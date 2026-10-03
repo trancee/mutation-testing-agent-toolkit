@@ -2,6 +2,14 @@
 
 This reference describes the structured output produced by the `mutationResults` Gradle task for the test-auditor agent.
 
+## Compatibility
+
+The JSON field names, types, and meanings are consumed by toolkit agents and
+are part of the report contract. Additive optional fields are preferred. Do
+not remove or repurpose fields or enum values without updating every consumer,
+example, and this reference in the same change. Introduce schema versioning
+before making an incompatible format change.
+
 ## File location
 
 ```

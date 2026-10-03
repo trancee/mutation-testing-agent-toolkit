@@ -15,3 +15,25 @@ Single-context layout: one `CONTEXT.md` + `docs/adr/` at the repo root. See `doc
 ### Mutation testing
 
 Mutation testing has two client adapters: OMP `/mutation-test` in `.omp/skills/mutation-test/` and GitHub Copilot CLI `/omp-mutation-test` in `.github/skills/omp-mutation-test/`. Keep their five role contracts aligned; OMP agents use `task`/`hub`, while Copilot agents use `.github/agents/` and the native `agent` tool.
+
+### Trust boundaries
+
+Treat target-project paths, source, build files, scripts, and tool output as untrusted input. Validate paths at the boundary, quote paths passed to commands, and do not construct shell syntax from supplied values. Inspect scripts before running them; report command and build failures explicitly rather than silently continuing or presenting partial results as complete.
+
+### Contract changes
+
+Before changing a shared workflow or data contract, identify every consumer and update both client adapters, their skills and profiles, the bootstrap output, sample project, tests, and documentation in the same change. Keep `mutation-results.json` field names, types, and meanings stable; additive optional fields are preferred. Do not repurpose or remove fields or enum values without a coordinated migration and updated consumers and docs. Add or adopt schema versioning before an incompatible format change.
+
+### Commit messages
+
+Use Conventional Commits with the format `type(scope): imperative summary`; the scope is optional. Use a type that describes the change, such as `feat`, `fix`, `docs`, `test`, `refactor`, `build`, `ci`, or `chore`. Keep the subject concise and specific to this toolkit, for example `docs: clarify mutation result gaps` or `fix(bootstrap): preserve existing Gradle configuration`. Mark an intentional breaking change with `!` and explain its impact in the commit body.
+
+### Git workflow
+
+Make changes on a feature branch and use pull requests for review; do not commit directly to the protected default branch. Commit, push, open or merge pull requests, and publish only when the user explicitly approves those external actions. Preserve unrelated work and never rewrite history or force-push without explicit approval.
+
+### Verification
+
+Add or update behavior-focused tests for code and tooling changes, including relevant boundary and failure cases. Keep tests deterministic and independent of the developer workstation, retained processes, or manual inspection. Run the narrow checks for changed behavior and applicable repository CI gates; a retry loop must still exit unsuccessfully if every attempt fails.
+
+CI is the authoritative merge gate. Validate workflow syntax and action semantics, and pin CI-installed tools and dependencies to known versions when practical. Do not impose blanket coverage targets on generated files, examples, or internal tooling without an explicitly scoped policy.

@@ -60,10 +60,17 @@ jobs:
         run: |
           cd /tmp/ci-test
           for i in 1 2 3; do
-            gradle test --console=plain --no-daemon && break
-            echo "Gradle attempt $i failed, retrying in 10s..."
-            sleep 10
+            if gradle test --console=plain --no-daemon; then
+              exit 0
+            fi
+            echo "Gradle attempt $i failed."
+            if [ "$i" -lt 3 ]; then
+              echo "Retrying in 10s..."
+              sleep 10
+            fi
           done
+          echo "Gradle tests failed after 3 attempts." >&2
+          exit 1
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v5
@@ -79,18 +86,26 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
-      - name: Install markdownlint-cli2
-        run: npm install -g markdownlint-cli2
+      - name: Install actionlint
+        run: |
+          mkdir -p /tmp/actionlint
+          curl -fsSL "https://github.com/rhysd/actionlint/releases/download/v1.7.11/actionlint_1.7.11_linux_amd64.tar.gz" | tar -xz -C /tmp/actionlint actionlint
+          sudo install -m 0755 /tmp/actionlint/actionlint /usr/local/bin/actionlint
+          actionlint --version
       - name: Install lychee
         run: |
           mkdir -p /tmp/lychee
-          curl -fsSL "https://github.com/lycheeverse/lychee/releases/latest/download/lychee-x86_64-unknown-linux-gnu.tar.gz" | tar -xz -C /tmp/lychee --strip-components=1
+          curl -fsSL "https://github.com/lycheeverse/lychee/releases/download/lychee-v0.24.2/lychee-x86_64-unknown-linux-gnu.tar.gz" | tar -xz -C /tmp/lychee --strip-components=1
           sudo install -m 0755 /tmp/lychee/lychee /usr/local/bin/lychee
           lychee --version
       - name: Install yamllint
-        run: python3 -m pip install --user yamllint
+        run: python3 -m pip install --user yamllint==1.38.0
+      - name: Validate GitHub Actions workflows
+        run: actionlint .github/workflows/ci.yml
       - name: Validate Copilot agent profiles
         run: python3 scripts/check-copilot-agent-profiles.py
+      - name: Validate shared mutation-agent contracts
+        run: python3 scripts/check-mutation-agent-contracts.py
       - name: Markdown lint + link check
         run: ./scripts/check-markdown.sh --offline
       - name: YAML lint

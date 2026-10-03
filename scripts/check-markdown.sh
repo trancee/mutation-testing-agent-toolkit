@@ -42,7 +42,7 @@ fi
 ml_files=("${files[@]}" "!.scratch/**" "!.agents/**" "!build/**" "!.gradle/**")
 
 echo "[check-markdown] Running markdownlint-cli2: ${ml_files[*]}"
-npx --yes markdownlint-cli2 "${ml_files[@]}"
+npx --yes markdownlint-cli2@0.23.3 "${ml_files[@]}"
 
 # lychee uses lychee.toml for exclude_path settings
 lychee_args=(--no-progress "${files[@]}")

@@ -58,7 +58,7 @@ use client-specific dispatch and profile formats. The bootstrap installs both.
 
 ## Data contracts
 
-The `mutationResults` Gradle task outputs `mutation-results.json` including `killedByTests` (all killing tests per mutation) and `testKillerMatrix` (test → mutation source locations). The format and quality bands are documented in the [mutation results reference](docs/reference/mutation-results-format.md).
+The `mutationResults` Gradle task outputs `mutation-results.json` including `killedByTests` (all killing tests per mutation) and `testKillerMatrix` (test → mutation source locations). Field names, types, and meanings are a consumer contract; the format and quality bands are documented in the [mutation results reference](docs/reference/mutation-results-format.md).
 
 ## Decisions deferred to v2
 
