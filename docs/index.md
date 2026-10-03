@@ -28,7 +28,7 @@
 
 | Topic | Document |
 |-------|----------|
-| How mutflow's compile-once meta-mutant works | [Explanation: mutflow architecture](explanation/mutflow-architecture.md) |
+| How mutflow's test-only mutation compilation works | [Explanation: mutflow architecture](explanation/mutflow-architecture.md) |
 | How the 5 agents work together | [Explanation: Agent system architecture](explanation/agent-system.md) |
 | Engine choice | [ADR-001](adr/0001-use-mutflow-as-mutation-engine.md) |
 | Agent structure and orchestration | [ADR-002](adr/0002-agent-structure-and-orchestration-model.md) |

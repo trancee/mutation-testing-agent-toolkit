@@ -10,7 +10,8 @@ edit source or test files.
 
 1. Run the project's Gradle test task for the requested class, normally
    `./gradlew test --tests <TestClass>`. Quote the class pattern as a shell
-   argument. The toolkit's `mutationResults` task generates the aggregate JSON
+   argument; never build shell syntax from the supplied pattern. The toolkit's
+   `mutationResults` task generates the aggregate JSON
    report by running the configured `test` task; run it separately when that
    report is needed, not as a per-class replacement for `test --tests`.
 2. Capture the Gradle exit status, mutation summary, JUnit XML path, and

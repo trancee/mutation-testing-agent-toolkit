@@ -11,7 +11,7 @@ write_minimal_project() {
   mkdir -p "$project"
   cat > "$project/build.gradle.kts" <<'EOF'
 plugins {
-    kotlin("jvm") version "2.4.0"
+    kotlin("jvm") version "2.4.20"
 }
 
 repositories {

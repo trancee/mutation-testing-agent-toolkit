@@ -4,7 +4,7 @@
 
 A five-role mutation-testing toolkit for Kotlin (JVM-first) projects, powered by [mutflow](https://github.com/anschnapp/mutflow), with separate OMP and GitHub Copilot CLI adapters.
 
-The toolkit uses mutflow's compile-once engine and predefined operators. Agents select targets, execute tests, calculate quality metrics, and propose test improvements. They do not generate mutation operators.
+The toolkit uses mutflow's test-only mutation compilation and predefined operators. Agents select targets, execute tests, calculate quality metrics, and propose test improvements. They do not generate mutation operators.
 
 ## Key concepts
 
@@ -14,7 +14,7 @@ Injecting small faults (mutations) into source code and running tests to see whe
 
 ### Meta-mutant (mutflow)
 
-mutflow injects all mutation variants into the compiled code, guarded by conditional branches with `MutationRegistry.check()` calls. At runtime, one variant is active per test run. This compile-once approach avoids per-mutation recompilation.
+mutflow keeps production compilation clean and injects mutation variants during test compilation. The test artifact contains guarded variants; runtime activates one variant per mutation run, avoiding a separate compile for each mutation.
 
 ### Zombie test
 
@@ -58,7 +58,7 @@ use client-specific dispatch and profile formats. The bootstrap installs both.
 
 ## Data contracts
 
-The `mutationResults` Gradle task outputs `mutation-results.json` including `killedByTests` (all killing tests per mutation) and `testKillerMatrix` (test → mutation source locations). The format and quality bands are documented in the [mutation results reference](docs/reference/mutation-results-format.md).
+The `mutationResults` Gradle task outputs `mutation-results.json` including `killedByTests` (all killing tests per mutation) and `testKillerMatrix` (test → mutation source locations). Field names, types, and meanings are a consumer contract; the format and quality bands are documented in the [mutation results reference](docs/reference/mutation-results-format.md).
 
 ## Decisions deferred to v2
 

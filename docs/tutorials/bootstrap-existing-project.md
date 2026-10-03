@@ -7,7 +7,7 @@ This tutorial assumes you have a Kotlin JVM project with Gradle. If you don't, s
 ## Prerequisites
 
 - An existing Kotlin JVM project with `build.gradle.kts` and `settings.gradle.kts`
-- Java 21 (or newer)
+- Java 26
 - The Mutation Testing Agent Toolkit cloned to a known location
 
 ## Step 1: Run the bootstrap script
@@ -36,9 +36,9 @@ Configuring build.gradle.kts...
   Applied mutation-results.gradle.kts
   Added JUnit 6 + mutflow-junit6 dependencies
   Added mutflow configuration
-  Detected Kotlin 2.4.0 from build.gradle.kts
+  Detected Kotlin 2.4.20 from build.gradle.kts
 Setting up typed mutation-results module (buildSrc)...
-  Created buildSrc/ with typed MutationResults module (Kotlin 2.4.0)
+  Created buildSrc/ with typed MutationResults module (Kotlin 2.4.20)
 
 ✅ Bootstrap complete!
 ```
@@ -58,7 +58,7 @@ Open `build.gradle.kts`. We should see:
 
 ```kotlin
 plugins {
-    id("io.github.anschnapp.mutflow") version "1.1.1"
+    id("io.github.anschnapp.mutflow") version "1.6.0"
     // ... existing plugins
 }
 ```
@@ -75,7 +75,6 @@ apply(from = rootProject.file(".omp/mutation-results.gradle.kts"))
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.3")
     testImplementation("org.junit.platform:junit-platform-launcher:6.1.3")
-    testImplementation("io.github.anschnapp.mutflow:mutflow-junit6:1.1.1")
 }
 ```
 
@@ -175,7 +174,9 @@ Run the `mutationResults` task:
 gradle mutationResults
 ```
 
-Gradle may print `Unsupported Kotlin plugin version` when its embedded Kotlin version differs from 2.4.0 while compiling `buildSrc`. The expected run still reaches the mutation summary below.
+The mutflow plugin supplies its matching JUnit integration. The bootstrap
+detects the target Kotlin Gradle plugin version for `buildSrc`, falling back to
+Kotlin 2.4.20 when it cannot detect one.
 
 We'll see the mutflow summary at the bottom:
 

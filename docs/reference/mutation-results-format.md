@@ -2,6 +2,14 @@
 
 This reference describes the structured output produced by the `mutationResults` Gradle task for the test-auditor agent.
 
+## Compatibility
+
+The JSON field names, types, and meanings are consumed by toolkit agents and
+are part of the report contract. Additive optional fields are preferred. Do
+not remove or repurpose fields or enum values without updating every consumer,
+example, and this reference in the same change. Introduce schema versioning
+before making an incompatible format change.
+
 ## File location
 
 ```
@@ -83,8 +91,8 @@ and `COMPILATION_FAILURE`. A missing JUnit XML report is classified as
 `COMPILATION_FAILURE`; its reason may mention an IR transformation error.
 `BACKSTOP_TIMEOUT` and `IR_TRANSFORMATION_ERROR` can be supplied by an
 orchestration executor, but are not emitted as separate types by the current
-Gradle task. Gaps are detected at per-test-class granularity because mutflow's
-compile-once model shares a compilation cycle across a test class.
+Gradle task. Gaps are detected at per-test-class granularity because mutations
+for a test class share an instrumented test compilation.
 
 ### redundantGroups[].tests
 

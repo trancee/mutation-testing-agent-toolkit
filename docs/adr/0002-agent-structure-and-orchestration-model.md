@@ -6,12 +6,12 @@
 
 ## Context
 
-Scott-CC's mutation-testing plugin uses 5 domain-specific agents dispatched via Claude Code's `Task(subagent_type="mutation-testing:test-X")` API. We need to port this to OMP's agent/task/skill system while adapting to mutflow's compile-once meta-mutant architecture.
+Scott-CC's mutation-testing plugin uses 5 domain-specific agents dispatched via Claude Code's `Task(subagent_type="mutation-testing:test-X")` API. We need to port this to OMP's agent/task/skill system while adapting to mutflow's test-only mutation compilation.
 
 Key architectural differences:
 
 - Scott-CC: per-mutant git worktrees, 15 parallel executors, per-test-per-mutation matrix
-- mutflow: compile-once, runtime mutation selection, a per-JVM synchronized lock, and aggregate verdicts that track all killers
+- mutflow: mutation instrumentation during test compilation, runtime mutation selection, a per-JVM synchronized lock, and aggregate verdicts that track all killers
 
 ## Decision
 

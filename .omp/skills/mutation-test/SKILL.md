@@ -47,7 +47,7 @@ Runs a mutation-testing analysis on a Kotlin (JVM-first) project using mutflow a
 ### Prerequisites
 
 - Kotlin JVM project with Gradle
-- Java 21+, Gradle 9.x+, Kotlin 2.4.x
+- Java 26, Gradle 9.8.0, Kotlin 2.4.20, mutflow 1.6.0 (validated baseline)
 - For fresh projects, use `/mutation-test setup` first
 
 ### mutflow architecture notes
@@ -55,11 +55,11 @@ Runs a mutation-testing analysis on a Kotlin (JVM-first) project using mutflow a
 Key mutflow constraints that affect orchestration:
 
 - JVM-only — no JS/Native/Android support in v1
-- Compile-once meta-mutant — all mutations injected at compile time, one active per run
-- Global synchronized lock — serializes mutation runs; parallel executors block-and-wait
+- Test-only mutation compilation — production artifacts stay free of mutation code
+- Global synchronized lock — serializes mutation runs within each JVM
 - Full per-test-per-mutation zombie detection — mutflow tracks all tests that kill each mutation
 
-For the full explanation of how mutflow's compile-once meta-mutant architecture works and why it matters for the OMP adapter, see [About mutflow's architecture](../../../docs/explanation/mutflow-architecture.md). For the 5-agent system and how each agent contributes, see [About the mutation-testing agent system](../../../docs/explanation/agent-system.md).
+For the full explanation of how mutflow's test-only mutation compilation works and why it matters for the OMP adapter, see [About mutflow's architecture](../../../docs/explanation/mutflow-architecture.md). For the 5-agent system and how each agent contributes, see [About the mutation-testing agent system](../../../docs/explanation/agent-system.md).
 
 ### Issue tracking
 

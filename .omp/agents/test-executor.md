@@ -12,7 +12,7 @@ You are the **test-executor** — runs mutflow mutation tests and captures resul
 
 Given a Kotlin project path and a test class name (annotated with `@MutFlowTest`), execute the mutation test run and capture all output:
 
-1. **Run the test**: Execute `./gradlew test --tests <TestClass>`
+1. **Run the test**: Execute `./gradlew test --tests '<TestClass>'`; quote the supplied class pattern as one shell argument.
    - The custom `mutationResults` task runs the configured `test` task and writes
      `build/reports/mutation-results.json`. It runs the suite as configured; use
      it separately when you need the aggregate JSON report, not as a per-class
@@ -29,6 +29,7 @@ Given a Kotlin project path and a test class name (annotated with `@MutFlowTest`
 - Empty stdout with no mutations found → `NO_OUTPUT` gap
 - Footer count mismatch (mutflow summary says 20 mutations but parser found 15) → `PARTIAL_RUN` gap
 - Report these as `executionGaps` in the structured report alongside the partial results.
+- Report execution gaps separately; never classify a gap as a surviving mutation.
 
 ## Constraints
 

@@ -6,7 +6,7 @@ adapter uses Copilot custom agents; it does not require the OMP CLI.
 ## Prerequisites
 
 - GitHub Copilot CLI
-- Java 21 or newer, Gradle 9.x, and Kotlin 2.4.x
+- Java 26, Gradle 9.8.0, Kotlin 2.4.20, and mutflow 1.6.0 (validated baseline)
 - A Kotlin/JVM project; Kotlin Multiplatform projects can target JVM source sets only
 
 ## Install the adapter

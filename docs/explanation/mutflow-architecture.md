@@ -1,53 +1,55 @@
-# About mutflow's compile-once meta-mutant architecture
+# About mutflow's test-only mutation compilation
 
-mutflow's compile-once meta-mutant approach differs from mutation engines that compile the source separately for each mutation.
+mutflow instruments test compilation so mutation code is present in test runs
+without changing production artifacts. This keeps mutation testing integrated
+with the normal Gradle test task while avoiding compilation once per mutation.
 
-## The traditional approach
+## Production and test compilation
 
-Most mutation testing engines work by compiling the source code many times — once per mutation. For N mutations, you need N compilations and N test runs. Scott-CC's original plugin followed this model: it created a **git worktree per mutation** and ran tests in parallel across all of them.
+The Kotlin compiler produces the ordinary production artifact without mutation
+instrumentation. During test compilation, mutflow transforms targeted
+production logic into guarded variants and includes those variants in the
+instrumented test artifact.
 
-## mutflow's approach
-
-mutflow injects **all mutation variants** into the compiled code at **compile time**, guarded by conditional branches with `MutationRegistry.check()` calls. At runtime, one variant is activated per test run. This is a "compile-once" approach — no per-mutation recompilation is needed.
-
-```
-Source code
+```text
+Production source
     │
     ▼
-┌────────────────────────────┐
-│  Mutflow IrTransformer     │  Injects check() calls at every
-│  (Kotlin compiler plugin)  │  IR node for all operators
-└────────────────────────────┘
+Production compilation ───────────────► clean production artifact
     │
     ▼
-    Mutated bytecode (all variants, guarded)
-    │
+Test compilation with mutflow
+    │  discovers and injects guarded mutation variants
     ▼
-    Test run 0: baseline (no active mutation)
+Instrumented test artifact
     │
-    ▼
-    Test run 1: activate mutation #1 → run tests
-    │
-    ▼
-    Test run 2: activate mutation #2 → run tests
-    ...
+    ├─ baseline run: no mutation active
+    ├─ mutation run: activate variant 1
+    ├─ mutation run: activate variant 2
+    └─ ...
 ```
 
-### Key implications
+The instrumented artifact contains the available variants, while each mutation
+run activates one variant. The run records whether tests kill, survive, or time
+out that mutation.
 
-1. **Single compilation**: All mutations compile in one pass. This removes per-mutation compilation and git worktree management.
+## Implications for the toolkit
 
-2. **Per-JVM synchronized lock**: `MutationRegistry.withSession()` uses `synchronized(lock)`, so one mutation session runs at a time inside each JVM. Each test class still runs its baseline before its mutation variants.
+1. **Production artifacts stay clean.** Mutation instrumentation is applied for
+   test compilation rather than shipped with production output.
+2. **No per-mutation builds or worktrees are required.** The test artifact
+   includes the mutation variants, and the test extension selects variants for
+   mutation runs.
+3. **JUnit orchestrates the test runs.** `@MutFlowTest` supplies the test
+   integration, and `MutFlow.underTest { }` marks the code whose mutations are
+   activated.
+4. **Execution is serialized within a JVM.** The registry permits one active
+   mutation session at a time in a JVM. Executors may be dispatched together,
+   but mutation sessions wait for the registry lock.
+5. **The results task reads test reports.** The toolkit's `mutationResults`
+   task captures mutflow output from JUnit XML and serializes mutation results,
+   gaps, per-test killer data, and redundant groups.
 
-3. **Runtime selection**: The `MutationRegistry.check()` calls are no-ops during baseline execution (null active mutation). During mutation runs, one `ActiveMutation` is activated and all others are skipped.
-
-4. **JUnit 6 integration**: The `@MutFlowTest` annotation uses JUnit 6's `ClassTemplateInvocationContextProvider` to orchestrate baseline (run 0) + mutation runs (run 1+). `MutFlow.underTest { }` blocks wrap business logic calls for mutation injection.
-
-5. **Aggregate verdicts**: mutflow records `Killed(testNames: Set<String>)`, `Survived`, and `TimedOut` outcomes. The `mutation-results.gradle.kts` task builds a `testKillerMatrix` that maps each test to the mutation source locations it killed. Tests that execute but never kill a mutation become zombie-test candidates.
-
-## Why this matters for the OMP agent system
-
-- **No git worktrees**: The saboteur doesn't need to create worktrees per mutation — mutflow handles isolation via compile-once.
-- **One executor per test class**: Not per mutation. Each test class with `@MutFlowTest` runs all its mutations in one `./gradlew test` invocation.
-- **Stdout capture**: mutflow prints `MutationTestingSummary` to stdout. The `mutation-results.gradle.kts` task captures this from JUnit XML's `<system-out>` elements (not from Gradle's `StandardOutputListener`, which is unavailable in Kotlin DSL on Gradle 9.x).
-- **Full per-test-per-mutation zombie detection**: mutflow's `MutFlowSession.markTestFailed()` now tracks ALL tests that kill each mutation (via a `Set<String>`). The parser extracts all "killed by:" lines and builds `testKillerMatrix` for precise zombie candidate identification. Included in upstream mutflow v1.1.1+.
+For agent responsibilities and phase ordering, see [About the
+mutation-testing agent system](agent-system.md). For the version decision and
+current validated baseline, see [ADR-001](../adr/0001-use-mutflow-as-mutation-engine.md).

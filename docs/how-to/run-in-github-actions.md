@@ -28,14 +28,16 @@ jobs:
     env:
       MIN_MUTATION_SCORE: '0.80'
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '26'
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: '9.8.0'
 
       - name: Generate mutation results
         run: ./gradlew mutationResults --no-daemon --console=plain
@@ -76,7 +78,7 @@ jobs:
 
       - name: Upload mutation results
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: mutation-results
           path: |
