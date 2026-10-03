@@ -1,4 +1,4 @@
-# About the OMP 5-agent mutation testing system
+# About the mutation-testing agent system
 
 The mutation-testing pipeline separates source targeting, execution, analysis, and test improvement. A fifth agent coordinates those four responsibilities.
 
@@ -51,4 +51,4 @@ native `agent` tool. The OMP and Copilot skill entry points are separate because
 their orchestration tools and profile formats differ; both retain the same
 targeting, execution, audit, refactor, and approval contracts.
 
-For the engine model behind these constraints, see [About mutflow's compile-once meta-mutant architecture](mutflow-architecture.md). For the OMP design and alternatives, see [ADR-002](../adr/0002-agent-structure-and-orchestration-model.md). For the Copilot adapter, see [ADR-003](../adr/0003-copilot-cli-adapter.md).
+For the engine model behind these constraints, see [About mutflow's compile-once meta-mutant architecture](mutflow-architecture.md). For the orchestration design and alternatives, see [ADR-002](../adr/0002-agent-structure-and-orchestration-model.md). For the Copilot adapter, see [ADR-003](../adr/0003-copilot-cli-adapter.md).

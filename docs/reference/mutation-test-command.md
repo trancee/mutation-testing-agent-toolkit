@@ -117,7 +117,7 @@ Deep mode also includes full redundant-test-group details and per-mutation kille
 | Unsupported targets | Kotlin/JS, Kotlin/Native, and Android. |
 | Mutation execution | A global mutflow lock serializes active mutation sessions within each JVM. |
 
-For pipeline ordering and agent responsibilities, see [About the OMP 5-agent system](../explanation/agent-system.md). For the mutation engine constraints, see [About mutflow's compile-once meta-mutant](../explanation/mutflow-architecture.md).
+For pipeline ordering and agent responsibilities, see [About the mutation-testing agent system](../explanation/agent-system.md). For the mutation engine constraints, see [About mutflow's compile-once meta-mutant](../explanation/mutflow-architecture.md).
 
 ## Examples
 

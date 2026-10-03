@@ -8,17 +8,17 @@ This tutorial assumes you have a Kotlin JVM project with Gradle. If you don't, s
 
 - An existing Kotlin JVM project with `build.gradle.kts` and `settings.gradle.kts`
 - Java 21 (or newer)
-- The OMP mutation testing system installed (this repo, cloned to a known location)
+- The Mutation Testing Agent Toolkit cloned to a known location
 
 ## Step 1: Run the bootstrap script
 
 We'll use the bootstrap script to copy the .omp files and configure Gradle. From your project root:
 
 ```bash
-# Replace with the path to this mutation-testing repo
-OMP_MUTATION_DIR="/path/to/mutation-testing"
+# Replace with the path to the Mutation Testing Agent Toolkit
+MUTATION_TOOLKIT_DIR="/path/to/mutation-testing-agent-toolkit"
 
-"$OMP_MUTATION_DIR/.omp/bootstrap-mutation-testing.sh" .
+"$MUTATION_TOOLKIT_DIR/.omp/bootstrap-mutation-testing.sh" .
 ```
 
 We'll see output like:
@@ -195,4 +195,4 @@ If some mutations survived, we can add boundary tests to kill them. See the [int
 
 ## Summary
 
-We bootstrapped the OMP 5-agent mutation testing system into our existing Kotlin project. The bootstrap script handled file copying and Gradle configuration. We annotated our business logic with `@MutationTarget` and our tests with `@MutFlowTest`, wrapping calls in `MutFlow.underTest { }`. Our first mutation test run shows the results.
+We bootstrapped the Mutation Testing Agent Toolkit into our existing Kotlin project. The bootstrap script handled file copying and Gradle configuration. We annotated our business logic with `@MutationTarget` and our tests with `@MutFlowTest`, wrapping calls in `MutFlow.underTest { }`. Our first mutation test run shows the results.

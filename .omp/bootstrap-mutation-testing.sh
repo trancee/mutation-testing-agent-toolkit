@@ -2,7 +2,8 @@
 set -euo pipefail
 
 # bootstrap-mutation-testing.sh
-# Installs the OMP 5-agent mutation testing system into a Kotlin project.
+# Installs the Mutation Testing Agent Toolkit's OMP and Copilot adapters into
+# a Kotlin project.
 #
 # Usage:
 #   ./bootstrap-mutation-testing.sh <project-path> [--kmp]

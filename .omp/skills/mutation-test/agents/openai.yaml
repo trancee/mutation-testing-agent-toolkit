@@ -1,5 +1,5 @@
 interface:
   display_name: "Mutation Test"
-  short_description: "Run mutflow-powered mutation testing on Kotlin projects"
+  short_description: "Run the toolkit's OMP mutation-testing workflow on Kotlin projects"
 policy:
   allow_implicit_invocation: false

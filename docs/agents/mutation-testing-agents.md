@@ -60,4 +60,4 @@ task with agent: "test-auditor", task: "Audit results in <project-path>"
 task with agent: "test-refactor-specialist", task: "Improve tests based on audit"
 ```
 
-For pipeline relationships and ordering, see [About the OMP 5-agent mutation testing system](../explanation/agent-system.md). For the accepted design, see [ADR-002](../adr/0002-agent-structure-and-orchestration-model.md).
+For pipeline relationships and ordering, see [About the mutation-testing agent system](../explanation/agent-system.md). For the accepted design, see [ADR-002](../adr/0002-agent-structure-and-orchestration-model.md).

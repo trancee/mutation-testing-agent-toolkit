@@ -55,7 +55,7 @@ jobs:
           tasks.test { useJUnitPlatform() }
           EOF
       - name: Write settings.gradle.kts
-        run: echo "rootProject.name = \"omp-ci-test\"" > /tmp/ci-test/settings.gradle.kts
+        run: echo "rootProject.name = \"mutation-toolkit-ci-test\"" > /tmp/ci-test/settings.gradle.kts
       - name: Run tests
         run: |
           cd /tmp/ci-test

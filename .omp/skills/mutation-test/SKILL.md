@@ -1,11 +1,11 @@
 ---
 name: mutation-test
-description: Run mutflow-powered mutation testing on a Kotlin project via the 5-agent OMP system (test-quality-reviewer orchestrator, test-saboteur, test-executor, test-auditor, test-refactor-specialist). JVM-first.
+description: Run mutflow-powered mutation testing on a Kotlin project via the toolkit's 5-agent OMP adapter (test-quality-reviewer orchestrator, test-saboteur, test-executor, test-auditor, test-refactor-specialist). JVM-first.
 ---
 
 ## Mutation Testing
 
-Runs a mutation-testing analysis on a Kotlin (JVM-first) project using mutflow as the engine and OMP's 5-agent system for orchestration.
+Runs a mutation-testing analysis on a Kotlin (JVM-first) project using mutflow as the engine and the toolkit's OMP adapter for orchestration.
 
 ### Usage
 
@@ -59,7 +59,7 @@ Key mutflow constraints that affect orchestration:
 - Global synchronized lock — serializes mutation runs; parallel executors block-and-wait
 - Full per-test-per-mutation zombie detection — mutflow tracks all tests that kill each mutation
 
-For the full explanation of how mutflow's compile-once meta-mutant architecture works and why it matters for the OMP agent system, see [About mutflow's architecture](../../../docs/explanation/mutflow-architecture.md). For the 5-agent system and how each agent contributes, see [About the OMP 5-agent system](../../../docs/explanation/agent-system.md).
+For the full explanation of how mutflow's compile-once meta-mutant architecture works and why it matters for the OMP adapter, see [About mutflow's architecture](../../../docs/explanation/mutflow-architecture.md). For the 5-agent system and how each agent contributes, see [About the mutation-testing agent system](../../../docs/explanation/agent-system.md).
 
 ### Issue tracking
 
