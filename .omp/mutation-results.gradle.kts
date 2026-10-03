@@ -31,6 +31,13 @@ import org.gradle.api.tasks.testing.Test
 import java.io.File
 import java.util.regex.Pattern
 
+val mutationTestIncludes = providers.gradleProperty("mutationTest.includes")
+    .orNull
+    ?.split(',')
+    ?.map(String::trim)
+    ?.filter(String::isNotEmpty)
+    .orEmpty()
+
 // Configure test to capture stdout in JUnit XML (mutflow prints to stdout)
 tasks.withType<Test>().configureEach {
     testLogging {
@@ -39,6 +46,11 @@ tasks.withType<Test>().configureEach {
     }
     reports {
         junitXml.required.set(true)
+    }
+    if (mutationTestIncludes.isNotEmpty()) {
+        filter {
+            mutationTestIncludes.forEach { includeTestsMatching(it) }
+        }
     }
 }
 

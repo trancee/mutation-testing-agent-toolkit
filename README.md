@@ -2,7 +2,7 @@
 
 A five-role mutation-testing toolkit for Kotlin (JVM-first) projects, powered by [mutflow](https://github.com/anschnapp/mutflow). It currently provides native adapters for [OMP](https://omp.sh/) and GitHub Copilot CLI, with shared mutation-testing contracts across clients.
 
-The toolkit grew from an OMP implementation of [Scott-CC's](https://github.com/citadelgrad/scott-cc/tree/main/plugins/mutation-testing) multi-agent orchestration. It uses mutflow's test-only mutation compilation so production artifacts remain clean, with client-specific adapters providing native orchestration while preserving the shared mutation-testing workflow.
+The toolkit adapts the five-role orchestration and test-quality workflow from [Scott-CC's mutation-testing plugin](https://github.com/citadelgrad/scott-cc/tree/main/plugins/mutation-testing). It is not feature- or behavior-equivalent: this Kotlin toolkit replaces Scott-CC's LLM-generated, per-mutant Git-worktree mutations with mutflow's predefined operators and test-only compilation. See [how the designs differ](docs/adr/0002-agent-structure-and-orchestration-model.md#adaptation-boundaries).
 
 ## Quick start
 

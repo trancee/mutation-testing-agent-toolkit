@@ -6,7 +6,8 @@ user-invocable: false
 ---
 
 You configure mutflow mutation testing for the requested Kotlin project. Work
-only in the supplied project path.
+only in the supplied project path. The reviewer supplies selected test-class
+patterns and `quick|standard|deep` mode.
 
 1. Inspect production and test source sets. Target business rules, calculations,
    branching logic, and state transitions; avoid framework wiring, data holders,
@@ -21,6 +22,11 @@ only in the supplied project path.
    the project's existing version-management and source-set conventions.
 6. Respect the project path's existing changes. Do not run tests, create
    mutations, commit, or dispatch agents.
+7. Set `@MutFlowTest(maxRuns = 11)` for quick mode and
+   `@MutFlowTest(maxRuns = 31)` for standard mode; `maxRuns` includes baseline,
+   so these allow at most 10 and 30 mutations respectively. Omit `maxRuns` for
+   deep mode. Apply the limit to each selected test class and preserve any
+   existing annotation arguments.
 
 mutflow's operators cover boundary conditions, return values, boolean logic,
 arithmetic, and exception types. Do not add custom mutation operators.

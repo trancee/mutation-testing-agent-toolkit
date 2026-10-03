@@ -10,16 +10,15 @@ Runs a mutation-testing analysis on a Kotlin (JVM-first) project using mutflow a
 ### Usage
 
 - `project path`: Path to the Kotlin project root (default: current directory)
-- `--targets`: Optional glob pattern for test classes to include (default: all `@MutFlowTest` classes)
+- `--targets`: Optional comma-separated Gradle test class patterns (default: all `@MutFlowTest` classes)
 - `--kmp`: (setup only) Use Kotlin Multiplatform project setup (mutflow targets JVM source sets only)
-- `--focus`: Comma-separated list of test class patterns to include (bridges to Gradle `test` task's `includeTargets`)
-- `--auto-approve`: When set, test-refactor-specialist may apply refactor changes directly without explicit approval. Zombie deletion and redundant test group removal always require explicit approval.
-- `--mode quick`: Run with `maxRuns=10` mutations. Skip the refactor phase — only audit + report.
-- `--mode standard`: (default) Run with `maxRuns=30` mutations. Full pipeline including refactoring suggestions.
-- `--mode deep`: Run with all available mutations. Include full redundant test group details and per-mutation killer matrices in the report.
+- `--auto-approve`: Permits additive or assertion-level test changes to be applied. Deleting or consolidating tests always requires explicit approval.
+- `--mode quick`: At most 10 mutation runs per selected test class (`maxRuns=11`, including the baseline). Skip refactoring — only audit and report.
+- `--mode standard`: (default) At most 30 mutation runs per selected test class (`maxRuns=31`, including the baseline). Run the full pipeline and provide refactoring suggestions.
+- `--mode deep`: Run all available mutations per selected test class. Include full redundant-group details and per-mutation killer data in the report.
 
 ```
-/mutation-test [project path] [--targets <pattern>] [--focus <patterns>] [--auto-approve] [--mode quick|standard|deep]
+/mutation-test [project path] [--targets <patterns>] [--auto-approve] [--mode quick|standard|deep]
 /mutation-test setup [project path] [--kmp]
 ```
 
@@ -30,19 +29,20 @@ Runs a mutation-testing analysis on a Kotlin (JVM-first) project using mutflow a
 1. **`.omp/` files copied**: agents, skills, `mutation-results.gradle.kts`, `mutation-results-src/` copied to `project-path/.omp/`
 2. **`settings.gradle.kts`**: `pluginManagement` block added with `mavenCentral()` + `gradlePluginPortal()`
 3. **`build.gradle.kts`**: mutflow plugin, JUnit 6 dependencies, `apply(from = ...)` for mutation-results added
-4. **`buildSrc/` generated**: typed `MutationResults` module copied from `.omp/mutation-results-src/` with `kotlin-dsl` + `kotlinx-serialization` plugins
-5. **`test-saboteur`** (via `task`) annotates business-logic classes with `@MutationTarget`, test classes with `@MutFlowTest`, and wraps existing assertions in `MutFlow.underTest { }`
+4. **`buildSrc/` generated**: typed `MutationResults` module copied from `.omp/mutation-results-src/` with Kotlin JVM and serialization plugins
+5. **`test-saboteur`** (via `task`) annotates business-logic and test classes, applies the per-class mode budget, and wraps applicable calls in `MutFlow.underTest { }`
 
 ### What happens (full mutation test run, standard mode by default)
 
 1. **`test-quality-reviewer`** (orchestrator) receives the task and coordinates the pipeline
 2. **`test-saboteur`** analyzes source code, adds `@MutationTarget` to business-logic classes, `@MutFlowTest` to test classes, and suppression comments to framework noise
-3. **`test-executor`** agents run `./gradlew test` for each test class — mutflow's JUnit 6 extension handles the multi-run model (baseline + mutation runs) internally
+3. **`test-executor`** runs one `mutationResults` Gradle invocation, optionally filtered by `--targets`; this produces the aggregate report and avoids concurrent Gradle processes writing shared results
 4. **`test-auditor`** parses JSON results + JUnit XML, calculates mutation score, identifies zombie test candidates, detects over-mocked tests
 5. **`test-refactor-specialist`** generates improved test code for flagged issues
 
 - In `--mode quick`, step 5 is skipped — only audit + report output
-- In `--mode deep`, step 4 includes full redundant test group details and per-mutation killer matrices
+- In `--mode deep`, step 4 includes full redundant group details and per-mutation killer data
+- When approved changes are applied, the reviewer reruns the same aggregate `mutationResults` task and reports its outcome before describing the change as validated
 
 ### Prerequisites
 
@@ -57,7 +57,9 @@ Key mutflow constraints that affect orchestration:
 - JVM-only — no JS/Native/Android support in v1
 - Test-only mutation compilation — production artifacts stay free of mutation code
 - Global synchronized lock — serializes mutation runs within each JVM
-- Full per-test-per-mutation zombie detection — mutflow tracks all tests that kill each mutation
+- Per-mutation killer evidence — mutflow records all tests that kill each mutation, supporting zombie-candidate analysis but not a complete test-outcome matrix
+- Mutation limits are applied per `@MutFlowTest` class. `maxRuns` includes the baseline run, so quick uses 11 and standard 31.
+- Score bands and the mock-count review heuristic are toolkit policy, not Scott-CC thresholds.
 
 For the full explanation of how mutflow's test-only mutation compilation works and why it matters for the OMP adapter, see [About mutflow's architecture](../../../docs/explanation/mutflow-architecture.md). For the 5-agent system and how each agent contributes, see [About the mutation-testing agent system](../../../docs/explanation/agent-system.md).
 

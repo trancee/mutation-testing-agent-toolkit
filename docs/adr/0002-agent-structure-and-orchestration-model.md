@@ -10,12 +10,33 @@ Scott-CC's mutation-testing plugin uses 5 domain-specific agents dispatched via 
 
 Key architectural differences:
 
-- Scott-CC: per-mutant git worktrees, 15 parallel executors, per-test-per-mutation matrix
+- Scott-CC: per-mutant git worktrees, batches of up to five executors, and its own mutation/test evidence
 - mutflow: mutation instrumentation during test compilation, runtime mutation selection, a per-JVM synchronized lock, and aggregate verdicts that track all killers
 
 ## Decision
 
-Use 5 separate OMP agent files in `.omp/agents/`, orchestrated via a sequential handshake pattern, with the `/mutation-test` skill as a thin entry point.
+Use 5 separate OMP agent files in `.omp/agents/`, orchestrated via a sequential handshake pattern, with the `/mutation-test` skill as a thin entry point. Copilot CLI has a corresponding native adapter with the same role boundaries and result contracts.
+
+### Adaptation boundaries
+
+This toolkit adapts Scott-CC's five-role collaboration and broad test-quality
+workflow; it does not port the mutation engine or promise feature parity.
+Scott-CC's saboteur creates context-aware semantic mutations in separate Git
+worktrees. Here, the saboteur identifies Kotlin business logic and configures
+mutflow's predefined operators through annotations. Mutflow instruments test
+compilation and reports its supported mutation variants.
+
+Scott-CC runs a bounded executor per mutant. This toolkit runs one aggregate
+Gradle mutation-results task for the selected test classes. The single
+invocation avoids overlapping build and JUnit report outputs; mutflow's
+synchronized lock is JVM-local and does not serialize separate Gradle processes.
+`maxRuns` limits are applied per `@MutFlowTest` class and include the baseline
+run, so they do not establish a project-wide mutant ceiling.
+
+The toolkit's score bands, mutation-run budgets, and mock-count heuristic are
+its own policy choices. Killer data supports candidate analysis but does not
+record every test's result against every mutation. A test without a killer
+entry is therefore a candidate for investigation, not a confirmed zombie.
 
 ## Rationale
 
@@ -23,14 +44,15 @@ Use 5 separate OMP agent files in `.omp/agents/`, orchestrated via a sequential 
 
 - **Clean separation of concerns**: Each agent has a single responsibility (targeting, execution, auditing, refactoring, orchestration)
 - **Per-agent tool restrictions**: `tools` frontmatter field allows least-privilege — executor can't edit files, saboteur can't spawn subagents, auditor is read-only
-- **Matches Scott-CC's architecture**: Direct port preserves the multi-agent orchestration that makes this system distinctive
+- **Adapts Scott-CC's architecture**: Preserves role separation and broad phase ordering while replacing engine-specific execution and mutation generation
 
-### Why sequential handshake (not parallel batch)
+### Why sequential phase handoffs
 
 - mutflow's run model requires **baseline before mutation runs**: mutflow discovers mutation points during run 0, then activates one mutation per run 1+. This ordering must be preserved
 - Saboteur must complete before executors start (source annotations needed for mutflow to find mutation targets)
 - Executors must complete before auditor (results aggregation) and auditor before refactorer (audit findings needed for refactoring)
-- Parallel execution is used WITHIN phases (multiple executors in one `tasks[]` batch)
+- The executor phase is one aggregate Gradle invocation, not a per-test-class
+  parallel batch. Separate Gradle processes share build and JUnit report paths.
 
 ### Why project-level location (`.omp/agents/`)
 
@@ -65,5 +87,6 @@ This table records the accepted design. The [mutation-testing agent reference](.
 ## Consequences
 
 - **No namespace needed**: OMP uses the `name` field as the dispatch key — `mutation-testing:` prefix is optional (unlike Scott-CC)
-- **mutflow adaptation**: The saboteur configures `@MutFlowTest` without git worktrees. Each executor runs `./gradlew test`, and the JUnit extension handles the baseline and mutation runs for its test class.
-- **Zombie detection**: mutflow tracks ALL tests that kill each mutation (not just the first). The `mutation-results.gradle.kts` task builds a `testKillerMatrix` and the test-auditor uses it for precise zombie candidate identification.
+- **mutflow adaptation**: The saboteur configures `@MutFlowTest` without git worktrees. One executor runs the selected tests through a single aggregate Gradle task; the JUnit extension handles baseline and mutation runs.
+- **Zombie analysis**: mutflow reports all tests that kill each mutation (not only the first). The results task builds a killer matrix, which supports candidate analysis but is not a complete per-test-per-mutation outcome matrix.
+- **Refactor verification**: When approved changes are applied, the reviewer reruns the aggregate mutation-results task before reporting the changes as validated.

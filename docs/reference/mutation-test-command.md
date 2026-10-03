@@ -5,7 +5,7 @@
 ## Invocation
 
 ```text
-/mutation-test [project-path] [--targets <pattern>] [--focus <patterns>] [--auto-approve] [--mode quick|standard|deep]
+/mutation-test [project-path] [--targets <patterns>] [--auto-approve] [--mode quick|standard|deep]
 /mutation-test setup [project-path] [--kmp]
 ```
 
@@ -18,7 +18,7 @@ omp mutation-test [project-path] [options]
 ## Copilot CLI invocation
 
 ```text
-/omp-mutation-test [project-path] [--targets <pattern>] [--focus <patterns>] [--auto-approve] [--mode quick|standard|deep]
+/omp-mutation-test [project-path] [--targets <patterns>] [--auto-approve] [--mode quick|standard|deep]
 /omp-mutation-test setup [project-path] [--kmp]
 ```
 
@@ -43,9 +43,8 @@ The Copilot skill delegates to the `omp-mutation-test-*` custom agents in
 
 | Option | Value | Default | Description |
 |--------|-------|---------|-------------|
-| `--targets` | Glob pattern | All classes annotated with `@MutFlowTest` | Limits the included test classes. |
-| `--focus` | Comma-separated class patterns | All included test classes | Passes class patterns to the Gradle test task's `includeTargets` filtering. |
-| `--auto-approve` | None | Disabled | Permits the refactor specialist to apply proposed test refactors. Deleting zombie tests or redundant test groups still requires explicit approval. |
+| `--targets` | Comma-separated Gradle test class patterns | All classes annotated with `@MutFlowTest` | Limits the test classes run by the aggregate Gradle invocation. |
+| `--auto-approve` | None | Disabled | Permits the refactor specialist to apply additive or assertion-level test refactors. Deleting or consolidating tests always requires explicit user approval. |
 | `--mode` | `quick`, `standard`, or `deep` | `standard` | Selects the mutation limit and report detail described under [Execution modes](#execution-modes). |
 
 ## Setup command
@@ -84,11 +83,15 @@ For an executable setup walkthrough, see [Tutorial: Bootstrap mutation testing i
 
 ## Execution modes
 
-| Mode | Maximum mutation runs | Refactor phase | Report detail |
+| Mode | Maximum mutation runs per selected `@MutFlowTest` class | Refactor phase | Report detail |
 |------|-----------------------|----------------|---------------|
-| `quick` | 10 | Skipped | Audit and summary report. |
-| `standard` | 30 | Included | Audit, refactoring suggestions, and summary report. |
-| `deep` | All available mutations | Included | Full redundant-group details and per-mutation killer matrices. |
+| `quick` | 10 (`maxRuns=11`, including baseline) | Skipped | Audit and summary report. |
+| `standard` | 30 (`maxRuns=31`, including baseline) | Included | Audit, refactoring suggestions, and summary report. |
+| `deep` | All available mutations (`maxRuns` omitted) | Included | Full redundant-group details and per-mutation killer data. |
+
+The limit applies independently to each selected test class; it is not a
+project-wide mutation ceiling. The command runs the selected classes in one
+aggregate `mutationResults` Gradle invocation.
 
 ## Final report
 
@@ -115,7 +118,7 @@ Deep mode also includes full redundant-test-group details and per-mutation kille
 | Kotlin | 2.4.20 (validated baseline; must match the mutflow compiler plugin). |
 | Kotlin Multiplatform | JVM source sets only. |
 | Unsupported targets | Kotlin/JS, Kotlin/Native, and Android. |
-| Mutation execution | A global mutflow lock serializes active mutation sessions within each JVM. |
+| Mutation execution | A mutflow lock serializes active mutation sessions within one JVM; it does not coordinate separate Gradle processes. |
 
 For pipeline ordering and agent responsibilities, see [About the mutation-testing agent system](../explanation/agent-system.md). For the mutation engine constraints, see [About mutflow's test-only mutation compilation](../explanation/mutflow-architecture.md).
 
@@ -130,7 +133,7 @@ Standard mode against the current directory:
 Quick mode for selected test classes:
 
 ```text
-/mutation-test /work/orders --focus "*OrderServiceTest" --mode quick
+/mutation-test /work/orders --targets "*OrderServiceTest" --mode quick
 ```
 
 Kotlin Multiplatform setup:

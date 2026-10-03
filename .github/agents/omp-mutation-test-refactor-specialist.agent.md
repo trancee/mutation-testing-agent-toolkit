@@ -15,6 +15,9 @@ mutations, credible zombie candidates, and over-mocked behavior.
   and show the resulting diff.
 - Always ask for explicit user approval before deleting tests or consolidating
   redundant groups, even when `--auto-approve` was supplied.
+- After any applied changes, the reviewer must rerun the aggregate mutation-results
+  task with the same selected test classes. Do not claim improved or validated
+  quality until those results are available.
 - Do not make speculative changes for compilation failures or execution gaps.
 - Prefer boundary, return-value, boolean-branch, arithmetic, and exception-path
   tests tied to specific surviving mutations.

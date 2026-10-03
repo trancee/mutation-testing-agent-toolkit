@@ -11,15 +11,14 @@ Use this skill as the Copilot CLI entry point. Delegate to the
 OMP's `task`, `hub`, or `tasks[]` interfaces.
 
 ```text
-/omp-mutation-test [project path] [--targets <pattern>] [--focus <patterns>] [--auto-approve] [--mode quick|standard|deep]
+/omp-mutation-test [project path] [--targets <patterns>] [--auto-approve] [--mode quick|standard|deep]
 /omp-mutation-test setup [project path] [--kmp]
 ```
 
-- `--targets` selects test classes; by default, include all `@MutFlowTest` classes.
-- `--focus` narrows Gradle test targets.
-- `--mode quick` runs at most 10 mutations and skips refactoring.
-- `--mode standard` runs at most 30 mutations and includes refactoring suggestions.
-- `--mode deep` runs all available mutations and includes detailed killer matrices.
+- `--targets` selects Gradle test class patterns; by default, include all `@MutFlowTest` classes.
+- `--mode quick` allows at most 10 mutation runs per selected class (`maxRuns=11`, including baseline) and skips refactoring.
+- `--mode standard` allows at most 30 mutation runs per selected class (`maxRuns=31`, including baseline) and includes refactoring suggestions.
+- `--mode deep` runs all available mutations per selected class and includes detailed killer data.
 - `--auto-approve` permits applying proposed test refactors; it never permits deleting
   zombie tests or redundant groups without explicit user approval.
 - `setup` runs the bootstrap script and changes the target project's Gradle, `.omp`,

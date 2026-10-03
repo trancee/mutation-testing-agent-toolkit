@@ -28,18 +28,25 @@ installed adapter.
 ## Mutation-testing flow
 
 1. Delegate target selection and mutflow configuration to
-   `omp-mutation-test-saboteur`. Wait for its summary before starting tests.
+   `omp-mutation-test-saboteur`, passing the requested test-class patterns and
+   mode so it can apply the per-class `maxRuns` budget. Wait for its summary
+   before starting tests.
 2. Use the test classes reported by the saboteur. If none are eligible, stop and
-   report why. Delegate one class per `omp-mutation-test-executor`. Use parallel
-   agent calls only when the client supports them; mutflow serializes mutation
-   sessions with a JVM-wide lock, so sequential execution is also valid.
-3. After every executor completes, delegate the combined outputs to
+   report why. Delegate exactly one `omp-mutation-test-executor` to run the
+   aggregate `mutationResults` task for the selected classes. Pass requested
+   class patterns as `-PmutationTest.includes=<comma-separated-patterns>`.
+   Never launch per-class Gradle processes in parallel: they share build and
+   JUnit result paths, and mutflow's lock is JVM-local.
+3. After the aggregate executor completes, delegate its JSON and JUnit output to
    `omp-mutation-test-auditor`. Do not calculate a score from incomplete runs.
 4. Skip refactoring in `quick` mode. Otherwise, pass the audit and the
    `--auto-approve` state to `omp-mutation-test-refactor-specialist`.
 5. With `--auto-approve` absent, require proposals only. When it is present,
-   test-file changes may be applied, but deletion of zombie tests or redundant
-   groups still requires explicit user approval.
+   additive or assertion-level test changes may be applied, but deletion or
+   consolidation always requires explicit user approval. After any applied
+   refactor, run one aggregate mutationResults validation with the same class
+   patterns and report whether it passed. Do not describe unvalidated changes
+   as verified.
 6. Report the mutation score or `null` when no mutations were evaluable, quality
    band, confidence, confidence interval, execution gaps, survivors, zombie
    candidates, over-mocked tests, refactor results, and changed paths.

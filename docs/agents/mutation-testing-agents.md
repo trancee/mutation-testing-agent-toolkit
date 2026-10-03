@@ -48,8 +48,9 @@ programmatic-only (`user-invocable: false`) and cannot spawn further agents.
 | Refactor specialist | [`omp-mutation-test-refactor-specialist`](../../.github/agents/omp-mutation-test-refactor-specialist.agent.md) | `read`, `search`, `edit` | No |
 
 The Copilot adapter does not use OMP's `task`, `hub`, or `tasks[]` protocols.
-Both clients share the phase order, mutflow result contract, and rule that test
-deletion requires explicit approval.
+Both clients share the phase order, mutflow result contract, a single aggregate
+Gradle execution per run, and the rule that test deletion or consolidation
+requires explicit approval.
 
 ## Dispatch examples
 

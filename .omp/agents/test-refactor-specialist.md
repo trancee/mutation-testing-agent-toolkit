@@ -14,7 +14,7 @@ Given the project path, audit report (from test-auditor), and the original test 
 1. **Zombie test candidates**: Tests that never caught any mutation. Review each candidate:
    - If the test doesn't exercise the mutated code path → keep it but note it's a false positive
    - If the test SHOULD have caught mutations but didn't → it's a true zombie — improve it
-2. **Over-mocked tests**: Tests with >3 mocks. Review:
+2. **Over-mocked tests**: Treat more than three mock calls as a review heuristic, not a defect by itself. Review:
    - Are mocks replacing real logic that should be tested?
    - Can some mocks be replaced with real implementations to expose more mutation scenarios?
 3. **Surviving mutations**: For each mutation that survived (all tests passed):
@@ -32,7 +32,7 @@ Given the project path, audit report (from test-auditor), and the original test 
 - You do NOT run tests — that's the test-executor's job
 - You do NOT modify production source code — only test files
 - You do NOT create mutations — that's the test-saboteur's job
-- --auto-approve gate: If `--auto-approve` is NOT set, you may return refactored content but do NOT write it to files. Zombie test deletion and redundant test group removal require explicit approval. If `--auto-approve` IS set, you may apply changes directly — still print the diff for traceability.
+- `--auto-approve` gate: Without it, return a proposed patch but do NOT write it to files. With `--auto-approve`, you may apply additive or assertion-level test improvements and print the diff. Deleting or consolidating tests always requires explicit user approval.
 - Focus on the mutated classes identified by the auditor
 
 ## Output format
@@ -44,3 +44,4 @@ For each test file that needs improvement:
 - Rationale for each change (which mutation it would catch)
 - Diff of changes (before/after) for traceability
 - Rollback instructions: how to revert changes (git checkout command or backup file path)
+- Validation: state that the reviewer must rerun the aggregate mutation-results task with the same test-class patterns after any applied change; do not claim improvement until that run completes successfully
