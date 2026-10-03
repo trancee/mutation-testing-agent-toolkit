@@ -39,21 +39,35 @@ if ! "$bootstrap" "$project" >"$tmp_root/install.log" 2>&1; then
   exit 1
 fi
 
-assert_file "$project/.github/skills/omp-mutation-test/SKILL.md"
+assert_file "$project/.omp/skills/mutation-testing/SKILL.md"
+assert_file "$project/.omp/skills/mutation-testing/agents/openai.yaml"
+assert_file "$project/.github/skills/mutation-testing/SKILL.md"
 assert_file "$project/.omp/AGENT-USAGE.md"
 cmp "$repo_root/.omp/AGENT-USAGE.md" "$project/.omp/AGENT-USAGE.md"
+cmp "$repo_root/.omp/skills/mutation-testing/SKILL.md" \
+  "$project/.omp/skills/mutation-testing/SKILL.md"
+cmp "$repo_root/.omp/skills/mutation-testing/agents/openai.yaml" \
+  "$project/.omp/skills/mutation-testing/agents/openai.yaml"
 grep -Fq '.omp/AGENT-USAGE.md' "$project/AGENTS.md"
 cp "$project/AGENTS.md" "$tmp_root/installed-AGENTS.md"
 "$bootstrap" "$project" >"$tmp_root/reinstall.log" 2>&1
 cmp "$tmp_root/installed-AGENTS.md" "$project/AGENTS.md"
-cmp "$repo_root/.github/skills/omp-mutation-test/SKILL.md" \
-  "$project/.github/skills/omp-mutation-test/SKILL.md"
+cmp "$repo_root/.github/skills/mutation-testing/SKILL.md" \
+  "$project/.github/skills/mutation-testing/SKILL.md"
+grep -Fq 'name: mutation-testing' "$project/.omp/skills/mutation-testing/SKILL.md"
+grep -Fq 'name: mutation-testing' "$project/.github/skills/mutation-testing/SKILL.md"
+grep -Fq '/mutation-testing' "$project/.omp/skills/mutation-testing/SKILL.md"
+grep -Fq '/mutation-testing' "$project/.github/skills/mutation-testing/SKILL.md"
+grep -Fq 'display_name: "Mutation Testing"' \
+  "$project/.omp/skills/mutation-testing/agents/openai.yaml"
+grep -Fq "Run: /mutation-testing $project" "$tmp_root/install.log"
+grep -Fq 'use /mutation-testing' "$tmp_root/install.log"
 for agent in \
-  omp-mutation-test-reviewer \
-  omp-mutation-test-saboteur \
-  omp-mutation-test-executor \
-  omp-mutation-test-auditor \
-  omp-mutation-test-refactor-specialist; do
+  mutation-testing-reviewer \
+  mutation-testing-saboteur \
+  mutation-testing-executor \
+  mutation-testing-auditor \
+  mutation-testing-refactor-specialist; do
   assert_file "$project/.github/agents/$agent.agent.md"
   cmp "$repo_root/.github/agents/$agent.agent.md" \
     "$project/.github/agents/$agent.agent.md"
@@ -63,8 +77,8 @@ conflict_project="$tmp_root/conflict-project"
 write_minimal_project "$conflict_project"
 mkdir -p "$conflict_project/.github/agents"
 printf '%s\n' 'user-owned agent profile' > \
-  "$conflict_project/.github/agents/omp-mutation-test-reviewer.agent.md"
-cp "$conflict_project/.github/agents/omp-mutation-test-reviewer.agent.md" \
+  "$conflict_project/.github/agents/mutation-testing-reviewer.agent.md"
+cp "$conflict_project/.github/agents/mutation-testing-reviewer.agent.md" \
   "$tmp_root/conflict-agent.agent.md"
 cp "$conflict_project/build.gradle.kts" "$tmp_root/conflict-build.gradle.kts"
 
@@ -79,7 +93,7 @@ if [[ -e "$conflict_project/.omp" ]]; then
 fi
 
 cmp "$tmp_root/conflict-agent.agent.md" \
-  "$conflict_project/.github/agents/omp-mutation-test-reviewer.agent.md"
+  "$conflict_project/.github/agents/mutation-testing-reviewer.agent.md"
 cmp "$tmp_root/conflict-build.gradle.kts" "$conflict_project/build.gradle.kts"
 
 owned_project="$tmp_root/owned-agents"
@@ -126,4 +140,4 @@ done
 grep -Fxq 'User-owned guide' "$tmp_root/conflicting-guide/.omp/AGENT-USAGE.md"
 cmp "$tmp_root/preserved-policy" "$owned_project/AGENTS.md"
 
-echo "Copilot adapter bootstrap checks passed."
+echo "OMP and Copilot adapter bootstrap checks passed."

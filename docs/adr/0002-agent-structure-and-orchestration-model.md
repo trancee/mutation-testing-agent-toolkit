@@ -15,7 +15,7 @@ Key architectural differences:
 
 ## Decision
 
-Use 5 separate OMP agent files in `.omp/agents/`, orchestrated via a sequential handshake pattern, with the `/mutation-test` skill as a thin entry point. Copilot CLI has a corresponding native adapter with the same role boundaries and result contracts.
+Use 5 separate OMP agent files in `.omp/agents/`, orchestrated via a sequential handshake pattern, with the `/mutation-testing` skill as a thin entry point. Copilot CLI has a corresponding native adapter with the same role boundaries and result contracts.
 
 ### Adaptation boundaries
 

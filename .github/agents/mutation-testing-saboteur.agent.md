@@ -1,5 +1,5 @@
 ---
-name: omp-mutation-test-saboteur
+name: mutation-testing-saboteur
 description: Selects meaningful Kotlin mutation targets and configures mutflow annotations and Gradle dependencies for a mutation-testing run.
 tools: ["read", "search", "edit"]
 user-invocable: false

@@ -1,5 +1,5 @@
 ---
-name: omp-mutation-test-refactor-specialist
+name: mutation-testing-refactor-specialist
 description: Proposes focused Kotlin test improvements from mutation findings and applies approved test-only refactors.
 tools: ["read", "search", "edit"]
 user-invocable: false

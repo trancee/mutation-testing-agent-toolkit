@@ -10,11 +10,11 @@ import yaml
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 AGENT_DIRECTORY = REPOSITORY_ROOT / ".github" / "agents"
 EXPECTED_NAMES = {
-    "omp-mutation-test-reviewer",
-    "omp-mutation-test-saboteur",
-    "omp-mutation-test-executor",
-    "omp-mutation-test-auditor",
-    "omp-mutation-test-refactor-specialist",
+    "mutation-testing-reviewer",
+    "mutation-testing-saboteur",
+    "mutation-testing-executor",
+    "mutation-testing-auditor",
+    "mutation-testing-refactor-specialist",
 }
 ALLOWED_TOOLS = {"read", "search", "edit", "execute", "agent"}
 
@@ -43,7 +43,7 @@ def read_profile(path: Path) -> dict[str, object]:
 
 
 def main() -> None:
-    paths = sorted(AGENT_DIRECTORY.glob("omp-mutation-test-*.agent.md"))
+    paths = sorted(AGENT_DIRECTORY.glob("mutation-testing-*.agent.md"))
     profiles: dict[str, tuple[Path, dict[str, object]]] = {}
 
     for path in paths:
@@ -72,13 +72,13 @@ def main() -> None:
         unexpected = sorted(actual_names - EXPECTED_NAMES)
         fail(f"agent set mismatch; missing={missing}, unexpected={unexpected}")
 
-    reviewer_tools = profiles["omp-mutation-test-reviewer"][1]["tools"]
+    reviewer_tools = profiles["mutation-testing-reviewer"][1]["tools"]
     if "agent" not in reviewer_tools:
         fail("reviewer must be able to delegate through Copilot's agent tool")
-    if profiles["omp-mutation-test-reviewer"][1].get("user-invocable", True) is not True:
+    if profiles["mutation-testing-reviewer"][1].get("user-invocable", True) is not True:
         fail("reviewer must remain user-invocable")
 
-    for name in EXPECTED_NAMES - {"omp-mutation-test-reviewer"}:
+    for name in EXPECTED_NAMES - {"mutation-testing-reviewer"}:
         _, profile = profiles[name]
         if profile.get("user-invocable") is not False:
             fail(f"{name}: worker profiles must be programmatic-only")

@@ -1,5 +1,5 @@
 ---
-name: mutation-test
+name: mutation-testing
 description: Run mutflow-powered mutation testing on a Kotlin project via the toolkit's 5-agent OMP adapter (test-quality-reviewer orchestrator, test-saboteur, test-executor, test-auditor, test-refactor-specialist). JVM-first.
 ---
 
@@ -18,13 +18,13 @@ Runs a mutation-testing analysis on a Kotlin (JVM-first) project using mutflow a
 - `--mode deep`: Run all available mutations per selected test class. Include full redundant-group details and per-mutation killer data in the report.
 
 ```
-/mutation-test [project path] [--targets <patterns>] [--auto-approve] [--mode quick|standard|deep]
-/mutation-test setup [project path] [--kmp]
+/mutation-testing [project path] [--targets <patterns>] [--auto-approve] [--mode quick|standard|deep]
+/mutation-testing setup [project path] [--kmp]
 ```
 
 ### Setup subcommand
 
-`/mutation-test setup [project path] [--kmp]` bootstraps the entire system into a new project:
+`/mutation-testing setup [project path] [--kmp]` bootstraps the entire system into a new project:
 
 1. **`.omp/` files copied**: agents, skills, `mutation-results.gradle.kts`, `mutation-results-src/` copied to `project-path/.omp/`
 2. **`settings.gradle.kts`**: `pluginManagement` block added with `mavenCentral()` + `gradlePluginPortal()`
@@ -48,7 +48,7 @@ Runs a mutation-testing analysis on a Kotlin (JVM-first) project using mutflow a
 
 - Kotlin JVM project with Gradle
 - Java 26, Gradle 9.8.0, Kotlin 2.4.20, mutflow 1.6.0 (validated baseline)
-- For fresh projects, use `/mutation-test setup` first
+- For fresh projects, use `/mutation-testing setup` first
 
 ### mutflow architecture notes
 

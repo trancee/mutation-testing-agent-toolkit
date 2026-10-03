@@ -125,7 +125,7 @@ the CI workflow, then run:
 
 ```bash
 actionlint
-yamllint --strict .omp/skills/mutation-test/agents/openai.yaml .github/workflows/ .github/dependabot.yml
+yamllint --strict .omp/skills/mutation-testing/agents/openai.yaml .github/workflows/ .github/dependabot.yml
 ./scripts/check-markdown.sh --offline
 ```
 

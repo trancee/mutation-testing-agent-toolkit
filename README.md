@@ -30,8 +30,8 @@ annotate your sources. Choose your client from the target project:
 
 | Client | Entry point |
 |--------|-------------|
-| OMP | `/mutation-test` in OMP, or `omp mutation-test /path/to/kotlin-project` |
-| GitHub Copilot CLI | Start `copilot` and invoke `/omp-mutation-test` |
+| OMP | `/mutation-testing` in OMP, or `omp mutation-testing /path/to/kotlin-project` |
+| GitHub Copilot CLI | Start `copilot` and invoke `/mutation-testing` |
 
 The agents select targets and prepare tests before running Gradle. See
 [How to use mutation testing with Copilot CLI](docs/how-to/use-with-copilot.md).
@@ -85,5 +85,5 @@ in [AGENTS.md](AGENTS.md).
 - **Test-quality findings**: killer data supports zombie/redundancy candidates,
   not proof that a test can safely be deleted.
 
-See the [command reference](docs/reference/mutation-test-command.md) for modes
+See the [command reference](docs/reference/mutation-testing-command.md) for modes
 and constraints, and [CONTEXT.md](CONTEXT.md) for domain terminology.

@@ -8,8 +8,8 @@ authority to install, overwrite configuration, or delete tests.
 
 | Task/runtime | Read first |
 |--------------|------------|
-| OMP pipeline | [skills/mutation-test/SKILL.md](skills/mutation-test/SKILL.md), then `agents/test-quality-reviewer.md` |
-| Copilot CLI pipeline | [../.github/skills/omp-mutation-test/SKILL.md](../.github/skills/omp-mutation-test/SKILL.md), then `../.github/agents/omp-mutation-test-reviewer.agent.md` |
+| OMP pipeline | [skills/mutation-testing/SKILL.md](skills/mutation-testing/SKILL.md), then `agents/test-quality-reviewer.md` |
+| Copilot CLI pipeline | [../.github/skills/mutation-testing/SKILL.md](../.github/skills/mutation-testing/SKILL.md), then `../.github/agents/mutation-testing-reviewer.agent.md` |
 | Prepared Gradle execution | Inspect the owning module build and [mutation-results.gradle.kts](mutation-results.gradle.kts) |
 | Existing report audit | Establish the evidence contract below |
 

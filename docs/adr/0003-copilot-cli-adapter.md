@@ -15,15 +15,16 @@ provide a native Copilot workflow.
 
 Maintain a separate Copilot adapter:
 
-- `.github/skills/omp-mutation-test/` is the Copilot CLI entry point.
-- `.github/agents/omp-mutation-test-*.agent.md` defines the reviewer and four
+- `.github/skills/mutation-testing/` is the Copilot CLI entry point.
+- `.github/agents/mutation-testing-*.agent.md` defines the reviewer and four
   least-privilege worker profiles.
 - The reviewer uses Copilot's native `agent` tool; worker profiles cannot spawn
   more agents.
 - The bootstrap installs both client adapters. It refuses symlinked Copilot
   destinations and differing files with matching names before modifying the
   target.
-- OMP files and its `/mutation-test` entry point remain unchanged.
+- The OMP adapter remains separate and uses its own files and `task`/`hub`
+  dispatch protocol; the shared skill name does not couple the two clients.
 
 Both adapters preserve the same mutflow phases, result contract, and explicit
 approval requirement for deleting tests. Client-specific dispatch and profile

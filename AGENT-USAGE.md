@@ -58,8 +58,8 @@ permission to overwrite customizations.
 
 | Runtime | Load | Reviewer dispatch |
 |---------|------|-------------------|
-| OMP | [.omp/skills/mutation-test/SKILL.md](.omp/skills/mutation-test/SKILL.md) | `test-quality-reviewer` through OMP `task`/`hub` |
-| Copilot CLI | [.github/skills/omp-mutation-test/SKILL.md](.github/skills/omp-mutation-test/SKILL.md) | `omp-mutation-test-reviewer` through native `agent` |
+| OMP | [.omp/skills/mutation-testing/SKILL.md](.omp/skills/mutation-testing/SKILL.md) | `test-quality-reviewer` through OMP `task`/`hub` |
+| Copilot CLI | [.github/skills/mutation-testing/SKILL.md](.github/skills/mutation-testing/SKILL.md) | `mutation-testing-reviewer` through native `agent` |
 
 Load the selected skill and its reviewer profile; they own exact role prompts,
 mode budgets, and approval behavior. Keep client dispatch native. If profiles

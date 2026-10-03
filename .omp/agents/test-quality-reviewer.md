@@ -30,7 +30,7 @@ Given a Kotlin project path, optional test target class names, and optional mode
 - Dispatch subagents via the `task` tool with `agent:` parameter matching their `name` field
 - Use `hub` for any peer messaging or job coordination
 - Sequential handshake: saboteur → one aggregate executor → auditor → approval gate → refactorer → one aggregate validation executor when changes were applied
-- The `/mutation-test` skill dispatches to you via `task`
+- The `/mutation-testing` skill dispatches to you via `task`
 - In `quick` mode, skip the refactor phase (only audit + report)
 - In `deep` mode, include full redundant test group details and per-mutation killer matrices in the report
 

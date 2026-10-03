@@ -27,13 +27,13 @@ class Role:
 ROLES = {
     "reviewer": Role(
         ".omp/agents/test-quality-reviewer.md",
-        ".github/agents/omp-mutation-test-reviewer.agent.md",
+        ".github/agents/mutation-testing-reviewer.agent.md",
         (
             Contract(
                 "orders targeting, execution, audit, and refactoring",
                 r"Sequential handshake: saboteur → one aggregate executor → auditor → approval gate → refactorer",
-                r"1\..*omp-mutation-test-saboteur.*2\..*omp-mutation-test-executor.*"
-                r"3\..*omp-mutation-test-auditor.*4\..*omp-mutation-test-refactor-specialist",
+                r"1\..*mutation-testing-saboteur.*2\..*mutation-testing-executor.*"
+                r"3\..*mutation-testing-auditor.*4\..*mutation-testing-refactor-specialist",
             ),
             Contract(
                 "skips refactoring in quick mode",
@@ -55,7 +55,7 @@ ROLES = {
     ),
     "saboteur": Role(
         ".omp/agents/test-saboteur.md",
-        ".github/agents/omp-mutation-test-saboteur.agent.md",
+        ".github/agents/mutation-testing-saboteur.agent.md",
         (
             Contract(
                 "does not create mutation operators",
@@ -76,7 +76,7 @@ ROLES = {
     ),
     "executor": Role(
         ".omp/agents/test-executor.md",
-        ".github/agents/omp-mutation-test-executor.agent.md",
+        ".github/agents/mutation-testing-executor.agent.md",
         (
             Contract(
                 "runs one aggregate mutationResults invocation with selected class patterns",
@@ -97,7 +97,7 @@ ROLES = {
     ),
     "auditor": Role(
         ".omp/agents/test-auditor.md",
-        ".github/agents/omp-mutation-test-auditor.agent.md",
+        ".github/agents/mutation-testing-auditor.agent.md",
         (
             Contract(
                 "uses schema 2 evaluated denominator and invalidates incomplete scores",
@@ -123,7 +123,7 @@ ROLES = {
     ),
     "refactor specialist": Role(
         ".omp/agents/test-refactor-specialist.md",
-        ".github/agents/omp-mutation-test-refactor-specialist.agent.md",
+        ".github/agents/mutation-testing-refactor-specialist.agent.md",
         (
             Contract(
                 "changes test files only",

@@ -120,4 +120,4 @@ jobs:
       - name: Markdown lint + link check
         run: ./scripts/check-markdown.sh --offline
       - name: YAML lint
-        run: yamllint --strict .omp/skills/mutation-test/agents/openai.yaml .github/workflows/
+        run: yamllint --strict .omp/skills/mutation-testing/agents/openai.yaml .github/workflows/
