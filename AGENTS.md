@@ -14,4 +14,4 @@ Single-context layout: one `CONTEXT.md` + `docs/adr/` at the repo root. See `doc
 
 ### Mutation testing
 
-/mutation-test — mutflow-powered 5-agent mutation testing system for Kotlin (JVM-first). See `.omp/skills/mutation-test/SKILL.md` and `.omp/agents/` for agent definitions.
+Mutation testing has two client adapters: OMP `/mutation-test` in `.omp/skills/mutation-test/` and GitHub Copilot CLI `/omp-mutation-test` in `.github/skills/omp-mutation-test/`. Keep their five role contracts aligned; OMP agents use `task`/`hub`, while Copilot agents use `.github/agents/` and the native `agent` tool.

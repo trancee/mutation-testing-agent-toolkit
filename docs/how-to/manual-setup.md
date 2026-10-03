@@ -16,6 +16,11 @@ Copy these from the mutation testing repo into your project root:
 - `.omp/skills/mutation-test/`
 - `.omp/mutation-results.gradle.kts`
 - `.omp/mutation-results-src/`, the typed module source copied to `buildSrc/`
+- `.github/skills/omp-mutation-test/` for GitHub Copilot CLI
+- `.github/agents/omp-mutation-test-*.agent.md` for the Copilot mutation-testing roles
+
+The Copilot skill and agent files are independent of the OMP files. Keep both
+sets if users of the project need both client entry points.
 
 ## Add plugin management
 

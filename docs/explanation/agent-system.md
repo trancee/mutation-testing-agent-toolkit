@@ -18,7 +18,9 @@ The exact dispatch keys, inputs, outputs, and declared tools are listed in the [
 
 ## How work moves through the pipeline
 
-The `/mutation-test` skill sends the project and command options to the reviewer. The reviewer then coordinates four phases:
+The OMP `/mutation-test` skill sends the project and command options to the OMP
+reviewer. The Copilot CLI `/omp-mutation-test` skill sends the same contract to
+the Copilot reviewer. Each reviewer then coordinates four phases:
 
 1. The saboteur selects mutation targets and prepares their tests.
 2. Executors run the prepared test classes and collect mutflow output.
@@ -41,4 +43,12 @@ The reviewer dispatches one executor per annotated test class in a single task b
 
 The refactor specialist may write approved test refactors when `--auto-approve` is present. Deleting zombie tests or redundant groups always requires explicit approval. This boundary prevents a quality heuristic from removing tests without a human decision.
 
-For the engine model behind these constraints, see [About mutflow's compile-once meta-mutant architecture](mutflow-architecture.md). For the accepted design and alternatives, see [ADR-002](../adr/0002-agent-structure-and-orchestration-model.md).
+## Client-specific adapters
+
+OMP keeps its profiles in `.omp/agents/` and dispatches them with `task` and
+`hub`. Copilot CLI uses `.github/agents/` profiles and delegates through its
+native `agent` tool. The OMP and Copilot skill entry points are separate because
+their orchestration tools and profile formats differ; both retain the same
+targeting, execution, audit, refactor, and approval contracts.
+
+For the engine model behind these constraints, see [About mutflow's compile-once meta-mutant architecture](mutflow-architecture.md). For the OMP design and alternatives, see [ADR-002](../adr/0002-agent-structure-and-orchestration-model.md). For the Copilot adapter, see [ADR-003](../adr/0003-copilot-cli-adapter.md).

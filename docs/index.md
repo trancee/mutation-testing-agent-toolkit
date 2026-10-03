@@ -7,6 +7,7 @@
 | Learn mutation testing from scratch | [Tutorial: Your first mutation test](tutorials/first-mutation-test.md) |
 | Add mutation testing to an existing project | [Tutorial: Bootstrap an existing project](tutorials/bootstrap-existing-project.md) |
 | Set up Gradle manually without the bootstrap script | [How-to: Manual Gradle setup](how-to/manual-setup.md) |
+| Use the native GitHub Copilot CLI adapter | [How-to: Use mutation testing with Copilot CLI](how-to/use-with-copilot.md) |
 | Run mutation testing in GitHub Actions | [How-to: Run mutation testing in GitHub Actions](how-to/run-in-github-actions.md) |
 
 ## Command reference
@@ -31,6 +32,7 @@
 | How the 5 agents work together | [Explanation: Agent system architecture](explanation/agent-system.md) |
 | Engine choice | [ADR-001](adr/0001-use-mutflow-as-mutation-engine.md) |
 | Agent structure and orchestration | [ADR-002](adr/0002-agent-structure-and-orchestration-model.md) |
+| Native GitHub Copilot CLI adapter | [ADR-003](adr/0003-copilot-cli-adapter.md) |
 
 ## Domain
 
