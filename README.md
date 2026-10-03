@@ -30,6 +30,6 @@ The sample exercises every mutation strategy. Its `validateInput` method throws 
 
 ## Known limitations
 
-- **Kotlin Multiplatform (JVM-first)**: mutflow is JVM-only. The `--kmp` bootstrap flag targets JVM source sets only.
+- **Kotlin Multiplatform (JVM-first)**: `--kmp` installs the toolkit's JVM mutation-task adapter. Upstream also supports Native and JUnit 4; those adapters are not validated here.
 
 See [CONTEXT.md](CONTEXT.md) for details.

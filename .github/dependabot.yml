@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: gradle
+    directories:
+      - /sample
+      - /sample/buildSrc
+      - /.omp/mutation-results-src
+    schedule:
+      interval: weekly
+    groups:
+      compiler-coupled:
+        patterns:
+          - '*kotlin*'
+          - '*mutflow*'

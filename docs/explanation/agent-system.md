@@ -40,8 +40,9 @@ The saboteur must finish first because mutflow relies on `@MutationTarget`, `@Mu
 Each reviewer dispatches one executor for a single aggregate Gradle invocation
 covering the selected test classes. The results task reads JUnit XML from that
 same invocation and emits one JSON report. Competing Gradle processes would
-share build and JUnit result paths; mutflow's synchronized lock is JVM-local
-and cannot protect separate Gradle processes.
+share build and JUnit result paths; mutflow's session guard is JVM-local
+and cannot protect separate Gradle processes. KMP selects dedicated JVM
+mutation tasks rather than ordinary `jvmTest`.
 
 ## Why approval remains separate
 

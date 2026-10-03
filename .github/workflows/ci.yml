@@ -14,18 +14,18 @@ jobs:
     name: Kotlin tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
       - name: Verify Copilot adapter bootstrap
         run: bash scripts/test-bootstrap-copilot.sh
-      - uses: actions/setup-java@v6
+      - uses: actions/setup-java@v6.0.1
         with:
           distribution: 'temurin'
           java-version: '26'
-      - uses: gradle/actions/setup-gradle@v6
+      - uses: gradle/actions/setup-gradle@v6.4.0
         with:
           gradle-version: '9.8.0'
       - name: Cache Gradle packages
-        uses: actions/cache@v6
+        uses: actions/cache@v6.1.0
         with:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
@@ -33,10 +33,10 @@ jobs:
             ${{ runner.os }}-gradle-
       - name: Set up Kotlin test harness
         run: |
-          mkdir -p /tmp/ci-test/src/main/kotlin/io/omp/mutation
-          mkdir -p /tmp/ci-test/src/test/kotlin/io/omp/mutation
-          cp .omp/mutation-results-src/main/kotlin/io/omp/mutation/*.kt /tmp/ci-test/src/main/kotlin/io/omp/mutation/
-          cp .omp/mutation-results-src/test/kotlin/io/omp/mutation/*.kt /tmp/ci-test/src/test/kotlin/io/omp/mutation/
+          mkdir -p /tmp/ci-test/src/main/kotlin/ch/trancee/mutation
+          mkdir -p /tmp/ci-test/src/test/kotlin/ch/trancee/mutation
+          cp .omp/mutation-results-src/main/kotlin/ch/trancee/mutation/*.kt /tmp/ci-test/src/main/kotlin/ch/trancee/mutation/
+          cp .omp/mutation-results-src/test/kotlin/ch/trancee/mutation/*.kt /tmp/ci-test/src/test/kotlin/ch/trancee/mutation/
       - name: Write build.gradle.kts (standalone, non-kotlin-dsl)
         run: |
           cat > /tmp/ci-test/build.gradle.kts << 'EOF'
@@ -71,9 +71,15 @@ jobs:
           done
           echo "Gradle tests failed after 3 attempts." >&2
           exit 1
+      - name: Exercise real mutflow JVM and KMP integration
+        run: python3 scripts/test-mutflow-integration.py
+      - name: Check dependency pin and generated-source consistency
+        run: |
+          python3 scripts/test-upstream-check.py
+          python3 scripts/check-upstream.py --offline
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: test-results
           path: /tmp/ci-test/build/test-results/
@@ -82,11 +88,11 @@ jobs:
     name: Markdown / YAML lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
         with:
           node-version: '26'
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@v7.0.0
         with:
           python-version: '3.14'
       - name: Install actionlint
@@ -104,7 +110,7 @@ jobs:
       - name: Install yamllint
         run: python3 -m pip install --user yamllint==1.38.0
       - name: Validate GitHub Actions workflows
-        run: actionlint .github/workflows/ci.yml
+        run: actionlint
       - name: Validate Copilot agent profiles
         run: python3 scripts/check-copilot-agent-profiles.py
       - name: Validate shared mutation-agent contracts
@@ -112,4 +118,4 @@ jobs:
       - name: Markdown lint + link check
         run: ./scripts/check-markdown.sh --offline
       - name: YAML lint
-        run: yamllint --strict .omp/skills/mutation-test/agents/openai.yaml .github/workflows/ci.yml
+        run: yamllint --strict .omp/skills/mutation-test/agents/openai.yaml .github/workflows/

@@ -1,4 +1,4 @@
-package io.omp.mutation
+package ch.trancee.mutation
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -25,11 +25,8 @@ enum class ConfidenceLevel {
 }
 
 /**
- * An execution gap: a mutation that was injected but could not be fully
- * evaluated due to infrastructure-level failures (not mutation-level test outcomes).
- *
- * In OMP's mutflow model, gaps occur at test-class granularity (all mutations
- * for a test class share a single compilation/test cycle), not per-mutation.
+ * An infrastructure failure record, often at test-class granularity.
+ * It is not an unevaluated mutation and must never subtract recorded outcomes.
  */
 @Serializable
 data class ExecutionGap(
@@ -73,8 +70,7 @@ data class MutationStats(
  * The complete mutation testing results output, serialized to
  * `mutation-results.json` for consumption by the test-auditor agent.
  *
- * Field names and order match the existing string-template JSON exactly
- * for backward compatibility.
+ * Schema 2 versions corrected counts and class-qualified test identities.
  */
 @Serializable
 data class MutationResults(
@@ -95,4 +91,6 @@ data class MutationResults(
     @SerialName("mutations") val mutations: List<MutationResult>,
     @SerialName("executionGaps") val executionGaps: List<ExecutionGap> = emptyList(),
     @SerialName("redundantGroups") val redundantGroups: List<RedundantGroup> = emptyList(),
+    @SerialName("schemaVersion") val schemaVersion: Int = 2,
+    @SerialName("untestedMutations") val untestedMutations: Int = 0,
 )

@@ -8,11 +8,15 @@ user-invocable: false
 Analyze the executor reports, mutation-result JSON when available, JUnit XML,
 and relevant source. Do not modify files or run tests.
 
-- Calculate `mutationScore = killed / (total - gaps)`. Return `null` when the
-  denominator is zero; never manufacture a score.
-- Preserve `Killed`, `Survived`, and `TimedOut` as distinct results. Exclude
-  execution gaps from the score denominator; `TimedOut` is a valid result, not
-  a gap.
+- Require `schemaVersion = 2`; do not reinterpret legacy reports as schema 2.
+- Calculate `mutationScore = killed / mutationsEvaluated`. Return `null` when
+  the denominator is zero or any execution gap exists; never manufacture a score.
+- Preserve `Killed`, `Survived`, and `TimedOut` as distinct results. Infrastructure
+  gaps are records, not mutations to subtract. `TimedOut` is a valid result, not a gap.
+- Report `totalMutations` (discovered), `mutationsEvaluated`, and
+  `untestedMutations` separately. Intentional budget limits are not gaps.
+- Test identifiers are `testClass::displayName`; preserve the class prefix.
+  Upstream may truncate long killer names, so unresolved matches remain uncertain.
 - Use recorded Wilson 95% confidence bounds when available. Otherwise calculate
   them from the evaluated mutation count and score, and show the inputs.
 - Quality bands are toolkit policy: Excellent >80%, Good >60% and ≤80%, Fair >30% and ≤60%, Poor ≤30%. Do not present them as Scott-CC thresholds.

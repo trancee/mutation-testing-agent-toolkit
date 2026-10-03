@@ -1,146 +1,103 @@
-/**
- * Custom Gradle task: mutationResults
- *
- * Thin adapter that delegates to the typed MutationResults module in buildSrc.
- *
- * Usage in build.gradle.kts:
- *   apply(plugin = "io.github.anschnapp.mutflow")
- *   apply(from = rootProject.file(".omp/mutation-results.gradle.kts"))
- *
- * Output: build/reports/mutation-results.json
- *
- * mutflow's @MutFlowTest JUnit extension runs baseline (run 0) + mutation runs (run 1+)
- * internally. Each mutation run prints MutationTestingSummary to stdout.
- * Gradle captures stdout in JUnit XML's <system-out> elements.
- *
- * The typed data model, pure parsing functions, and JSON serialization live in
- * buildSrc (see .omp/mutation-results-src/). This task only collects JUnit XML
- * files, delegates to the parser, and writes the JSON output.
- */
-
-import io.omp.mutation.MutationResultsParser
-import io.omp.mutation.MutationResultsSerializer
-import io.omp.mutation.MutationResults
+import ch.trancee.mutation.ExecutionGap
+import ch.trancee.mutation.JUnitMutationReportReader
+import ch.trancee.mutation.MutationResultsParser
+import ch.trancee.mutation.MutationResultsSerializer
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Property
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.testing.Test
-import java.io.File
-import java.util.regex.Pattern
 
-val mutationTestIncludes = providers.gradleProperty("mutationTest.includes")
-    .orNull
-    ?.split(',')
-    ?.map(String::trim)
-    ?.filter(String::isNotEmpty)
-    .orEmpty()
-
-// Configure test to capture stdout in JUnit XML (mutflow prints to stdout)
-tasks.withType<Test>().configureEach {
-    testLogging {
-        showStandardStreams = true
-        events("passed", "skipped", "failed")
-    }
-    reports {
-        junitXml.required.set(true)
-    }
-    if (mutationTestIncludes.isNotEmpty()) {
-        filter {
-            mutationTestIncludes.forEach { includeTestsMatching(it) }
-        }
-    }
+val includesProperty = providers.gradleProperty("mutationTest.includes").orNull
+val mutationTestIncludes = includesProperty?.split(',')?.map(String::trim).orEmpty()
+require(includesProperty == null || mutationTestIncludes.all { it.isNotEmpty() }) {
+    "mutationTest.includes must contain nonempty comma-separated Gradle test patterns"
 }
 
-tasks.register<MutationResultsTask>("mutationResults") {
+val mutationResults = tasks.register<MutationResultsTask>("mutationResults") {
     group = "verification"
-    description = "Runs mutflow mutation tests and outputs structured JSON results"
-    dependsOn(tasks.matching { it.name == "test" })
-    project.gradle.taskGraph.whenReady {
-        val testTask = project.tasks.findByName("test")
-        if (testTask is Test) {
-            testTask.ignoreFailures = true
+    description = "Writes schema 2 mutation results from current JVM JUnit reports"
+}
+val prepareMutationResults = tasks.register("prepareMutationResults") {
+    doLast {
+        delete(mutationResults.get().resultsFile.get().asFile)
+    }
+}
+tasks.matching { it.name.startsWith("compile") }.configureEach {
+    mustRunAfter(prepareMutationResults)
+}
+
+// KMP creates its dedicated mutation tasks after evaluation.
+afterEvaluate {
+    val isKmp = plugins.hasPlugin("org.jetbrains.kotlin.multiplatform")
+    val selectedTests = tasks.withType<Test>().matching {
+        if (isKmp) it.name.startsWith("mutflow") && it.name.endsWith("Test") else it.name == "test"
+    }
+    require(!selectedTests.isEmpty()) {
+        "No supported JVM mutation test task found; enable mutflow and configure a JVM target"
+    }
+    selectedTests.configureEach {
+        dependsOn(prepareMutationResults)
+        useJUnitPlatform()
+        reports.junitXml.required.set(true)
+        testLogging.showStandardStreams = true
+        mutationTestIncludes.forEach { filter.includeTestsMatching(it) }
+    }
+    gradle.taskGraph.whenReady {
+        if (hasTask(mutationResults.get())) {
+            // Allow XML collection, then restore the failure exit status after writing JSON.
+            selectedTests.forEach { it.ignoreFailures = true }
         }
+    }
+    mutationResults.configure {
+        dependsOn(selectedTests)
+        junitReports.from(selectedTests.map { it.reports.junitXml.outputLocation.get().asFile })
     }
 }
 
 open class MutationResultsTask : DefaultTask() {
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    val junitReports: ConfigurableFileCollection = project.objects.fileCollection()
 
     @get:OutputFile
     val resultsFile: RegularFileProperty = project.objects.fileProperty()
         .convention(project.layout.buildDirectory.file("reports/mutation-results.json"))
 
-    @get:Input
-    val testTaskName: Property<String> = project.objects.property(String::class.java)
-        .convention("test")
-
-
     @TaskAction
     fun generateResults() {
-        val buildDir = project.layout.buildDirectory.get().asFile
-        val resultsDir = File(buildDir, "test-results/test")
-
-        // Collect all JUnit XML files — they contain <system-out> with mutflow output
-        val allStdout = StringBuilder()
-        val testMethods = mutableSetOf<String>()
-
-        val xmlFiles = if (resultsDir.exists()) {
-            resultsDir.walkTopDown()
-                .filter { it.isFile && it.name.startsWith("TEST-") && it.extension == "xml" }
-                .onEach { xmlFile ->
-                    val content = xmlFile.readText()
-                    val testcasePattern = Pattern.compile("""<testcase[^>]*\bname="([^"]+)""")
-                    val tcMatcher = testcasePattern.matcher(content)
-                    while (tcMatcher.find()) {
-                        testMethods.add(tcMatcher.group(1))
-                    }
-                    val sysoutPattern = Pattern.compile("<system-out>(.*?)</system-out>", Pattern.DOTALL)
-                    val soMatcher = sysoutPattern.matcher(content)
-                    while (soMatcher.find()) {
-                        allStdout.append(soMatcher.group(1)).append("\n")
-                    }
-                }
-                .toList()
-        } else {
-            emptyList()
-        }
-
-        val stdout = allStdout.toString()
-
-        // Detect build-level gaps (compilation failure, IR transform error, etc.)
-        val buildLevelGaps = mutableListOf<io.omp.mutation.ExecutionGap>()
+        val xmlFiles = junitReports.files.flatMap { directory ->
+            directory.walkTopDown().filter {
+                it.isFile && it.name.startsWith("TEST-") && it.extension == "xml"
+            }.toList()
+        }.sortedBy { it.absolutePath }
+        val reports = xmlFiles.map(JUnitMutationReportReader::read)
+        val gaps = reports.flatMap { it.gaps }.toMutableList()
         if (xmlFiles.isEmpty()) {
-            val testTask = project.tasks.findByName(testTaskName.get())
-            val gradleExitCode = if (testTask?.state?.failure != null) 1 else null
-            buildLevelGaps.add(io.omp.mutation.ExecutionGap(
-                type = "COMPILATION_FAILURE",
-                reason = "No JUnit XML files found — likely compilation error or IR transformation error",
-                gradleExitCode = gradleExitCode,
-            ))
+            gaps += ExecutionGap("NO_OUTPUT", "No current JUnit XML reports were produced")
         }
-
-        // Delegate to typed module — pure functions, no Gradle dependency
-        val mutations = MutationResultsParser.parseMutflowSummary(stdout)
-        val gaps = MutationResultsParser.detectGaps(stdout, mutations, buildLevelGaps)
-        val sortedTestMethods = testMethods.sorted()
         val results = MutationResultsParser.assembleResults(
-            mutations = mutations,
-            testMethods = sortedTestMethods,
+            mutations = reports.flatMap { it.mutations },
+            testMethods = reports.flatMap { it.testMethods }.distinct().sorted(),
             gaps = gaps,
+            discoveredMutations = reports.sumOf { it.discoveredMutations },
         )
-        val json = MutationResultsSerializer.toJson(results)
-
-        resultsFile.get().asFile.parentFile.mkdirs()
-        resultsFile.get().asFile.writeText(json)
-
+        resultsFile.get().asFile.apply {
+            parentFile.mkdirs()
+            writeText(MutationResultsSerializer.toJson(results))
+        }
         logger.lifecycle("Mutation results written to: ${resultsFile.get().asFile}")
-        val scoreStr = results.mutationScore?.let { String.format("%.1f%%", it * 100) } ?: "N/A"
-        logger.lifecycle("  Score: $scoreStr (${results.qualityBand}, ${results.confidence} confidence)")
+        val score = results.mutationScore?.let { "${it * 100}%" } ?: "N/A"
+        logger.lifecycle("  Score: $score")
         logger.lifecycle("  Killed: ${results.killed}, Survived: ${results.survived}, Timed out: ${results.timedOut}")
-        if (results.gaps > 0) {
-            logger.lifecycle("  Gaps: ${results.gaps} (${results.executionGaps.joinToString { it.type }})")
+        logger.lifecycle("  Evaluated: ${results.mutationsEvaluated}, Untested: ${results.untestedMutations}, Gaps: ${results.gaps}")
+        if (reports.any { it.hasTestFailures } || gaps.isNotEmpty()) {
+            throw GradleException("Mutation run failed or was incomplete; inspect mutation-results.json and JUnit XML")
         }
     }
 }

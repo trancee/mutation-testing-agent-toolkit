@@ -20,7 +20,7 @@ Given a Kotlin project path, optional test target class names, and optional mode
 
 1. **Saboteur phase**: Dispatch `test-saboteur` with the selected test-class patterns and mode. It analyzes source code, adds `@MutationTarget`/`@MutFlowTest`, applies the mode's per-class `maxRuns`, adds applicable suppressions, and configures mutflow.
 2. **Executor phase**: Dispatch exactly one `test-executor` to run `./gradlew [-PmutationTest.includes=<patterns>] mutationResults` once for the selected classes. Do not launch per-class Gradle processes in parallel: they share build and JUnit report paths, and mutflow's lock is JVM-local. mutflow's JUnit 6 extension handles baseline + mutation runs internally.
-3. **Audit phase**: Dispatch `test-auditor` to analyze the aggregate JSON report and JUnit XML. Calculate mutation score (`killed / (total - gaps)`), identify evidence-qualified zombie candidates, detect execution gaps, compute redundant test groups, and determine toolkit quality bands.
+3. **Audit phase**: Dispatch `test-auditor` to analyze schema 2 JSON and JUnit XML. Score is `killed / mutationsEvaluated`, or null for gaps/zero evaluations. Preserve discovered and untested totals and class-qualified identities.
 4. **Refactor phase**: Dispatch `test-refactor-specialist` to review flagged issues and generate improved test code.
 5. **Approval gate**: If `--auto-approve` is set, the specialist may apply additive or assertion-level test changes directly (still prints diffs). Deletion or consolidation of tests always requires explicit user approval. After any applied refactor, dispatch one executor to rerun the same aggregate task and report the validation result; a failed or incomplete rerun means the refactor is unverified.
 6. **Final report**: Synthesize auditor's analysis (mutation score, quality band, confidence, CI, gaps, redundant groups) with refactorer's suggestions. If mode is `deep`, include full redundant test group details and per-mutation killer matrices.
@@ -36,9 +36,10 @@ Given a Kotlin project path, optional test target class names, and optional mode
 
 ## mutflow architecture awareness
 
-- mutflow is JVM-only (no KMP/JS/Native support in v1)
+- The toolkit validates JVM/JUnit 6 and KMP JVM. Upstream supports Native and JUnit 4 too; do not claim those paths are implemented here.
+- KMP runs dedicated `mutflow<Target>Test` tasks through `mutationResults`; the budget is DSL `maxMutationRuns` (10/30/unlimited), not common-test JUnit annotations.
 - mutflow injects mutations during test-only compilation; production artifacts stay clean
-- mutflow's synchronized lock is JVM-local; it does not serialize separate Gradle processes
+- mutflow's overlap guard is JVM-local; it does not coordinate separate Gradle processes
 - mutflow's JUnit extension runs baseline (run 0) then mutation runs (run 1+) internally
 - One aggregate Gradle execution for all selected test classes; do not run competing Gradle invocations against shared result paths
 - mutflow reports `Killed(testNames: Set<String>)` (all killers), `Survived` (zombie mutation), `TimedOut`
@@ -47,7 +48,7 @@ Given a Kotlin project path, optional test target class names, and optional mode
 
 After all phases complete, produce a final report:
 
-- Mutation score (killed / (total - gaps)) with quality band (Excellent/Good/Fair/Poor), or null when no mutations are evaluable
+- Mutation score (killed / mutationsEvaluated) with quality band (Excellent/Good/Fair/Poor), or null when gaps exist or no mutations are evaluable
 - Confidence level (based on mutation count)
 - 95% Wilson score confidence intervals (confidenceIntervalLow, confidenceIntervalHigh)
 - Execution gaps detected (type, reason, gradleExitCode)

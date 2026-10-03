@@ -18,10 +18,10 @@ Given the project path, results from test-executor agents (stdout and JUnit XML,
    - Survived mutations (mutations not caught by this run)
    - Timed-out mutations
    - Full `testKillerMatrix`: map of test name → list of mutation source locations it killed
-2. **Calculate mutation score**: `killed / (total - gaps)`. Returns a ratio (0.0–1.0), not a percentage. Returns `null` when no mutations are evaluable (denominator is 0 — never manufacture a score).
-3. **Execution gap reporting**: Use `executionGaps` from the JSON artifact when available and include gaps reported by executors. If the JSON artifact is absent, rely on the executor's gap evidence; do not infer missing gap records. Gaps are detected at per-test-class granularity (mutations for a test class share an instrumented test compilation). Gap types: `NO_OUTPUT` (empty stdout), `PARTIAL_RUN` (footer count mismatch), `COMPILATION_FAILURE` (no JUnit XML — may include IR transformation errors), `BACKSTOP_TIMEOUT` (15-min backstop). They are excluded from the score denominator. **Note:** `TimedOut` is NOT a gap — it's a valid result where mutflow detected an infinite loop.
+2. **Calculate mutation score**: Require `schemaVersion = 2`; do not reinterpret legacy reports. Use `killed / mutationsEvaluated`. Returns a ratio (0.0–1.0), not a percentage. Returns `null` when no mutations are evaluable or any execution gap exists. Infrastructure gap records never subtract evaluated mutations. Report discovered `totalMutations`, `mutationsEvaluated`, and `untestedMutations` separately; budget-limited untested mutations are not gaps.
+3. **Execution gap reporting**: Preserve `executionGaps` and executor evidence. Types include `NO_OUTPUT`, `PARTIAL_RUN` (actual upstream tested counter mismatch), `TEST_FAILURE` (baseline/ordinary failure), `COMPILATION_FAILURE`, and `BACKSTOP_TIMEOUT`. Do not trust a pre-existing report after a compilation failure. **Note:** `TimedOut` is NOT a gap — it is a valid mutation result.
 4. **Confidence intervals**: Read `confidenceIntervalLow` and `confidenceIntervalHigh` from the JSON artifact. These are Wilson score 95% confidence intervals for the mutation score proportion (z=1.96). When `mutationScore` is `null`, both CI bounds are also `null`.
-5. **Redundant test group detection**: Read the `redundantGroups` field from the JSON artifact (pre-computed by the Kotlin module). Each group has `tests`, `count`, and `failureSignature` (array of mutation source locations shared across the group). Provide semantic pattern descriptions for each group (e.g., "All tests validate boundary values for Calculator.isPositive — consolidate into a parameterized test").
+5. **Redundant test group detection**: Read `redundantGroups`. Each group has class-qualified `tests`, their `count`, and `failureSignature` composite mutation keys (`sourceLocation:originalOperator->variantOperator`). Interpret equivalent killer signatures as review candidates, not proof of semantic redundancy; any consolidation needs explicit approval.
 6. **Quality bands**:
    - Excellent: >80%
    - Good: >60% and ≤80%
@@ -39,13 +39,14 @@ Given the project path, results from test-executor agents (stdout and JUnit XML,
 
 ## Known limitations
 
-- Display name normalization: JUnit XML `name` attributes give method names (e.g., `testValidateInput`), while JUnit 5 `context.displayName` may add `()` suffix (e.g., `testValidateInput()`). Normalize by stripping the trailing `()`.
+- Schema 2 identifiers are `testClass::displayName`; preserve the class prefix during normalization. JUnit display names can differ from method names, and upstream may truncate long killer names. Do not claim exact zombie or redundancy evidence for unresolved identities.
 - Surviving mutations still require manual investigation to determine if the mutation is genuinely untested or if the test is over-mocked.
 
 ## Output format
 
 ```json
 {
+  "schemaVersion": 2,
   "generatedAt": 1700000000000,
   "mutationScore": 0.85,
   "qualityBand": "Excellent",
@@ -56,6 +57,7 @@ Given the project path, results from test-executor agents (stdout and JUnit XML,
   "timedOut": 1,
   "gaps": 0,
   "mutationsEvaluated": 20,
+  "untestedMutations": 0,
   "confidenceIntervalLow": 0.65,
   "confidenceIntervalHigh": 0.95,
   "survivingMutations": ["(Calculator.kt:5) > → >=", ...],

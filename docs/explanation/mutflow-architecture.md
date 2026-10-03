@@ -43,12 +43,23 @@ out that mutation.
 3. **JUnit orchestrates the test runs.** `@MutFlowTest` supplies the test
    integration, and `MutFlow.underTest { }` marks the code whose mutations are
    activated.
-4. **Execution is serialized within a JVM.** The registry permits one active
-   mutation session at a time in a JVM. Executors may be dispatched together,
-   but mutation sessions wait for the registry lock.
+4. **Do not overlap sessions within a JVM.** Upstream guards overlapping sessions;
+   separate test JVMs are independent. The toolkit uses one aggregate Gradle
+   invocation rather than competing processes sharing output directories.
 5. **The results task reads test reports.** The toolkit's `mutationResults`
    task captures mutflow output from JUnit XML and serializes mutation results,
    gaps, per-test killer data, and redundant groups.
+
+Plain JVM uses `test`; KMP JVM uses dedicated `mutflow<Target>Test` tasks,
+with compiler-synthesized annotations on common tests. Upstream additionally
+supports Kotlin/Native and JUnit 4. Those engines are not yet toolkit adapters.
+
+The schema 2 results task declares its XML inputs, so changed tests and filters
+invalidate cached JSON. It collects test failures before restoring a failing
+Gradle exit status; baseline failures invalidate aggregate scores, whereas
+strict survivors and mutation timeouts remain recorded mutation outcomes.
+Compilation or discovery failures may prevent report generation, so executors
+must not reuse a report from a prior invocation.
 
 For agent responsibilities and phase ordering, see [About the
 mutation-testing agent system](agent-system.md). For the version decision and

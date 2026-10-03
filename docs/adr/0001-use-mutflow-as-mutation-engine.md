@@ -42,9 +42,9 @@ Use **mutflow** as the mutation engine.
 
 ### Negative
 
-- Non-JVM targets: Kotlin Multiplatform projects can mutate JVM source sets only. Kotlin/JS and Kotlin/Native are unsupported. Supporting them requires changes to the Gradle and compiler plugins.
+- Toolkit scope: JVM/JUnit 6 and KMP JVM mutation tasks are supported here. Upstream 1.6.0 also supports Native and JUnit 4; integrating those paths requires toolkit adapters and validation, not a claim that upstream lacks them.
 - No LLM-guided mutations: all operators are predefined and static. LLM serves as targeting specialist (suppression annotations), not as a mutation generator
-- Per-JVM synchronized lock: one active mutation session runs at a time inside each JVM.
+- Per-JVM overlap guard: avoid overlapping active sessions inside one JVM; separate JVMs are independent.
 
 ### Current engine baseline
 

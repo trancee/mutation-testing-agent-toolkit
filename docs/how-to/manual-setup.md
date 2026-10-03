@@ -58,17 +58,29 @@ apply(from = rootProject.file(".omp/mutation-results.gradle.kts"))
 
 ## Set up the typed results module (buildSrc)
 
-The mutation-results task delegates to a typed Kotlin module in `buildSrc/`. Copy the module source and generate the build file:
+The mutation-results task delegates to `ch.trancee.mutation` in `buildSrc/`.
+For a new `buildSrc`, copy the source and build template:
 
 ```bash
-mkdir -p buildSrc/src/main/kotlin/io/omp/mutation
-mkdir -p buildSrc/src/test/kotlin/io/omp/mutation
-cp .omp/mutation-results-src/main/kotlin/io/omp/mutation/*.kt buildSrc/src/main/kotlin/io/omp/mutation/
-cp .omp/mutation-results-src/test/kotlin/io/omp/mutation/*.kt buildSrc/src/test/kotlin/io/omp/mutation/
+mkdir -p buildSrc/src/main/kotlin/ch/trancee/mutation
+mkdir -p buildSrc/src/test/kotlin/ch/trancee/mutation
+cp .omp/mutation-results-src/main/kotlin/ch/trancee/mutation/*.kt buildSrc/src/main/kotlin/ch/trancee/mutation/
+cp .omp/mutation-results-src/test/kotlin/ch/trancee/mutation/*.kt buildSrc/src/test/kotlin/ch/trancee/mutation/
 cp .omp/mutation-results-src/build.gradle.kts buildSrc/build.gradle.kts
 ```
 
-The `buildSrc/build.gradle.kts` template applies the `kotlin-dsl` plugin with `kotlinx-serialization` and depends on `kotlinx-serialization-json`. Adjust the Kotlin and serialization versions to match your project.
+The template applies Kotlin JVM and serialization plugins, not `kotlin-dsl`.
+For an existing `buildSrc`, merge its dependencies and source files instead of
+overwriting the build. mutflow 1.6.0 requires Kotlin 2.4.20; do not independently
+upgrade or downgrade the compiler. Bootstrap rejects unknown alias/catalog
+versions, nonstandard plugin-block layouts, and user-owned `buildSrc` builds;
+configure those manually.
+
+For installations using `io.omp.mutation`, replace the toolkit-owned source
+directories with the new `ch/trancee/mutation` copies and update the results
+script together. Preserve all unrelated sources and convention plugins. Schema 2
+changes score/count semantics and test identities; migrate consumers using the
+[results reference](../reference/mutation-results-format.md#compatibility).
 
 ## Add test dependencies
 
@@ -79,6 +91,10 @@ JUnit 6 integration automatically:
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.3")
     testImplementation("org.junit.platform:junit-platform-launcher:6.1.3")
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 ```
 
@@ -95,3 +111,22 @@ mutflow {
 ## Annotate your code
 
 Add `@MutationTarget` to business-logic classes and `@MutFlowTest` to test classes. The `test-saboteur` agent handles this automatically when you run `/mutation-test`. To do it by hand, see the [bootstrap tutorial](../tutorials/bootstrap-existing-project.md) for the annotation patterns.
+
+## Configure KMP JVM projects
+
+Use the same plugin and results script with a `kotlin("multiplatform")` project
+and a JVM target. Put `kotlin("test")` in `commonTest` dependencies. Keep common
+tests free of JUnit annotations; upstream synthesizes `@MutFlowTest` in its
+mutated JVM compilation. `targets` contains production class/file patterns,
+not source-set or task names.
+
+```kotlin
+mutflow {
+    enabled = true
+    maxMutationRuns = 30
+}
+```
+
+Run `gradle mutationResults`; the adapter selects dedicated `mutflow<Target>Test`
+tasks and their report directories. Normal `jvmTest` is not a mutation run.
+This toolkit does not collect Native or JUnit 4 results.

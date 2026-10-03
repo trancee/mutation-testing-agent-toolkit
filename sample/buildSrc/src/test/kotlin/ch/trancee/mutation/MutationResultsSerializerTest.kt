@@ -1,4 +1,4 @@
-package io.omp.mutation
+package ch.trancee.mutation
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
@@ -155,7 +155,9 @@ class MutationResultsSerializerTest {
         assertNotNull(parsed["gaps"])
         assertEquals(1, parsed["gaps"]!!.jsonPrimitive.int)
         assertNotNull(parsed["mutationsEvaluated"])
-        assertEquals(1, parsed["mutationsEvaluated"]!!.jsonPrimitive.int)
+        assertEquals(2, parsed["mutationsEvaluated"]!!.jsonPrimitive.int)
+        assertEquals(2, parsed["schemaVersion"]!!.jsonPrimitive.int)
+        assertEquals(JsonNull, parsed["mutationScore"])
         assertNotNull(parsed["confidenceIntervalLow"])
         assertNotNull(parsed["confidenceIntervalHigh"])
         assertNotNull(parsed["executionGaps"])
@@ -184,6 +186,31 @@ class MutationResultsSerializerTest {
     }
 
     @Test
+    fun `budgeted schema two report serializes untested counts and qualified session identity`() {
+        val mutation = MutationResult(
+            "Calc.kt:1", ">", ">=", MutationResultType.Killed,
+            "example.CalcTest::boundary()", listOf("example.CalcTest::boundary()"),
+            testClass = "example.CalcTest",
+        )
+        val results = MutationResultsParser.assembleResults(
+            listOf(mutation), listOf("example.CalcTest::boundary()"),
+            generatedAt = 1700000000000L, discoveredMutations = 4,
+        )
+
+        val parsed = testJson.parseToJsonElement(MutationResultsSerializer.toJson(results)).jsonObject
+
+        assertEquals(2, parsed["schemaVersion"]!!.jsonPrimitive.int)
+        assertEquals(4, parsed["totalMutations"]!!.jsonPrimitive.int)
+        assertEquals(1, parsed["mutationsEvaluated"]!!.jsonPrimitive.int)
+        assertEquals(3, parsed["untestedMutations"]!!.jsonPrimitive.int)
+        assertEquals("example.CalcTest",
+            parsed["mutations"]!!.jsonArray.single().jsonObject["testClass"]!!.jsonPrimitive.content)
+        assertEquals(listOf("Calc.kt:1"),
+            parsed["testKillerMatrix"]!!.jsonObject["example.CalcTest::boundary()"]!!
+                .jsonArray.map { it.jsonPrimitive.content })
+    }
+
+    @Test
     fun `null mutationScore when all mutations are gaps`() {
         val mutations = listOf(
             MutationResult("(Calc.kt:7)", ">", ">=", MutationResultType.Survived),
@@ -197,9 +224,9 @@ class MutationResultsSerializerTest {
         val json = MutationResultsSerializer.toJson(results)
         val parsed = testJson.parseToJsonElement(json).jsonObject
 
-        // mutationScore should be null (0 evaluated mutations)
+        // Gaps invalidate the score, not recorded mutation outcomes.
         assertEquals(JsonNull, parsed["mutationScore"])
-        assertEquals(0, parsed["mutationsEvaluated"]!!.jsonPrimitive.int)
+        assertEquals(1, parsed["mutationsEvaluated"]!!.jsonPrimitive.int)
         assertEquals(1, parsed["gaps"]!!.jsonPrimitive.int)
     }
 }

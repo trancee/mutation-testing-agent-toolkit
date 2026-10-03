@@ -1,4 +1,4 @@
-package io.omp.mutation
+package ch.trancee.mutation
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -18,6 +18,7 @@ data class MutationResult(
     @SerialName("result") val result: MutationResultType,
     @SerialName("killedByTest") val killedByTest: String? = null,
     @SerialName("killedByTests") val killedByTests: List<String> = emptyList(),
+    @SerialName("testClass") val testClass: String? = null,
 )
 
 /**

@@ -1,6 +1,6 @@
 ---
 name: omp-mutation-test-executor
-description: Runs one mutflow-annotated Kotlin test class and captures Gradle, JUnit XML, and mutation-result evidence without changing source files.
+description: Runs selected JVM mutation tests in one aggregate Gradle invocation and captures JUnit XML and schema 2 evidence without changing source files.
 tools: ["read", "search", "execute"]
 user-invocable: false
 ---
@@ -15,7 +15,12 @@ classes in the requested Kotlin project. Do not edit source or test files.
    JSON report from their JUnit XML. This is an aggregate report task, not a
    per-class replacement.
 2. Capture the Gradle exit status, mutation summary, JUnit XML paths, and
-   `mutation-results.json` path when present.
+   `mutation-results.json` path when present. KMP uses dedicated
+   `mutflow<Target>Test` report directories, not ordinary `jvmTest`.
+   Require schema 2 JSON from this run. Never use stale JSON after a compilation
+   or discovery failure. The results task writes current JSON before failing
+   for test failures; strict survivors and timeouts can have valid reports
+   despite nonzero exit. Ordinary/baseline failures are `TEST_FAILURE` gaps.
 3. Report execution gaps separately:
    - nonzero build failure before tests ran: `COMPILATION_FAILURE`
    - missing JUnit XML: `COMPILATION_FAILURE`
@@ -27,7 +32,8 @@ classes in the requested Kotlin project. Do not edit source or test files.
 
 Do not run one Gradle process per class or in parallel: Gradle build outputs and
 JUnit result directories are shared, while mutflow's synchronization lock is
-JVM-local. mutflow may swallow failures during mutation runs, so all tests can appear passed
-in JUnit XML. Use mutflow's mutation summary for `Killed`, `Survived`, and
+JVM-local. Mutflow swallows assertions when mutations are killed; strict
+survivors, timeouts, and baseline failures remain failures in XML.
+Use mutflow's mutation summary for `Killed`, `Survived`, and
 `TimedOut` results. Return the test class, command, exit status, result paths,
 and any execution gaps.

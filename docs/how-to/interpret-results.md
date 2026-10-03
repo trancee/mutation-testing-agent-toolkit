@@ -30,8 +30,13 @@ mutflow prints a summary after all runs:
 ## Step 2: Calculate your mutation score
 
 ```
-mutation score = killed / (total - gaps)
+mutation score = killed / mutationsEvaluated
 ```
+
+For schema 2, first check the run's exit status and `executionGaps`. Any gap or
+zero evaluated mutations makes the score null. Gap records never subtract
+recorded outcomes. Check `untestedMutations` too: a high score on a budgeted run
+does not mean every discovered mutation was tested.
 
 The mutation score is a fraction (0.0–1.0). For the quality bands (Excellent / Good / Fair / Poor) and the recommended action at each level, see [Quality bands in the mutation results reference](../reference/mutation-results-format.md#quality-bands).
 

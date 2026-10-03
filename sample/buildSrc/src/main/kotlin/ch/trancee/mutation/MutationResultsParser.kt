@@ -1,4 +1,4 @@
-package io.omp.mutation
+package ch.trancee.mutation
 
 import java.util.regex.Pattern
 
@@ -90,8 +90,8 @@ object MutationResultsParser {
      * Calculates mutation score, quality band, confidence level, confidence interval,
      * and totals from parsed mutation results, accounting for execution gaps.
      *
-     * Score = killed / (total - gaps). Returns null score when denominator is 0
-     * (mirrors Scott-CC's "never manufacture a score" principle).
+     * Score = killed / evaluated. Infrastructure gaps never subtract evaluated
+     * mutations; any gap makes the aggregate score and interval unavailable.
      *
      * Confidence interval uses the Wilson score interval (appropriate for proportions,
      * especially near 0 or 1 where the normal approximation degrades).
@@ -104,8 +104,9 @@ object MutationResultsParser {
         val killed = mutations.count { it.result == MutationResultType.Killed }
         val survived = mutations.count { it.result == MutationResultType.Survived }
         val timedOut = mutations.count { it.result == MutationResultType.TimedOut }
-        val evaluated = maxOf(0, total - gaps)
-        val score: Double? = if (evaluated > 0) killed.toDouble() / evaluated else null
+        require(gaps >= 0) { "Execution gap count must be nonnegative" }
+        val evaluated = total
+        val score: Double? = if (evaluated > 0 && gaps == 0) killed.toDouble() / evaluated else null
 
         val band = score?.let { s ->
             when {
@@ -222,7 +223,7 @@ object MutationResultsParser {
      *
      * Two gap types are detectable from stdout + parsed mutations:
      * - [ExecutionGap] with type "NO_OUTPUT" — stdout is empty or no mutations parsed
-     * - "PARTIAL_RUN" — mutflow's summary footer reports more mutations than were parsed
+     * - "PARTIAL_RUN" — actual upstream tested counters disagree with parsed details
      *
      * Build-level gaps (COMPILATION_FAILURE, IR_TRANSFORMATION_ERROR, BACKSTOP_TIMEOUT)
      * are detected by the Gradle task / test-executor and passed in via [buildLevelGaps].
@@ -234,6 +235,7 @@ object MutationResultsParser {
     ): List<ExecutionGap> {
         val gaps = buildLevelGaps.toMutableList()
 
+        val testedCounts = summaryCounts(stdout, "Tested this run")
         if (stdout.isBlank()) {
             if (gaps.isEmpty()) {
                 gaps.add(ExecutionGap(
@@ -241,29 +243,44 @@ object MutationResultsParser {
                     reason = "No mutflow output captured — test class may have failed to produce JUnit XML",
                 ))
             }
-        } else if (mutations.isEmpty()) {
+        } else if (mutations.isEmpty() && (testedCounts.isEmpty() || testedCounts.any { it != 0 })) {
             gaps.add(ExecutionGap(
                 type = "NO_OUTPUT",
                 reason = "Stdout was non-empty but no mutation results could be parsed",
             ))
         }
 
-        // Check for partial runs: mutflow prints a footer with total mutation count.
-        // If the parsed count is less than reported, some mutations were not fully evaluated.
-        val footerMatcher = java.util.regex.Pattern.compile("""(\d+)\s+mutat""").matcher(stdout)
-        var reportedCount = 0
-        while (footerMatcher.find()) {
-            reportedCount = footerMatcher.group(1).toInt()
-        }
-        if (reportedCount > 0 && mutations.size < reportedCount) {
+        val reportedCount = testedCounts.sum()
+        if (testedCounts.isNotEmpty() && mutations.size != reportedCount) {
             gaps.add(ExecutionGap(
                 type = "PARTIAL_RUN",
-                reason = "Parsed ${mutations.size} mutations but mutflow reported $reportedCount in summary footer",
+                reason = "Parsed ${mutations.size} mutations but mutflow reported $reportedCount tested this run",
+            ))
+        }
+
+        val discoveredCounts = summaryCounts(stdout, "Total mutations discovered")
+        val remainingCounts = summaryCounts(stdout, "Remaining untested")
+        if (listOf(discoveredCounts, testedCounts, remainingCounts).any { it.isNotEmpty() } &&
+            (discoveredCounts.size != testedCounts.size || remainingCounts.size != testedCounts.size ||
+                testedCounts.indices.any { index ->
+                    discoveredCounts[index].toLong() !=
+                        testedCounts[index].toLong() + remainingCounts[index].toLong()
+                })) {
+            gaps.add(ExecutionGap(
+                type = "PARTIAL_RUN",
+                reason = "Mutflow discovered, tested, and remaining counters are missing or inconsistent",
             ))
         }
 
         return gaps
     }
+
+    fun discoveredCount(stdout: String): Int? =
+        summaryCounts(stdout, "Total mutations discovered").takeIf { it.isNotEmpty() }?.sum()
+
+    private fun summaryCounts(stdout: String, label: String): List<Int> =
+        Regex("${Regex.escape(label)}:\\s*(\\d+)").findAll(stdout)
+            .map { it.groupValues[1].toInt() }.toList()
 
     /**
      * Assembles a complete [MutationResults] from parsed mutations, test method
@@ -277,7 +294,9 @@ object MutationResultsParser {
         generatedAt: Long = System.currentTimeMillis(),
         gaps: List<ExecutionGap> = emptyList(),
         redundantGroups: List<RedundantGroup>? = null,
+        discoveredMutations: Int = mutations.size,
     ): MutationResults {
+        require(discoveredMutations >= mutations.size) { "Discovered count is smaller than evaluated count" }
         val stats = calculateMetrics(mutations, gaps.size)
         val testKillerMatrix = buildTestKillerMatrix(mutations)
         val rg = redundantGroups ?: detectRedundantTestGroups(mutations)
@@ -287,7 +306,7 @@ object MutationResultsParser {
             mutationScore = stats.score,
             qualityBand = stats.band,
             confidence = stats.confidence,
-            totalMutations = stats.total,
+            totalMutations = discoveredMutations,
             killed = stats.killed,
             survived = stats.survived,
             timedOut = stats.timedOut,
@@ -300,6 +319,7 @@ object MutationResultsParser {
             mutations = mutations,
             executionGaps = gaps,
             redundantGroups = rg,
+            untestedMutations = discoveredMutations - mutations.size,
         )
     }
 }

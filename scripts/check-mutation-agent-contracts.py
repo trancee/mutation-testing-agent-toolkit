@@ -100,10 +100,9 @@ ROLES = {
         ".github/agents/omp-mutation-test-auditor.agent.md",
         (
             Contract(
-                "uses the score formula and nulls an empty denominator",
-                r"killed / \(total - gaps\).*Returns `null` when no mutations are evaluable "
-                r"\(denominator is 0",
-                r"killed / \(total - gaps\).*Return `null` when the\n  denominator is zero",
+                "uses schema 2 evaluated denominator and invalidates incomplete scores",
+                r"schemaVersion = 2.*killed / mutationsEvaluated.*Returns `null`.*execution gap",
+                r"schemaVersion = 2.*killed / mutationsEvaluated.*Return `null`.*execution gap",
             ),
             Contract(
                 "uses identical quality-band boundaries",

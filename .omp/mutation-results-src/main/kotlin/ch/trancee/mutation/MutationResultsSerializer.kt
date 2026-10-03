@@ -1,4 +1,4 @@
-package io.omp.mutation
+package ch.trancee.mutation
 
 import kotlinx.serialization.json.Json
 

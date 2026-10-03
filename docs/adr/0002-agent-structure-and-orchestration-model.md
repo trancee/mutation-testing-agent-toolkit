@@ -11,7 +11,7 @@ Scott-CC's mutation-testing plugin uses 5 domain-specific agents dispatched via 
 Key architectural differences:
 
 - Scott-CC: per-mutant git worktrees, batches of up to five executors, and its own mutation/test evidence
-- mutflow: mutation instrumentation during test compilation, runtime mutation selection, a per-JVM synchronized lock, and aggregate verdicts that track all killers
+- mutflow: separate mutation compilation, runtime mutation selection, a per-JVM overlap guard, and per-mutation killer verdicts
 
 ## Decision
 
@@ -29,7 +29,7 @@ compilation and reports its supported mutation variants.
 Scott-CC runs a bounded executor per mutant. This toolkit runs one aggregate
 Gradle mutation-results task for the selected test classes. The single
 invocation avoids overlapping build and JUnit report outputs; mutflow's
-synchronized lock is JVM-local and does not serialize separate Gradle processes.
+session guard is JVM-local and does not coordinate separate Gradle processes.
 `maxRuns` limits are applied per `@MutFlowTest` class and include the baseline
 run, so they do not establish a project-wide mutant ceiling.
 

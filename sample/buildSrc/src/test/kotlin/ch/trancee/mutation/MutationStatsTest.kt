@@ -1,6 +1,6 @@
-package io.omp.mutation
+package ch.trancee.mutation
 
-import io.omp.mutation.MutationResultsParser.calculateMetrics
+import ch.trancee.mutation.MutationResultsParser.calculateMetrics
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 
@@ -94,7 +94,7 @@ class MutationStatsTest {
     }
 
     @Test
-    fun `score excludes gaps from denominator`() {
+    fun `gap invalidates score without subtracting evaluated mutations`() {
         val mutations = listOf(
             MutationResult("(File.kt:7)", ">", ">=", MutationResultType.Killed, "testA", listOf("testA")),
             MutationResult("(File.kt:8)", ">=", ">", MutationResultType.Survived),
@@ -102,10 +102,11 @@ class MutationStatsTest {
             MutationResult("(File.kt:10)", "-", "+", MutationResultType.Survived),
         )
         val stats = calculateMetrics(mutations, gaps = 1)
-        // 1 killed out of (4 - 1) = 3 evaluated → 1/3
-        assertEquals(1.0 / 3.0, stats.score!!, 0.0001)
+        assertNull(stats.score)
+        assertNull(stats.confidenceIntervalLow)
+        assertNull(stats.confidenceIntervalHigh)
         assertEquals(4, stats.total)
-        assertEquals(3, stats.mutationsEvaluated)
+        assertEquals(4, stats.mutationsEvaluated)
         assertEquals(1, stats.gaps)
     }
 
@@ -117,16 +118,29 @@ class MutationStatsTest {
         val stats = calculateMetrics(mutations, gaps = 1)
         assertNull(stats.score)
         assertEquals(QualityBand.Poor, stats.band)
-        assertEquals(0, stats.mutationsEvaluated)
+        assertEquals(1, stats.mutationsEvaluated)
     }
     @Test
-    fun `mutationsEvaluated clamped to zero when gaps exceed total`() {
+    fun `class gaps never alter mutation evaluation counts`() {
         val mutations = listOf(
             MutationResult("(File.kt:7)", ">", ">=", MutationResultType.Survived),
         )
         val stats = calculateMetrics(mutations, gaps = 5)
         assertNull(stats.score)
-        assertEquals(0, stats.mutationsEvaluated)
+        assertEquals(1, stats.mutationsEvaluated)
+    }
+
+    @Test
+    fun `unrelated class failure cannot produce a score above one`() {
+        val mutations = List(2) {
+            MutationResult("File.kt:$it", ">", ">=", MutationResultType.Killed, "testA", listOf("testA"))
+        }
+
+        val stats = calculateMetrics(mutations, gaps = 1)
+
+        assertNull(stats.score)
+        assertEquals(2, stats.mutationsEvaluated)
+        assertEquals(2, stats.killed)
     }
 
     @Test
@@ -145,6 +159,50 @@ class MutationStatsTest {
         assertTrue(ciHigh >= score)
         assertTrue(ciLow >= 0.0)
         assertTrue(ciHigh <= 1.0)
+    }
+
+    @Test
+    fun `quality band boundaries use strict greater than thresholds`() {
+        val cases = listOf(
+            3 to QualityBand.Poor, 4 to QualityBand.Fair,
+            6 to QualityBand.Fair, 7 to QualityBand.Good,
+            8 to QualityBand.Good, 9 to QualityBand.Excellent,
+        )
+        for ((killed, expectedBand) in cases) {
+            val mutations = List(10) { index ->
+                MutationResult("Calc.kt:$index", ">", ">=",
+                    if (index < killed) MutationResultType.Killed else MutationResultType.Survived)
+            }
+
+            val stats = calculateMetrics(mutations)
+
+            assertEquals(expectedBand, stats.band, "killed=$killed out of 10")
+        }
+    }
+
+    @Test
+    fun `confidence boundaries use evaluated outcomes rather than discovered budget`() {
+        for ((count, expected) in listOf(
+            9 to ConfidenceLevel.Low, 10 to ConfidenceLevel.Medium,
+            50 to ConfidenceLevel.Medium, 51 to ConfidenceLevel.High,
+        )) {
+            val mutations = List(count) { MutationResult("Calc.kt:$it", ">", ">=", MutationResultType.Killed) }
+
+            val results = MutationResultsParser.assembleResults(
+                mutations, emptyList(), discoveredMutations = 100,
+            )
+
+            assertEquals(expected, results.confidence, "evaluated=$count")
+        }
+    }
+
+    @Test
+    fun `negative infrastructure gap count is rejected`() {
+        val failure = assertThrows(IllegalArgumentException::class.java) {
+            calculateMetrics(emptyList(), gaps = -1)
+        }
+
+        assertTrue(failure.message!!.contains("nonnegative"))
     }
 
     @Test

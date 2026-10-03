@@ -36,7 +36,7 @@ Configuring build.gradle.kts...
   Applied mutation-results.gradle.kts
   Added JUnit 6 + mutflow-junit6 dependencies
   Added mutflow configuration
-  Detected Kotlin 2.4.20 from build.gradle.kts
+  Verified compiler-coupled Kotlin 2.4.20
 Setting up typed mutation-results module (buildSrc)...
   Created buildSrc/ with typed MutationResults module (Kotlin 2.4.20)
 

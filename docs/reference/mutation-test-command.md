@@ -93,6 +93,11 @@ The limit applies independently to each selected test class; it is not a
 project-wide mutation ceiling. The command runs the selected classes in one
 aggregate `mutationResults` Gradle invocation.
 
+For KMP, the equivalent DSL budget is `maxMutationRuns = 10`, `30`, or
+`Int.MAX_VALUE`; it excludes baseline. Common tests stay plain `kotlin.test`.
+Ambient `MUTFLOW_MAX_RUNS` overrides must be reported because they can alter
+the effective budget.
+
 ## Final report
 
 The pipeline's final report contains:
@@ -116,8 +121,8 @@ Deep mode also includes full redundant-test-group details and per-mutation kille
 | Java | 26 (validated baseline; latest bytecode target supported by Kotlin 2.4.20). |
 | Gradle | 9.8.0 (validated baseline). |
 | Kotlin | 2.4.20 (validated baseline; must match the mutflow compiler plugin). |
-| Kotlin Multiplatform | JVM source sets only. |
-| Unsupported targets | Kotlin/JS, Kotlin/Native, and Android. |
+| Kotlin Multiplatform | Dedicated `mutflow<Target>Test` JVM tasks; common tests stay plain `kotlin.test`. |
+| Unsupported toolkit adapters | Native, JUnit 4/Android, and JS. Upstream Native/JUnit 4 support is separate. |
 | Mutation execution | A mutflow lock serializes active mutation sessions within one JVM; it does not coordinate separate Gradle processes. |
 
 For pipeline ordering and agent responsibilities, see [About the mutation-testing agent system](../explanation/agent-system.md). For the mutation engine constraints, see [About mutflow's test-only mutation compilation](../explanation/mutflow-architecture.md).

@@ -10,7 +10,7 @@ The toolkit uses mutflow's test-only mutation compilation and predefined operato
 
 ### Mutation testing
 
-Injecting small faults (mutations) into source code and running tests to see whether they catch the faults. The mutation score is `killed / (total - gaps)`. A higher score means the tests detected a larger share of evaluated mutations. The score is null when no mutations are evaluable.
+Injecting small faults (mutations) into source code and running tests to see whether they catch the faults. The schema 2 score is `killed / mutationsEvaluated`. A higher score means tests detected a larger share of recorded mutation outcomes. The score is null for zero evaluations or any infrastructure gap.
 
 ### Meta-mutant (mutflow)
 
@@ -70,7 +70,16 @@ The `mutationResults` Gradle task outputs `mutation-results.json` including `kil
 
 ## Decisions deferred to v2
 
-- Kotlin/JS and Kotlin/Native mutation targets. Kotlin Multiplatform setup currently covers JVM source sets only.
+- Native and JUnit 4 toolkit adapters. Upstream mutflow supports these paths,
+  but this toolkit currently validates plain JVM/JUnit 6 and KMP JVM only.
+
+## Results module ownership
+
+The shared results module uses `ch.trancee.mutation`, not a client-specific
+namespace. Schema 2 distinguishes discovered/evaluated/untested counts,
+qualifies tests as `testClass::displayName`, and makes scores null when
+infrastructure gaps exist. Legacy `io.omp.mutation` installations require a
+coordinated source and consumer migration.
 
 ## References
 

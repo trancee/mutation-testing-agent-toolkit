@@ -18,8 +18,8 @@ This reference lists the OMP and GitHub Copilot CLI agents that implement the mu
 |-------|-------|--------|--------------------------|
 | `test-quality-reviewer` | Project path, target filters, mode, approval setting | Combined mutation-quality report | Through spawned agents |
 | `test-saboteur` | Kotlin production and test sources | Mutflow configuration, annotations, and wrapped test calls | Yes |
-| `test-executor` | Project path and an annotated test class | Gradle status, stdout, JUnit XML, and mutation-results path when the separate `mutationResults` task has been run | No |
-| `test-auditor` | Executor results, optional structured mutation results, and source | Scores, confidence, gaps, survivors, zombie candidates, and redundant groups | No |
+| `test-executor` | Project path and selected JVM test-class patterns (plain JVM or KMP) | One aggregate Gradle status, current JUnit XML, and schema 2 JSON when generation succeeds | No |
+| `test-auditor` | Executor evidence, schema 2 results when available, and source | Evaluated/discovered/untested totals, scores, confidence, gaps, survivors, zombie candidates, and redundant groups | No |
 | `test-refactor-specialist` | Audit report and original tests | Proposed or approved test refactors, diffs, and rollback instructions | Only when approval permits |
 
 ## Spawn permissions
@@ -56,7 +56,7 @@ requires explicit approval.
 
 ```text
 task with agent: "test-saboteur", task: "Annotate source in <project-path>"
-task with agent: "test-executor", task: "Run tests for <TestClass> in <project-path>"
+task with agent: "test-executor", task: "Run one aggregate mutationResults for <class-patterns> in <project-path>"
 task with agent: "test-auditor", task: "Audit results in <project-path>"
 task with agent: "test-refactor-specialist", task: "Improve tests based on audit"
 ```

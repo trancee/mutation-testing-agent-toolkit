@@ -1,8 +1,8 @@
-package io.omp.mutation
+package ch.trancee.mutation
 
-import io.omp.mutation.MutationResultsParser.parseMutflowSummary
-import io.omp.mutation.MutationResultsParser.detectRedundantTestGroups
-import io.omp.mutation.MutationResultsParser.detectGaps
+import ch.trancee.mutation.MutationResultsParser.parseMutflowSummary
+import ch.trancee.mutation.MutationResultsParser.detectRedundantTestGroups
+import ch.trancee.mutation.MutationResultsParser.detectGaps
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 
@@ -235,15 +235,133 @@ class MutationResultsParserTest {
     }
 
     @Test
-    fun `detectGaps detects PARTIAL_RUN when footer count exceeds parsed`() {
+    fun `detectGaps detects PARTIAL_RUN from actual upstream counters`() {
         val stdout = """
             ✓ (Calc.kt:1) > → >=
                 killed by: testA
-            Results: 5 mutations tested
+            ║  Total mutations discovered: 5 ║
+            ║  Tested this run: 5 ║
+            ║  Remaining untested: 0 ║
         """.trimIndent()
         val mutations = parseMutflowSummary(stdout) // finds 1 mutation
         val gaps = MutationResultsParser.detectGaps(stdout, mutations)
         assertTrue(gaps.any { it.type == "PARTIAL_RUN" })
+    }
+
+    @Test
+    fun `budgeted runs retain discovered and untested counts without a gap`() {
+        val stdout = """
+            ║  Total mutations discovered: 32 ║
+            ║  Tested this run: 1 ║
+            ║  Remaining untested: 31 ║
+            ✓ (Calc.kt:1) > → >=
+                killed by: testA
+        """.trimIndent()
+        val mutations = parseMutflowSummary(stdout)
+
+        val report = MutationResultsParser.assembleResults(
+            mutations, listOf("testA"),
+            gaps = detectGaps(stdout, mutations),
+            discoveredMutations = MutationResultsParser.discoveredCount(stdout)!!,
+        )
+
+        assertEquals(32, report.totalMutations)
+        assertEquals(1, report.mutationsEvaluated)
+        assertEquals(31, report.untestedMutations)
+        assertEquals(0, report.gaps)
+        assertEquals(1.0, report.mutationScore)
+    }
+
+    @Test
+    fun `valid zero discovery summary is not an execution gap`() {
+        val stdout = """
+            ║  Total mutations discovered: 0 ║
+            ║  Tested this run: 0 ║
+            ║  Remaining untested: 0 ║
+        """.trimIndent()
+
+        val gaps = detectGaps(stdout, emptyList())
+
+        assertTrue(gaps.isEmpty())
+    }
+
+    @Test
+    fun `remaining counter mismatch is a partial run even when every detail was parsed`() {
+        val stdout = """
+            Total mutations discovered: 4
+            Tested this run: 1
+            Remaining untested: 2
+            ✓ (Calc.kt:1) > → >=
+                killed by: boundary()
+        """.trimIndent()
+        val mutations = parseMutflowSummary(stdout)
+
+        val gaps = detectGaps(stdout, mutations)
+
+        assertEquals("PARTIAL_RUN", gaps.single().type)
+    }
+
+    @Test
+    fun `multiple complete summaries aggregate discovered counts and retain budgets`() {
+        val stdout = """
+            Total mutations discovered: 2
+            Tested this run: 1
+            Remaining untested: 1
+            ✓ (Calc.kt:1) > → >=
+                killed by: boundary()
+            Total mutations discovered: 3
+            Tested this run: 1
+            Remaining untested: 2
+            ✗ (Calc.kt:2) + → -
+        """.trimIndent()
+        val mutations = parseMutflowSummary(stdout)
+
+        val gaps = detectGaps(stdout, mutations)
+
+        assertTrue(gaps.isEmpty())
+        assertEquals(5, MutationResultsParser.discoveredCount(stdout))
+    }
+
+    @Test
+    fun `discovered count smaller than evaluated count is rejected at assembly`() {
+        val mutations = listOf(MutationResult("Calc.kt:1", ">", ">=", MutationResultType.Killed))
+
+        val failure = assertThrows(IllegalArgumentException::class.java) {
+            MutationResultsParser.assembleResults(mutations, emptyList(), discoveredMutations = 0)
+        }
+
+        assertTrue(failure.message!!.contains("Discovered count is smaller"))
+    }
+
+    @Test
+    fun `zero discovery across multiple sessions is not missing output`() {
+        val stdout = List(2) {
+            "Total mutations discovered: 0\nTested this run: 0\nRemaining untested: 0"
+        }.joinToString("\n")
+
+        val gaps = detectGaps(stdout, emptyList())
+
+        assertTrue(gaps.isEmpty())
+        assertEquals(0, MutationResultsParser.discoveredCount(stdout))
+    }
+
+    @Test
+    fun `counter errors cannot cancel each other across sessions`() {
+        val stdout = """
+            Total mutations discovered: 2
+            Tested this run: 1
+            Remaining untested: 0
+            ✓ (Calc.kt:1) > → >=
+            Total mutations discovered: 1
+            Tested this run: 1
+            Remaining untested: 1
+            ✗ (Calc.kt:2) + → -
+        """.trimIndent()
+        val mutations = parseMutflowSummary(stdout)
+
+        val gaps = detectGaps(stdout, mutations)
+
+        assertEquals("PARTIAL_RUN", gaps.single().type)
     }
 
     @Test
