@@ -2,7 +2,7 @@
 
 ## Overview
 
-A 5-agent mutation testing system for Kotlin (JVM-first) projects, built on OMP's agent/task/skill architecture and powered by [mutflow](https://github.com/anschnapp/mutflow) as the underlying mutation engine.
+A five-role mutation-testing system for Kotlin (JVM-first) projects, powered by [mutflow](https://github.com/anschnapp/mutflow), with separate OMP and GitHub Copilot CLI adapters.
 
 The system uses mutflow's compile-once engine and predefined operators. Agents select targets, execute tests, calculate quality metrics, and propose test improvements. They do not generate mutation operators.
 
@@ -34,6 +34,17 @@ A test that uses excessive mocking (`mockk()`, `mock()`), potentially masking re
 | test-auditor | Results analysis — parses output, calculates score, identifies zombies |
 | test-refactor-specialist | Test improvement — generates refactored test code |
 
+## Client adapters
+
+- **OMP**: `/mutation-test` dispatches through `.omp/skills/mutation-test/` and
+  `.omp/agents/` using OMP's `task` and `hub` tools.
+- **GitHub Copilot CLI**: `/omp-mutation-test` dispatches through
+  `.github/skills/omp-mutation-test/` and the five `omp-mutation-test-*`
+  profiles in `.github/agents/` using Copilot's `agent` tool.
+
+The adapters keep the same mutation-testing phases and approval boundaries but
+use client-specific dispatch and profile formats. The bootstrap installs both.
+
 ## Mutation strategies
 
 | Scott-CC Strategy | mutflow Operator | Coverage |
@@ -58,4 +69,5 @@ The `mutationResults` Gradle task outputs `mutation-results.json` including `kil
 - [mutflow](https://github.com/anschnapp/mutflow)
 - [ADR-001: Use mutflow as the mutation engine](docs/adr/0001-use-mutflow-as-mutation-engine.md)
 - [ADR-002: Agent structure and orchestration](docs/adr/0002-agent-structure-and-orchestration-model.md)
+- [ADR-003: Native GitHub Copilot CLI adapter](docs/adr/0003-copilot-cli-adapter.md)
 - `.scratch/omp-mutation-testing/map.md`, the Wayfinder map

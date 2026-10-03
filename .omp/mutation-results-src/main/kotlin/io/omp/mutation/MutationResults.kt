@@ -16,7 +16,7 @@ enum class QualityBand {
 
 /**
  * Confidence level based on mutation count:
- *   Low: <10, Medium: 10–50, High: 50+
+ *   Low: <10, Medium: 10–50, High: >50
  */
 enum class ConfidenceLevel {
     @SerialName("Low") Low,

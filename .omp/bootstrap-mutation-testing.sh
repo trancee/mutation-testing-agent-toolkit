@@ -13,6 +13,7 @@ set -euo pipefail
 PROJECT_PATH="${1:-.}"
 KMP_MODE="${2:---jvm}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPOSITORY_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 if [[ "$KMP_MODE" == "--kmp" ]]; then
     IS_KMP=1
@@ -27,6 +28,62 @@ if [[ ! -d "$PROJECT_PATH" ]]; then
     echo "Error: project path '$PROJECT_PATH' does not exist"
     exit 1
 fi
+
+copilot_skill_source="$REPOSITORY_ROOT/.github/skills/omp-mutation-test/SKILL.md"
+copilot_agent_sources=(
+    "$REPOSITORY_ROOT/.github/agents/omp-mutation-test-reviewer.agent.md"
+    "$REPOSITORY_ROOT/.github/agents/omp-mutation-test-saboteur.agent.md"
+    "$REPOSITORY_ROOT/.github/agents/omp-mutation-test-executor.agent.md"
+    "$REPOSITORY_ROOT/.github/agents/omp-mutation-test-auditor.agent.md"
+    "$REPOSITORY_ROOT/.github/agents/omp-mutation-test-refactor-specialist.agent.md"
+)
+copilot_destination_dirs=(
+    "$PROJECT_PATH/.github"
+    "$PROJECT_PATH/.github/agents"
+    "$PROJECT_PATH/.github/skills"
+    "$PROJECT_PATH/.github/skills/omp-mutation-test"
+)
+
+for source_file in "$copilot_skill_source" "${copilot_agent_sources[@]}"; do
+    if [[ ! -f "$source_file" ]]; then
+        echo "Error: Copilot adapter source file is missing: '$source_file'" >&2
+        exit 1
+    fi
+done
+
+for destination_dir in "${copilot_destination_dirs[@]}"; do
+    if [[ -L "$destination_dir" ]]; then
+        echo "Error: refusing to follow symlink at Copilot destination '$destination_dir'" >&2
+        exit 1
+    fi
+    if [[ -e "$destination_dir" && ! -d "$destination_dir" ]]; then
+        echo "Error: Copilot destination '$destination_dir' is not a directory" >&2
+        exit 1
+    fi
+done
+
+assert_copilot_file_available() {
+    local source_file="$1"
+    local destination_file="$2"
+
+    if [[ -L "$destination_file" ]]; then
+        echo "Error: refusing to follow symlink at Copilot file '$destination_file'" >&2
+        exit 1
+    fi
+    if [[ -e "$destination_file" ]] && ! cmp -s "$source_file" "$destination_file"; then
+        echo "Error: refusing to overwrite existing Copilot file '$destination_file'" >&2
+        exit 1
+    fi
+}
+
+assert_copilot_file_available \
+    "$copilot_skill_source" \
+    "$PROJECT_PATH/.github/skills/omp-mutation-test/SKILL.md"
+for source_file in "${copilot_agent_sources[@]}"; do
+    assert_copilot_file_available \
+        "$source_file" \
+        "$PROJECT_PATH/.github/agents/$(basename "$source_file")"
+done
 
 echo "Bootstrapping mutation testing into: $PROJECT_PATH"
 echo "Mode: $( ((IS_KMP)) && echo "KMP" || echo "JVM" )"
@@ -44,6 +101,28 @@ cp -r "$SCRIPT_DIR/agents" "$target_dir/"
 cp -r "$SCRIPT_DIR/skills" "$target_dir/"
 cp "$SCRIPT_DIR/mutation-results.gradle.kts" "$target_dir/"
 cp -r "$SCRIPT_DIR/mutation-results-src" "$target_dir/"
+
+# --- Install the Copilot-native adapter ---
+echo ""
+echo "Installing GitHub Copilot skill and agents..."
+
+copilot_agents_dir="$PROJECT_PATH/.github/agents"
+copilot_skill_dir="$PROJECT_PATH/.github/skills/omp-mutation-test"
+mkdir -p "$copilot_agents_dir" "$copilot_skill_dir"
+copy_copilot_file() {
+    local source_file="$1"
+    local destination_file="$2"
+
+    if [[ -f "$destination_file" ]] && cmp -s "$source_file" "$destination_file"; then
+        return
+    fi
+    cp "$source_file" "$destination_file"
+}
+
+copy_copilot_file "$copilot_skill_source" "$copilot_skill_dir/SKILL.md"
+for source_file in "${copilot_agent_sources[@]}"; do
+    copy_copilot_file "$source_file" "$copilot_agents_dir/$(basename "$source_file")"
+done
 
 # --- Step 2: Configure settings.gradle.kts ---
 echo ""
@@ -250,5 +329,6 @@ echo "     The saboteur agent will annotate @MutationTarget and @MutFlowTest"
 echo "  2. test-executor runs: gradle mutationResults"
 echo "  3. test-auditor parses results and reports score"
 echo "  4. test-refactor-specialist proposes boundary tests for survivors"
+echo "  5. Copilot CLI: restart or run /skills reload, then use /omp-mutation-test"
 echo ""
 echo "Or run directly: cd $PROJECT_PATH && gradle mutationResults"

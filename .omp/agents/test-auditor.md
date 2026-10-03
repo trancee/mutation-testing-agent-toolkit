@@ -30,7 +30,7 @@ Given the project path, results from test-executor agents (stdout, JUnit XML, mu
 7. **Confidence level**: Based on mutation count:
    - Low: <10 mutations
    - Medium: 10-50 mutations
-   - High: 50+ mutations
+   - High: more than 50 mutations
 8. **Zombie test detection**: Use the `testKillerMatrix` from the JSON. This maps each test name to the mutation source locations it killed.
    - Find tests in `testMethods` that have no entry in `testKillerMatrix`. These tests ran during mutation runs but never killed any mutation. They are zombie candidates.
    - Raise confidence for candidates that also don't appear in any `killedByTests` array across all mutations.

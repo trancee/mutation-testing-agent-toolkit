@@ -1,8 +1,8 @@
 # OMP Mutation Testing
 
-A 5-agent mutation testing system for Kotlin (JVM-first) projects, powered by [mutflow](https://github.com/anschnapp/mutflow) and built on the [OMP](https://omp.sh/) agent/task/skill architecture.
+A five-role mutation-testing system for Kotlin (JVM-first) projects, powered by [mutflow](https://github.com/anschnapp/mutflow). It provides separate native adapters for [OMP](https://omp.sh/) and GitHub Copilot CLI.
 
-This ports [Scott-CC's](https://github.com/citadelgrad/scott-cc/tree/main/plugins/mutation-testing) multi-agent orchestration to OMP, adapting from per-mutant git worktrees to mutflow's compile-once meta-mutant approach.
+The original OMP implementation ports [Scott-CC's](https://github.com/citadelgrad/scott-cc/tree/main/plugins/mutation-testing) multi-agent orchestration, adapting from per-mutant git worktrees to mutflow's compile-once meta-mutant approach. The Copilot CLI adapter shares its mutation-testing contracts with native Copilot profiles.
 
 ## Quick start
 
@@ -15,6 +15,10 @@ omp mutation-test /path/to/kotlin-project
 ```
 
 Prerequisites: Java 21+, Gradle 9.x, Kotlin 2.4.x.
+
+The bootstrap also installs the Copilot CLI skill and custom agents. From the
+target project, start `copilot` and invoke `/omp-mutation-test`. See
+[How to use mutation testing with Copilot CLI](docs/how-to/use-with-copilot.md).
 
 See the [documentation index](docs/index.md) for tutorials, how-to guides, reference material, and explanations.
 

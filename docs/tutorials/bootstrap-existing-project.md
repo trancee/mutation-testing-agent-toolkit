@@ -28,6 +28,7 @@ Bootstrapping mutation testing into: .
 Mode: JVM
 
 Copying .omp agents, skills, and scripts...
+Installing GitHub Copilot skill and agents...
 Configuring settings.gradle.kts...
   Added pluginManagement block
 Configuring build.gradle.kts...
@@ -43,6 +44,11 @@ Setting up typed mutation-results module (buildSrc)...
 ```
 
 The script modified our `settings.gradle.kts` and `build.gradle.kts`, and copied the `.omp/` directory (agents, skills, scripts, and the typed results module) into our project.
+
+It also installs `.github/skills/omp-mutation-test/` and the five
+`.github/agents/omp-mutation-test-*.agent.md` profiles. Start Copilot CLI in the
+target project and invoke `/omp-mutation-test`; if Copilot is already running,
+use `/skills reload` first.
 
 ## Step 2: Verify the Gradle setup
 

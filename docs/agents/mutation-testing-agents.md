@@ -1,8 +1,8 @@
 # Mutation-testing agent reference
 
-This reference lists the project-scoped agents that implement the mutation-testing pipeline. Agent names are their `task` dispatch keys.
+This reference lists the OMP and GitHub Copilot CLI agents that implement the mutation-testing pipeline. The client adapters have separate dispatch keys and profile formats.
 
-## Agent definitions
+## OMP agent definitions
 
 | Agent | Definition | Model | Thinking level | Declared tools |
 |-------|------------|-------|----------------|----------------|
@@ -32,6 +32,24 @@ This reference lists the project-scoped agents that implement the mutation-testi
 - `test-refactor-specialist`
 
 The other four agents do not declare child agents.
+
+## Copilot CLI agent profiles
+
+The Copilot skill at `.github/skills/omp-mutation-test/SKILL.md` delegates to
+the reviewer with Copilot's native `agent` tool. The worker profiles are
+programmatic-only (`user-invocable: false`) and cannot spawn further agents.
+
+| Role | Profile | Tools | User selectable |
+|------|---------|-------|-----------------|
+| Reviewer | [`omp-mutation-test-reviewer`](../../.github/agents/omp-mutation-test-reviewer.agent.md) | `read`, `search`, `execute`, `agent` | Yes |
+| Saboteur | [`omp-mutation-test-saboteur`](../../.github/agents/omp-mutation-test-saboteur.agent.md) | `read`, `search`, `edit` | No |
+| Executor | [`omp-mutation-test-executor`](../../.github/agents/omp-mutation-test-executor.agent.md) | `read`, `search`, `execute` | No |
+| Auditor | [`omp-mutation-test-auditor`](../../.github/agents/omp-mutation-test-auditor.agent.md) | `read`, `search` | No |
+| Refactor specialist | [`omp-mutation-test-refactor-specialist`](../../.github/agents/omp-mutation-test-refactor-specialist.agent.md) | `read`, `search`, `edit` | No |
+
+The Copilot adapter does not use OMP's `task`, `hub`, or `tasks[]` protocols.
+Both clients share the phase order, mutflow result contract, and rule that test
+deletion requires explicit approval.
 
 ## Dispatch examples
 

@@ -1,6 +1,6 @@
 # mutation-test command reference
 
-`mutation-test` runs or configures the OMP mutation-testing pipeline for a Kotlin project.
+`mutation-test` runs or configures the OMP mutation-testing pipeline for a Kotlin project. GitHub Copilot CLI has a separate native entry point, `/omp-mutation-test`.
 
 ## Invocation
 
@@ -14,6 +14,18 @@ The shell form prefixes the skill name with `omp`:
 ```text
 omp mutation-test [project-path] [options]
 ```
+
+## Copilot CLI invocation
+
+```text
+/omp-mutation-test [project-path] [--targets <pattern>] [--focus <patterns>] [--auto-approve] [--mode quick|standard|deep]
+/omp-mutation-test setup [project-path] [--kmp]
+```
+
+The Copilot skill delegates to the `omp-mutation-test-*` custom agents in
+`.github/agents/`. It uses Copilot's native `agent` tool, not OMP's `task` or
+`hub` tools. For installation and activation steps, see
+[How to use mutation testing with Copilot CLI](../how-to/use-with-copilot.md).
 
 ## Mutation test command
 
@@ -61,6 +73,7 @@ The `setup` subcommand installs and configures the mutation-testing system.
 | Area | Effect |
 |------|--------|
 | `.omp/` | Copies the agents, mutation-test skill, Gradle results script, and typed results source. |
+| `.github/` | Installs the Copilot skill and its five custom agent profiles. Existing conflicting Copilot files cause setup to stop before modifying the target. |
 | `settings.gradle.kts` | Adds plugin repositories through `pluginManagement`. |
 | `build.gradle.kts` | Applies mutflow, adds JUnit and mutflow dependencies, applies the results script, and enables mutflow. |
 | `buildSrc/` | Installs the typed mutation-results module. |
