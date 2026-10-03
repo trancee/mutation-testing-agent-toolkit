@@ -52,6 +52,11 @@ Both clients share the phase order, mutflow result contract, a single aggregate
 Gradle execution per run, and the rule that test deletion or consolidation
 requires explicit approval.
 
+Profile/schema consistency checks verify these static contracts; they do not
+prove fresh end-to-end client delegation. The real integration gate exercises
+Gradle and mutflow independently of either agent runtime. See
+[repository checks](../how-to/run-checks.md) for the validation boundaries.
+
 ## Dispatch examples
 
 ```text

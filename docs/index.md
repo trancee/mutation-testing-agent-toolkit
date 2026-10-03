@@ -6,6 +6,8 @@
 |------|----------|
 | Learn mutation testing from scratch | [Tutorial: Your first mutation test](tutorials/first-mutation-test.md) |
 | Add mutation testing to an existing project | [Tutorial: Bootstrap an existing project](tutorials/bootstrap-existing-project.md) |
+| Audit and improve tests through the five-role workflow | [Tutorial: Agent-assisted mutation testing](tutorials/agent-assisted-mutation-test.md) |
+| Mutation-test common code with budgets and full JVM runs | [Tutorial: KMP JVM mutation testing](tutorials/kmp-jvm-mutation-test.md) |
 | Set up Gradle manually without the bootstrap script | [How-to: Manual Gradle setup](how-to/manual-setup.md) |
 | Use the native GitHub Copilot CLI adapter | [How-to: Use mutation testing with Copilot CLI](how-to/use-with-copilot.md) |
 | Run mutation testing in GitHub Actions | [How-to: Run mutation testing in GitHub Actions](how-to/run-in-github-actions.md) |
@@ -22,6 +24,7 @@
 |------|----------|
 | Read the mutation summary and calculate your score | [How-to: Interpret mutation testing results](how-to/interpret-results.md) |
 | Fix surviving mutations with boundary tests | [How-to: Fix surviving mutations](how-to/fix-surviving-mutations.md) |
+| Diagnose setup failures, gaps, timeouts, or suspicious findings | [How-to: Troubleshoot mutation testing](how-to/troubleshoot-mutation-testing.md) |
 | Understand the JSON output format | [Reference: mutation-results.json](reference/mutation-results-format.md) |
 
 ## Architecture
@@ -53,5 +56,7 @@
 
 | Goal | Document |
 |------|----------|
-| Write documentation following the Diataxi framework | [How-to: Contribute documentation](how-to/contribute-documentation.md) |
-| Run markdown lint and link checks | [How-to: Run documentation checks](how-to/run-checks.md) |
+| Write documentation following the Diataxis framework | [How-to: Contribute documentation](how-to/contribute-documentation.md) |
+| Run tests, documentation checks, and upstream monitoring | [How-to: Run repository checks](how-to/run-checks.md) |
+| Upgrade namespaces and JSON consumers | [How-to: Upgrade an existing installation](how-to/manual-setup.md#upgrade-an-existing-installation) |
+| Read contributor and commit rules | [AGENTS.md](../AGENTS.md) |

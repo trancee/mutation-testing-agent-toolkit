@@ -43,7 +43,7 @@ The Copilot skill delegates to the `omp-mutation-test-*` custom agents in
 
 | Option | Value | Default | Description |
 |--------|-------|---------|-------------|
-| `--targets` | Comma-separated Gradle test class patterns | All classes annotated with `@MutFlowTest` | Limits the test classes run by the aggregate Gradle invocation. |
+| `--targets` | Comma-separated Gradle test class patterns | No filter on the selected mutation test tasks | Limits the test classes run by the aggregate Gradle invocation. |
 | `--auto-approve` | None | Disabled | Permits the refactor specialist to apply additive or assertion-level test refactors. Deleting or consolidating tests always requires explicit user approval. |
 | `--mode` | `quick`, `standard`, or `deep` | `standard` | Selects the mutation limit and report detail described under [Execution modes](#execution-modes). |
 
@@ -74,10 +74,10 @@ The `setup` subcommand installs and configures the mutation-testing system.
 | `.omp/` | Copies the agents, mutation-test skill, Gradle results script, and typed results source. |
 | `.github/` | Installs the Copilot skill and its five custom agent profiles. Existing conflicting Copilot files cause setup to stop before modifying the target. |
 | `settings.gradle.kts` | Adds plugin repositories through `pluginManagement`. |
-| `build.gradle.kts` | Applies mutflow, adds JUnit and mutflow dependencies, applies the results script, and enables mutflow. |
+| `build.gradle.kts` | Applies mutflow and the results script, enables mutflow, and configures JUnit dependencies/Platform for plain JVM. The plugin supplies mutflow integration. |
 | `buildSrc/` | Installs the typed mutation-results module. |
-| Production sources | Adds `@MutationTarget` and applicable mutation suppressions. |
-| Test sources | Adds `@MutFlowTest` and wraps tested calls in `MutFlow.underTest`. |
+| Production sources | The setup agent adds `@MutationTarget` and applicable suppressions; the shell installer alone does not annotate source. |
+| Test sources | The agent wraps calls in `MutFlow.underTest` and adds `@MutFlowTest` for plain JVM; KMP common tests retain `kotlin.test`. |
 
 For an executable setup walkthrough, see [Tutorial: Bootstrap mutation testing into an existing Kotlin project](../tutorials/bootstrap-existing-project.md).
 
@@ -117,13 +117,39 @@ Deep mode also includes full redundant-test-group details and per-mutation kille
 
 | Item | Requirement or constraint |
 |------|---------------------------|
-| Project type | Kotlin JVM project using Gradle. |
+| Project type | Kotlin JVM or KMP with a JVM target, using Gradle Kotlin DSL. |
 | Java | 26 (validated baseline; latest bytecode target supported by Kotlin 2.4.20). |
 | Gradle | 9.8.0 (validated baseline). |
 | Kotlin | 2.4.20 (validated baseline; must match the mutflow compiler plugin). |
 | Kotlin Multiplatform | Dedicated `mutflow<Target>Test` JVM tasks; common tests stay plain `kotlin.test`. |
 | Unsupported toolkit adapters | Native, JUnit 4/Android, and JS. Upstream Native/JUnit 4 support is separate. |
-| Mutation execution | A mutflow lock serializes active mutation sessions within one JVM; it does not coordinate separate Gradle processes. |
+| Mutation execution | A per-JVM overlap guard rejects overlapping sessions; it does not queue them or coordinate separate Gradle processes. |
+| Configuration cache | Not validated; the adapter uses evaluation and task-graph hooks. |
+
+## Direct Gradle execution
+
+For a configured project with annotated/wrapped tests:
+
+```bash
+gradle mutationResults '-PmutationTest.includes=example.OrderTest,example.PriceTest'
+```
+
+Use the project's `./gradlew` instead of `gradle` when a wrapper is present.
+`mutationTest.includes` accepts nonempty comma-separated Gradle test patterns,
+not production-class targets. Do not filter individual test methods when you
+need a complete mutation session. `mutflow.targets` selects production classes
+or files instead.
+
+Plain JVM selects `test`; KMP selects dedicated `mutflow<Target>Test` JVM
+tasks. No filter means ordinary tests on those tasks can also run. JSON is
+written to `build/reports/mutation-results.json`. Strict survivors, mutation
+timeouts, test failures, and gaps produce nonzero status; compilation or
+discovery failures may leave no JSON. Never reuse an earlier report.
+
+Upstream `MUTFLOW_VERIFICATION_MODE` can override verification with `STRICT`,
+`LENIENT`, or `DISABLED`. Disabled mutation execution is not a quality result.
+Record effective environment overrides alongside the run budget. For a
+threshold-based CI policy, see [the GitHub Actions guide](../how-to/run-in-github-actions.md).
 
 For pipeline ordering and agent responsibilities, see [About the mutation-testing agent system](../explanation/agent-system.md). For the mutation engine constraints, see [About mutflow's test-only mutation compilation](../explanation/mutflow-architecture.md).
 

@@ -16,7 +16,7 @@ We need to choose a mutation testing engine for Kotlin (JVM-first) projects that
 Three candidates were evaluated:
 
 - **mutflow** (https://github.com/anschnapp/mutflow): Kotlin compiler plugin that instruments test compilation while keeping production artifacts clean. JUnit 6 native via `@MutFlowTest`.
-- **mutant-kraken** (Rust CLI): Standalone CLI with 5 stages. Operators include Arithmetic, Unary, Logical, Relational, etc. Beta quality (30 GitHub stars).
+- **mutant-kraken** (Rust CLI): Standalone mutation-testing CLI with less Kotlin-specific integration.
 - **pitest/Arcmutate**: Java-first mutation testing via Maven/Gradle. Arcmutate extends with Kotlin/Spring/Git support. Fast for Java but KMP pain.
 
 ## Decision
@@ -29,7 +29,8 @@ Use **mutflow** as the mutation engine.
 - **JUnit 6 native**: `@MutFlowTest` + `MutFlow.underTest { }` API is idiomatic Kotlin
 - **Test-only mutation compilation**: Mutations are injected during test compilation, keeping production artifacts free of mutation code and eliminating per-mutant git worktrees.
 - **Operator categories**: mutflow has predefined operators that map broadly to Scott-CC's boundary, return-value, boolean, arithmetic, and exception categories. This is a category mapping, not feature or behavioral parity; mutflow does not generate arbitrary context-aware return-value mutations.
-- **Active maintenance**: mutflow tracks the current Kotlin compiler release; the plugin and Kotlin versions must match.
+- **Compiler alignment**: mutflow releases are compiler-coupled; verify the
+  release's compiler version rather than assuming every Kotlin release is supported.
 
 ## Consequences
 
@@ -58,7 +59,7 @@ maintained architecture description is in
 
 ## Alternatives considered
 
-- **mutant-kraken**: Rejected — Rust CLI with less Kotlin-specific support, beta quality (30 stars vs mutflow's active development)
+- **mutant-kraken**: Rejected — standalone Rust CLI with less Kotlin-specific integration.
 - **pitest/Arcmutate**: Rejected — Java-first engine; KMP support via Arcmutate is an add-on, adds complexity
 - **Building a custom engine**: Rejected — significant engineering effort, reinvention of proven approaches
 

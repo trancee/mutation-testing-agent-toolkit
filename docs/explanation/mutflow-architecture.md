@@ -55,11 +55,19 @@ with compiler-synthesized annotations on common tests. Upstream additionally
 supports Kotlin/Native and JUnit 4. Those engines are not yet toolkit adapters.
 
 The schema 2 results task declares its XML inputs, so changed tests and filters
-invalidate cached JSON. It collects test failures before restoring a failing
+invalidate cached JSON. A repeated invocation can reuse up-to-date test XML and
+regenerate JSON; a fresh `generatedAt` is the report-generation timestamp, not
+proof that tests executed again. Environment-based mutation overrides require
+an explicit rerun when they change. It collects test failures before restoring a failing
 Gradle exit status; baseline failures invalidate aggregate scores, whereas
 strict survivors and mutation timeouts remain recorded mutation outcomes.
 Compilation or discovery failures may prevent report generation, so executors
 must not reuse a report from a prior invocation.
+
+Killer data identifies the tests that caught each recorded mutation, not every
+test's verdict. Class qualification prevents cross-class display-name
+collisions, but upstream can truncate long names in its console summary. This
+limits how confidently an auditor can match killer names to XML identities.
 
 For agent responsibilities and phase ordering, see [About the
 mutation-testing agent system](agent-system.md). For the version decision and

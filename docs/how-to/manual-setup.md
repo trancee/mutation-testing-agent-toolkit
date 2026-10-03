@@ -10,17 +10,25 @@ Use this guide when the bootstrap script does not fit your project, or when you 
 
 ## Copy files
 
+Commit or save your target project's existing changes first. Review and merge
+toolkit-owned files rather than overwriting customizations.
+
 Copy these from the mutation testing repo into your project root:
 
-- `.omp/agents/`
-- `.omp/skills/mutation-test/`
 - `.omp/mutation-results.gradle.kts`
 - `.omp/mutation-results-src/`, the typed module source copied to `buildSrc/`
-- `.github/skills/omp-mutation-test/` for GitHub Copilot CLI
-- `.github/agents/omp-mutation-test-*.agent.md` for the Copilot mutation-testing roles
+- `.omp/bootstrap-mutation-testing.sh` if you need the agent-driven `setup` command
 
-The Copilot skill and agent files are independent of the OMP files. Keep both
-sets if users of the project need both client entry points.
+Copy the complete client layer(s) you intend to use:
+
+| Client | Files |
+|--------|-------|
+| OMP | `.omp/agents/` and `.omp/skills/mutation-test/` |
+| Copilot CLI | `.github/skills/omp-mutation-test/` and all five `.github/agents/omp-mutation-test-*.agent.md` profiles |
+
+Gradle-only execution needs neither client. Agent-driven setup expects the
+bootstrap's source layout and both client file sets; use the installer for a
+complete dual-client installation.
 
 ## Add plugin management
 
@@ -76,12 +84,6 @@ upgrade or downgrade the compiler. Bootstrap rejects unknown alias/catalog
 versions, nonstandard plugin-block layouts, and user-owned `buildSrc` builds;
 configure those manually.
 
-For installations using `io.omp.mutation`, replace the toolkit-owned source
-directories with the new `ch/trancee/mutation` copies and update the results
-script together. Preserve all unrelated sources and convention plugins. Schema 2
-changes score/count semantics and test identities; migrate consumers using the
-[results reference](../reference/mutation-results-format.md#compatibility).
-
 ## Add test dependencies
 
 Add JUnit Jupiter dependencies. The mutflow plugin supplies its matching
@@ -110,14 +112,39 @@ mutflow {
 
 ## Annotate your code
 
-Add `@MutationTarget` to business-logic classes and `@MutFlowTest` to test classes. The `test-saboteur` agent handles this automatically when you run `/mutation-test`. To do it by hand, see the [bootstrap tutorial](../tutorials/bootstrap-existing-project.md) for the annotation patterns.
+Add `@MutationTarget` to business-logic classes and `@MutFlowTest` to plain JVM
+test classes. The targeting agent handles this through either client entry
+point. To do it by hand, see the [bootstrap tutorial](../tutorials/bootstrap-existing-project.md)
+for annotation and `MutFlow.underTest` patterns. Use `@file:MutationTarget`
+before the package declaration for top-level functions; nested classes must
+be targeted independently.
 
 ## Configure KMP JVM projects
 
-Use the same plugin and results script with a `kotlin("multiplatform")` project
-and a JVM target. Put `kotlin("test")` in `commonTest` dependencies. Keep common
-tests free of JUnit annotations; upstream synthesizes `@MutFlowTest` in its
-mutated JVM compilation. `targets` contains production class/file patterns,
+For KMP, replace the plain JVM plugin and test-dependency instructions above
+with this module build (keep the shared results module in `buildSrc`):
+
+```kotlin
+plugins {
+    kotlin("multiplatform") version "2.4.20"
+    id("io.github.anschnapp.mutflow") version "1.6.0"
+}
+
+apply(from = rootProject.file(".omp/mutation-results.gradle.kts"))
+
+repositories { mavenCentral() }
+
+kotlin {
+    jvm()
+    jvmToolchain(26)
+    sourceSets {
+        commonTest.dependencies { implementation(kotlin("test")) }
+    }
+}
+```
+
+Keep common tests free of JUnit annotations; upstream synthesizes
+`@MutFlowTest` in its mutated JVM compilation. `targets` contains production class/file patterns,
 not source-set or task names.
 
 ```kotlin
@@ -130,3 +157,51 @@ mutflow {
 Run `gradle mutationResults`; the adapter selects dedicated `mutflow<Target>Test`
 tasks and their report directories. Normal `jvmTest` is not a mutation run.
 This toolkit does not collect Native or JUnit 4 results.
+
+## Verify setup
+
+Run from the configured module, using its wrapper when available:
+
+```bash
+gradle mutationResults '-PmutationTest.includes=example.CalculatorTest'
+```
+
+Replace the filter with your test class. Expect
+`build/reports/mutation-results.json` with `schemaVersion: 2` and current
+class-qualified identities. Strict survivors/timeouts fail the task after
+writing the report. Compilation or no-match discovery failures may produce no
+report. For direct filters and exit semantics, see the
+[command reference](../reference/mutation-test-command.md#direct-gradle-execution).
+
+## Upgrade an existing installation
+
+1. Save existing changes and compare installed toolkit-owned files with this
+   repository. The installer overwrites same-path OMP/results files but refuses
+   differing Copilot profiles; do not treat rerunning it as a safe merge.
+2. For `io.omp.mutation` installations, remove only the legacy toolkit-owned
+   Kotlin files from `buildSrc/src/main/kotlin/io/omp/mutation` and the matching
+   test directory. Replace them with the `ch/trancee/mutation` copies. Also
+   replace the installed `.omp/mutation-results-src` template sources and update
+   imports in the shared results script. Preserve unrelated convention code.
+3. Merge the current build template, results script, both client skills and
+   role profiles. Resolve differing Copilot files explicitly before rerunning
+   bootstrap; never delete user-owned customizations merely to satisfy it.
+4. Update JSON consumers for [schema 2](../reference/mutation-results-format.md#compatibility):
+   discovered/evaluated/untested totals, null scores for gaps, and qualified
+   identities. Unversioned schema 1 data is not interchangeable.
+5. Rerun the configured mutation task and check current JSON and JUnit XML.
+   Validate any custom consumers before adopting the new report.
+
+## Configure a multi-module project
+
+Keep the shared typed module in root `buildSrc` and apply mutflow and the
+results script in each supported module that owns mutation tests. Module-local
+results go under that module's build directory:
+
+```bash
+./gradlew :service:mutationResults
+```
+
+The toolkit does not install every subproject automatically or combine
+module reports into one score. Use manual wiring and qualified tasks; see
+[multi-module CI](run-in-github-actions.md#adjust-a-multi-module-build).

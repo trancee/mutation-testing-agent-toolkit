@@ -6,9 +6,15 @@ This tutorial assumes you have a Kotlin JVM project with Gradle. If you don't, s
 
 ## Prerequisites
 
-- An existing Kotlin JVM project with `build.gradle.kts` and `settings.gradle.kts`
-- Java 26
+- An existing Kotlin JVM project with an explicit `kotlin("jvm") version "2.4.20"`
+  pin in a conventional multiline `plugins` block
+- Java 26 and Gradle 9.8.0
 - The Mutation Testing Agent Toolkit cloned to a known location
+
+Start with a clean worktree or save your changes. The script edits the build
+in place; it preserves existing `.bak` files but does not create a backup.
+If you have a version catalog, user-owned `buildSrc`, or legacy toolkit
+installation, follow [manual setup](../how-to/manual-setup.md) instead.
 
 ## Step 1: Run the bootstrap script
 
@@ -34,8 +40,9 @@ Configuring settings.gradle.kts...
 Configuring build.gradle.kts...
   Added mutflow plugin
   Applied mutation-results.gradle.kts
-  Added JUnit 6 + mutflow-junit6 dependencies
+  Added JUnit 6 dependencies
   Added mutflow configuration
+  Enabled JUnit Platform
   Verified compiler-coupled Kotlin 2.4.20
 Setting up typed mutation-results module (buildSrc)...
   Created buildSrc/ with typed MutationResults module (Kotlin 2.4.20)
@@ -43,7 +50,10 @@ Setting up typed mutation-results module (buildSrc)...
 ✅ Bootstrap complete!
 ```
 
-The script modified our `settings.gradle.kts` and `build.gradle.kts`, and copied the `.omp/` directory (agents, skills, scripts, and the typed results module) into our project.
+The script modified our Gradle configuration and installed `.omp/`, `buildSrc/`,
+and the Copilot files. It has not changed production or test sources yet.
+If `pluginManagement` already existed, verify that its repositories include
+`mavenCentral()`; the script leaves existing plugin-management blocks alone.
 
 It also installs `.github/skills/omp-mutation-test/` and the five
 `.github/agents/omp-mutation-test-*.agent.md` profiles. Start Copilot CLI in the
@@ -174,23 +184,20 @@ Run the `mutationResults` task:
 gradle mutationResults
 ```
 
-The mutflow plugin supplies its matching JUnit integration. The bootstrap
-detects the target Kotlin Gradle plugin version for `buildSrc`, falling back to
-Kotlin 2.4.20 when it cannot detect one.
+The mutflow plugin supplies its matching JUnit integration. Bootstrap requires
+the compatible Kotlin pin before changing files; it does not guess a compiler
+version or fall back to a default.
 
-We'll see the mutflow summary at the bottom:
+We'll see the mutation summary with discovered, tested, killed, survived,
+timed-out, and remaining-untested counts. Exact counts depend on the selected
+business logic and operators. For our eligibility rule, look for a survivor
+that changes `>=` to `>`: the test at age 25 does not cover the age-18 boundary.
 
-```
-╔════════════════════════════════╗
-║      MUTATION TESTING SUMMARY  ║
-╠════════════════════════════════╣
-║  Killed:  3  ✓                 ║
-║  Survived: 5  ✗                ║
-║  Timed out: 0  ✓               ║
-╚════════════════════════════════╝
-```
-
-The `mutationResults` task records survivors in the JSON report and completes successfully. Survivors are findings to investigate, not an infrastructure failure.
+Our deliberately weak test leaves survivors. With upstream's default strict
+mode, `mutationResults` writes schema 2 JSON and then exits unsuccessfully.
+Survivors are mutation outcomes, not infrastructure gaps. The report is at
+`build/reports/mutation-results.json`; its `gaps` should be zero for a complete
+run. Compilation or discovery failures can prevent a report from being written.
 
 If some mutations survived, we can add boundary tests to kill them. See the [interpret results](../how-to/interpret-results.md) guide for details.
 

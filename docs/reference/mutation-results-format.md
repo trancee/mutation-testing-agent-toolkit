@@ -10,7 +10,7 @@ Reports without `schemaVersion` are legacy schema 1; do not reinterpret them.
 Upgrade the results module, Gradle script, both client profiles, and consumers
 together. Schema 2 changes total/evaluated/gap accounting and class-qualifies
 test identities; namespace migration is described in the
-[manual setup guide](../how-to/manual-setup.md#set-up-the-typed-results-module-buildsrc).
+[upgrade procedure](../how-to/manual-setup.md#upgrade-an-existing-installation).
 
 ## File location
 
@@ -23,10 +23,10 @@ test identities; namespace migration is described in the
 | Field | Type | Description |
 |-------|------|-------------|
 | `schemaVersion` | number | `2`; reports without this field use the legacy contract |
-| `generatedAt` | number | Unix timestamp (milliseconds) when the results were generated |
+| `generatedAt` | number | Unix timestamp (milliseconds) when JSON was generated; test XML may have been reused by Gradle |
 | `mutationScore` | number/null | `killed / mutationsEvaluated` (0.0–1.0). `null` for zero evaluations or any execution gap. |
 | `qualityBand` | string | Excellent / Good / Fair / Poor (see quality bands table) |
-| `confidence` | string | Low / Medium / High (based on mutation count) |
+| `confidence` | string | Low / Medium / High (based on evaluated outcomes, not discovered totals) |
 | `totalMutations` | number | Discovered mutations summed across selected test-class sessions, not globally deduplicated |
 | `killed` | number | Mutations caught by at least one test |
 | `survived` | number | Mutations not caught by any test |
@@ -34,8 +34,8 @@ test identities; namespace migration is described in the
 | `gaps` | number | Infrastructure-gap records; never subtracted from evaluated mutation counts |
 | `mutationsEvaluated` | number | Recorded outcomes: `killed + survived + timedOut` |
 | `untestedMutations` | number | `totalMutations - mutationsEvaluated`; budget limits are not execution gaps |
-| `confidenceIntervalLow` | number | Wilson score 95% CI lower bound (z=1.96). `null` when mutationScore is null. |
-| `confidenceIntervalHigh` | number | Wilson score 95% CI upper bound (z=1.96). `null` when mutationScore is null. |
+| `confidenceIntervalLow` | number/null | Wilson score 95% CI lower bound (z=1.96). `null` when mutationScore is null. |
+| `confidenceIntervalHigh` | number/null | Wilson score 95% CI upper bound (z=1.96). `null` when mutationScore is null. |
 | `testMethods` | array[string] | `testClass::displayName` identities from XML, excluding synthetic `executionError`; may include skipped tests |
 | `testKillerMatrix` | object | Map: class-qualified identity → mutation `sourceLocation` strings it killed. Records killers, not every test outcome. Missing entries are not proof a test is unnecessary. |
 | `mutations` | array[object] | Per-mutation details |
@@ -120,7 +120,7 @@ produce a complete current report while Gradle fails.
 
 ### redundantGroups[].tests
 
-Array of test method display names that share an identical failure signature.
+Array of class-qualified test identities that share an identical failure signature.
 
 ### redundantGroups[].count
 
@@ -182,7 +182,7 @@ These thresholds are toolkit policy and are not inherited from Scott-CC.
 
 ## Confidence levels
 
-| Level | Mutation count |
+| Level | Evaluated mutation count |
 |-------|---------------|
 | Low | <10 |
 | Medium | 10–50 |
