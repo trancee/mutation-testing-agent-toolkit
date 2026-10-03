@@ -32,8 +32,8 @@ before making an incompatible format change.
 | `mutationsEvaluated` | number | `totalMutations - gaps`, clamped to 0 |
 | `confidenceIntervalLow` | number | Wilson score 95% CI lower bound (z=1.96). `null` when mutationScore is null. |
 | `confidenceIntervalHigh` | number | Wilson score 95% CI upper bound (z=1.96). `null` when mutationScore is null. |
-| `testMethods` | array[string] | All test method names from JUnit XML |
-| `testKillerMatrix` | object | Map: test displayName → array of mutation `sourceLocation` strings it killed. Enables full per-test-per-mutation zombie detection. |
+| `testMethods` | array[string] | Test method names found in JUnit XML; may include skipped tests |
+| `testKillerMatrix` | object | Map: test displayName → array of mutation `sourceLocation` strings it killed. Records killers, not every test's result for every mutation; a missing entry is not proof that a test is unnecessary. |
 | `mutations` | array[object] | Per-mutation details |
 | `executionGaps` | array[object] | Execution gap entries (see executionGaps[].type) |
 | `redundantGroups` | array[object] | Redundant test group entries (see redundantGroups[].tests) |
@@ -142,6 +142,8 @@ List of mutation source location strings shared across the group.
 ```
 
 ## Quality bands
+
+These thresholds are toolkit policy and are not inherited from Scott-CC.
 
 | Band | Score |
 |------|-------|

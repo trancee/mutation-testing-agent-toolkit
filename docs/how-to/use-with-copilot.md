@@ -35,14 +35,15 @@ setup described in [Manual setup](manual-setup.md).
 Start Copilot CLI from the target project and invoke:
 
 ```text
-/omp-mutation-test [project-path] [--targets <pattern>] [--focus <patterns>] [--auto-approve] [--mode quick|standard|deep]
+/omp-mutation-test [project-path] [--targets <patterns>] [--auto-approve] [--mode quick|standard|deep]
 ```
 
 The skill delegates to `omp-mutation-test-reviewer`, which coordinates the
 targeting, execution, audit, and refactoring agents. The default mode is
-`standard`. Use `--mode quick` to skip refactoring and limit the run to 10
-mutations; `--mode deep` includes all available mutations and detailed killer
-matrices.
+`standard`. `--targets` filters Gradle test classes. Use `--mode quick` to skip
+refactoring and allow at most 10 mutation runs per selected class; `--mode deep`
+includes all available mutations and detailed killer data. The limit is per
+class, not project-wide.
 
 To configure a new target project, explicitly request:
 
@@ -59,8 +60,8 @@ the skill while Copilot CLI is already running, reload skills with
 Copilot CLI may ask permission before running shell commands or editing files.
 Do not pre-approve shell access for unreviewed scripts. Without `--auto-approve`,
 the refactor specialist proposes changes but does not write them. With it,
-approved test refactors may be applied; deleting zombie tests or redundant test
-groups still requires explicit user approval.
+approved test refactors may be applied; deleting or consolidating tests always
+requires explicit user approval.
 
 The OMP entry point `/mutation-test` remains available separately. It uses the
 profiles in `.omp/agents/` and OMP's own dispatch tools; the Copilot adapter uses

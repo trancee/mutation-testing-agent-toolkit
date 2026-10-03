@@ -24,7 +24,7 @@ object MutationResultsParser {
      *     TIMED OUT - likely causes an infinite loop
      * ```
      *
-     * Multiple "killed by:" lines per mutation are captured (full per-test-per-mutation matrix).
+     * Multiple "killed by:" lines per mutation are captured (all recorded killers for each mutation).
      */
     fun parseMutflowSummary(stdout: String): List<MutationResult> {
         val mutations = mutableListOf<MutationResult>()

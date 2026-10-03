@@ -18,20 +18,20 @@ mutflow keeps production compilation clean and injects mutation variants during 
 
 ### Zombie test
 
-A test that passes even when the code is mutated. In Scott-CC's model, a zombie test passes for every mutation. In this system, a zombie candidate is a test that never appears in the `testKillerMatrix` for any killed mutation. It executes during mutation runs but never kills a mutation. mutflow records every test that catches each mutation, not only the first.
+A test that passes even when the code is mutated. In this system, a test is only a zombie candidate when the run evidence confirms it executed, it was in the selected mutation scope, and it never appears in any mutation's killer set. A missing killer entry alone is not proof: skipped or out-of-scope tests must not be classified as zombies. mutflow records all tests that kill each mutation, not every test's outcome for every mutation, so candidates are not confirmed unnecessary tests.
 
 ### Over-mocked test
 
-A test that uses excessive mocking (`mockk()`, `mock()`), potentially masking real logic and reducing mutation sensitivity. Flagged when a test method has >3 mock calls.
+A test that uses excessive mocking (`mockk()`, `mock()`), potentially masking real logic and reducing mutation sensitivity. More than three mock calls is a toolkit-specific review heuristic, not evidence by itself that a test is weak.
 
 ## Agent architecture
 
 | Agent | Role |
 |-------|------|
 | test-quality-reviewer | Orchestrator — coordinates the pipeline via `task` tool dispatch |
-| test-saboteur | Mutation targeting — adds `@MutationTarget`, `@MutFlowTest`, `// mutflow:ignore` |
-| test-executor | Test execution — runs selected `./gradlew test` classes and captures stdout + JUnit XML; the separate `mutationResults` task generates aggregate JSON |
-| test-auditor | Results analysis — parses output, calculates score, identifies zombies |
+| test-saboteur | Mutation targeting — selects source/test classes, adds `@MutationTarget`, `@MutFlowTest` with the mode budget, and applicable `// mutflow:ignore` annotations |
+| test-executor | Test execution — runs one aggregate `mutationResults` Gradle invocation for the selected classes and captures stdout, JUnit XML, and JSON |
+| test-auditor | Results analysis — parses aggregate output, calculates score, and identifies evidence-qualified zombie candidates |
 | test-refactor-specialist | Test improvement — generates refactored test code |
 
 ## Client adapters
@@ -47,18 +47,26 @@ use client-specific dispatch and profile formats. The bootstrap installs both.
 
 ## Mutation strategies
 
-| Scott-CC Strategy | mutflow Operator | Coverage |
+| Scott-CC strategy category | Representative mutflow operators | Relationship |
 |---|---|---|
-| Boundary conditions | RelationalComparisonOperator + ConstantBoundaryOperator | Full |
-| Return values | BooleanReturnOperator + NullableReturnOperator | Full |
-| Boolean logic | BooleanInversionOperator + EqualitySwapOperator + BooleanLogicOperator | Full |
-| Arithmetic | ArithmeticOperator | Full |
-| Exception types | ExceptionTypeSwapOperator | Full |
-| Zombie detection | Per-test-per-mutation matrix | Full |
+| Boundary conditions | RelationalComparisonOperator + ConstantBoundaryOperator | Category mapping; operator-generated cases only |
+| Return values | BooleanReturnOperator + NullableReturnOperator | Limited to supported return forms |
+| Boolean logic | BooleanInversionOperator + EqualitySwapOperator + BooleanLogicOperator | Category mapping; not semantic mutation parity |
+| Arithmetic | ArithmeticOperator | Category mapping; operator-generated cases only |
+| Exception types | ExceptionTypeSwapOperator | Category mapping; operator-generated cases only |
+| Zombie analysis | Per-mutation killing-test data | Candidate analysis; not complete test-outcome matrix |
+
+These are broad strategy mappings, not feature-equivalence claims. Scott-CC
+generates context-aware semantic mutations in isolated worktrees; this toolkit
+uses mutflow's predefined Kotlin/JVM operators and does not create arbitrary
+return-value replacements.
+
+Mutation score quality bands and the mock-count heuristic are toolkit policy;
+they are not inherited Scott-CC thresholds.
 
 ## Data contracts
 
-The `mutationResults` Gradle task outputs `mutation-results.json` including `killedByTests` (all killing tests per mutation) and `testKillerMatrix` (test → mutation source locations). Field names, types, and meanings are a consumer contract; the format and quality bands are documented in the [mutation results reference](docs/reference/mutation-results-format.md).
+The `mutationResults` Gradle task outputs `mutation-results.json` including `killedByTests` (all recorded killing tests per mutation) and `testKillerMatrix` (test → mutation source locations it killed). These are killer relationships, not a complete test-by-mutation outcome matrix. Field names, types, and meanings are a consumer contract; the format and quality bands are documented in the [mutation results reference](docs/reference/mutation-results-format.md).
 
 ## Decisions deferred to v2
 

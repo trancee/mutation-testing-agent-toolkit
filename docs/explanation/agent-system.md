@@ -22,8 +22,8 @@ The OMP `/mutation-test` skill sends the project and command options to the OMP
 reviewer. The Copilot CLI `/omp-mutation-test` skill sends the same contract to
 the Copilot reviewer. Each reviewer then coordinates four phases:
 
-1. The saboteur selects mutation targets and prepares their tests.
-2. Executors run the prepared test classes and collect mutflow output.
+1. The saboteur selects mutation targets, applies the mode budget, and prepares their tests.
+2. One executor runs the selected test classes together and collects aggregate mutflow output.
 3. The auditor turns those results into scores, execution gaps, survivor lists, and test-quality findings.
 4. The refactor specialist uses the audit to propose stronger tests.
 
@@ -37,14 +37,20 @@ The saboteur must finish first because mutflow relies on `@MutationTarget`, `@Mu
 
 ## Executor dispatch
 
-The OMP reviewer dispatches one executor per annotated test class in a batch.
-The Copilot reviewer may use parallel agent calls when supported, or run them
-sequentially. mutflow's synchronized lock serializes active mutation sessions
-within a JVM, so concurrency does not change the required per-class ordering.
+Each reviewer dispatches one executor for a single aggregate Gradle invocation
+covering the selected test classes. The results task reads JUnit XML from that
+same invocation and emits one JSON report. Competing Gradle processes would
+share build and JUnit result paths; mutflow's synchronized lock is JVM-local
+and cannot protect separate Gradle processes.
 
 ## Why approval remains separate
 
-The refactor specialist may write approved test refactors when `--auto-approve` is present. Deleting zombie tests or redundant groups always requires explicit approval. This boundary prevents a quality heuristic from removing tests without a human decision.
+The refactor specialist may apply additive or assertion-level test changes when
+`--auto-approve` is present. Deleting or consolidating tests always requires
+explicit approval. After any applied change, the reviewer reruns the same
+aggregate mutation task and reports whether validation passed. This boundary
+keeps quality heuristics from removing tests and prevents unverified changes
+from being presented as successful.
 
 ## Client-specific adapters
 

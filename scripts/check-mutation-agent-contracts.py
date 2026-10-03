@@ -31,7 +31,7 @@ ROLES = {
         (
             Contract(
                 "orders targeting, execution, audit, and refactoring",
-                r"Sequential handshake: saboteur → executors → auditor → approval gate → refactorer",
+                r"Sequential handshake: saboteur → one aggregate executor → auditor → approval gate → refactorer",
                 r"1\..*omp-mutation-test-saboteur.*2\..*omp-mutation-test-executor.*"
                 r"3\..*omp-mutation-test-auditor.*4\..*omp-mutation-test-refactor-specialist",
             ),
@@ -42,8 +42,8 @@ ROLES = {
             ),
             Contract(
                 "requires explicit approval before deleting tests",
-                r"Zombie deletion and redundant test group removal always require explicit approval",
-                r"deletion of zombie tests or redundant\s+groups still requires explicit user approval",
+                r"Deletion or consolidation of tests always requires explicit user approval",
+                r"deletion or\s+consolidation always requires explicit user approval",
             ),
             Contract(
                 "treats project paths as untrusted and quotes shell arguments",
@@ -79,16 +79,14 @@ ROLES = {
         ".github/agents/omp-mutation-test-executor.agent.md",
         (
             Contract(
-                "runs a selected test class with Gradle",
-                r"\./gradlew test --tests '<TestClass>'",
-                r"Quote the class pattern as a shell\s+argument",
+                "runs one aggregate mutationResults invocation with selected class patterns",
+                r"Run the aggregate task once.*mutationResults",
+                r"Run `\./gradlew.*mutationResults`.*exactly once",
             ),
             Contract(
                 "treats mutationResults as an aggregate report task",
-                r"custom `mutationResults` task runs the configured `test` task.*"
-                r"not as a per-class\s+replacement",
-                r"`mutationResults` task generates the aggregate JSON.*"
-                r"not as a per-class\s+replacement",
+                r"`mutationResults`.*aggregate\s+JSON.*not (?:as )?a per-class\s+replacement",
+                r"`mutationResults` writes the aggregate.*JSON report.*aggregate report task, not a\s+per-class replacement",
             ),
             Contract(
                 "does not report execution gaps as surviving mutations",
@@ -135,12 +133,12 @@ ROLES = {
             ),
             Contract(
                 "gates edits on auto-approval",
-                r"If `--auto-approve` IS set, you may apply changes directly",
+                r"(?:With `--auto-approve`|If `--auto-approve` IS set).*you may apply",
                 r"With `--auto-approve`, you may apply",
             ),
             Contract(
                 "requires explicit approval to delete or consolidate tests",
-                r"Zombie test deletion and redundant test group removal require explicit approval",
+                r"Deleting or consolidating tests always requires explicit user approval",
                 r"explicit user approval before deleting tests or consolidating\s+redundant groups",
             ),
         ),

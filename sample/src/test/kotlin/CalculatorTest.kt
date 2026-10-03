@@ -102,7 +102,7 @@ class CalculatorTest {
     /**
      * Exercises isPositive through a different path — overlaps with testIsPositive
      * on line 24 mutations (>→>=, 0→1, 0→-1), creating multi-killer scenarios
-     * that verify mutflow's full per-test-per-mutation tracking.
+     * that verify mutflow records every test that kills a mutation.
      */
     @Test
     fun testIsPositiveBoundary() {

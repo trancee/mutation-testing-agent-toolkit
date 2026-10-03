@@ -15,7 +15,7 @@ Given the project path, results from test-executor agents (stdout and JUnit XML,
 1. **Parse mutation results**: Extract from the custom Gradle task JSON or console output:
    - Total mutations discovered
    - Killed mutations (with `killedByTests` array — ALL tests that caught each mutation)
-   - Survived mutations (zombie mutations)
+   - Survived mutations (mutations not caught by this run)
    - Timed-out mutations
    - Full `testKillerMatrix`: map of test name → list of mutation source locations it killed
 2. **Calculate mutation score**: `killed / (total - gaps)`. Returns a ratio (0.0–1.0), not a percentage. Returns `null` when no mutations are evaluable (denominator is 0 — never manufacture a score).
@@ -32,9 +32,10 @@ Given the project path, results from test-executor agents (stdout and JUnit XML,
    - Medium: 10-50 mutations
    - High: more than 50 mutations
 8. **Zombie test detection**: Use `testKillerMatrix` and `killedByTests` from JSON when available. Otherwise use per-test killer details in executor output. Do not classify zombie candidates when the available results do not identify which tests killed mutations.
-   - Find tests in `testMethods` that have no entry in `testKillerMatrix`. These tests ran during mutation runs but never killed any mutation. They are zombie candidates.
+   - A test missing from `testKillerMatrix` is only a candidate if JUnit XML confirms it was not skipped and the selected test classes and mutation scope show it was eligible for the run. `testMethods` may include skipped tests; inspect the XML status. Do not label candidates as confirmed unnecessary tests.
    - Raise confidence for candidates that also don't appear in any `killedByTests` array across all mutations.
-   - Lower confidence for candidates that the test source suggests should exercise mutated code but didn't fail. Parse the test source to check whether the test method's assertions reference the same classes and lines as mutation points.
+   - Lower confidence for candidates that test source suggests should exercise mutated code but did not kill a mutation. Parse the test source to check whether the test method's assertions reference the same classes and lines as mutation points.
+9. **Over-mocking heuristic**: More than three mock calls is a toolkit-specific review trigger only. Count from source when practical; do not report over-mocking as a quality defect based on the threshold alone. Explain context and evidence.
 
 ## Known limitations
 

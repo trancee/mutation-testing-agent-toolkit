@@ -28,7 +28,7 @@ Use **mutflow** as the mutation engine.
 - **Kotlin-first**: mutflow is a native Kotlin compiler plugin — no Java interoperability layer needed
 - **JUnit 6 native**: `@MutFlowTest` + `MutFlow.underTest { }` API is idiomatic Kotlin
 - **Test-only mutation compilation**: Mutations are injected during test compilation, keeping production artifacts free of mutation code and eliminating per-mutant git worktrees.
-- **Operator coverage**: mutflow's catalog covers all 5 Scott-CC mutation strategies (boundary, return values, boolean logic, arithmetic, exception types).
+- **Operator categories**: mutflow has predefined operators that map broadly to Scott-CC's boundary, return-value, boolean, arithmetic, and exception categories. This is a category mapping, not feature or behavioral parity; mutflow does not generate arbitrary context-aware return-value mutations.
 - **Active maintenance**: mutflow tracks the current Kotlin compiler release; the plugin and Kotlin versions must match.
 
 ## Consequences
@@ -36,9 +36,9 @@ Use **mutflow** as the mutation engine.
 ### Positive
 
 - No git worktree management — mutflow isolates mutation instrumentation to test compilation
-- Simpler orchestration: one executor per test class, not per mutation
+- Simpler orchestration: one aggregate Gradle invocation for selected test classes, not one process per mutant
 - Fast iteration: a single instrumented test compilation covers all mutations
-- Full per-test-per-mutation zombie detection: mutflow tracks all tests that kill each mutation (`MutationResult.Killed(testNames: Set<String>)`), enabling precise zombie candidate identification via `testKillerMatrix`
+- Per-mutation killer evidence: mutflow records the tests that killed each mutation (`MutationResult.Killed(testNames: Set<String>)`), enabling zombie-candidate analysis. It does not provide every test's outcome for every mutation, so a missing killer entry is not proof that a test is unnecessary.
 
 ### Negative
 
