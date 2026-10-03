@@ -40,6 +40,12 @@ if ! "$bootstrap" "$project" >"$tmp_root/install.log" 2>&1; then
 fi
 
 assert_file "$project/.github/skills/omp-mutation-test/SKILL.md"
+assert_file "$project/.omp/AGENT-USAGE.md"
+cmp "$repo_root/.omp/AGENT-USAGE.md" "$project/.omp/AGENT-USAGE.md"
+grep -Fq '.omp/AGENT-USAGE.md' "$project/AGENTS.md"
+cp "$project/AGENTS.md" "$tmp_root/installed-AGENTS.md"
+"$bootstrap" "$project" >"$tmp_root/reinstall.log" 2>&1
+cmp "$tmp_root/installed-AGENTS.md" "$project/AGENTS.md"
 cmp "$repo_root/.github/skills/omp-mutation-test/SKILL.md" \
   "$project/.github/skills/omp-mutation-test/SKILL.md"
 for agent in \
@@ -75,5 +81,49 @@ fi
 cmp "$tmp_root/conflict-agent.agent.md" \
   "$conflict_project/.github/agents/omp-mutation-test-reviewer.agent.md"
 cmp "$tmp_root/conflict-build.gradle.kts" "$conflict_project/build.gradle.kts"
+
+owned_project="$tmp_root/owned-agents"
+write_minimal_project "$owned_project"
+printf 'User-owned policy without final newline' > "$owned_project/AGENTS.md"
+"$bootstrap" "$owned_project" >"$tmp_root/owned.log" 2>&1
+grep -Fxq 'User-owned policy without final newline' "$owned_project/AGENTS.md"
+grep -Fq '.omp/AGENT-USAGE.md' "$owned_project/AGENTS.md"
+
+cp "$owned_project/AGENTS.md" "$tmp_root/preserved-policy"
+for kind in conflicting-guide symlink-agents symlink-guide directory-agents symlink-omp directory-guide; do
+  rejected="$tmp_root/$kind"
+  write_minimal_project "$rejected"
+  cp "$rejected/build.gradle.kts" "$tmp_root/$kind-build"
+  case "$kind" in
+    conflicting-guide)
+      mkdir -p "$rejected/.omp"
+      printf 'User-owned guide\n' > "$rejected/.omp/AGENT-USAGE.md"
+      ;;
+    symlink-agents)
+      ln -s "$owned_project/AGENTS.md" "$rejected/AGENTS.md"
+      ;;
+    symlink-guide)
+      mkdir -p "$rejected/.omp"
+      ln -s "$owned_project/AGENTS.md" "$rejected/.omp/AGENT-USAGE.md"
+      ;;
+    directory-agents)
+      mkdir -p "$rejected/AGENTS.md"
+      ;;
+    symlink-omp)
+      ln -s "$owned_project/.omp" "$rejected/.omp"
+      ;;
+    directory-guide)
+      mkdir -p "$rejected/.omp/AGENT-USAGE.md"
+      ;;
+  esac
+  if "$bootstrap" "$rejected" >"$tmp_root/$kind.log" 2>&1; then
+    echo "Expected bootstrap to reject $kind." >&2
+    exit 1
+  fi
+  cmp "$tmp_root/$kind-build" "$rejected/build.gradle.kts"
+  [[ ! -e "$rejected/.github" ]]
+done
+grep -Fxq 'User-owned guide' "$tmp_root/conflicting-guide/.omp/AGENT-USAGE.md"
+cmp "$tmp_root/preserved-policy" "$owned_project/AGENTS.md"
 
 echo "Copilot adapter bootstrap checks passed."

@@ -80,7 +80,8 @@ in [AGENTS.md](AGENTS.md).
   not automatic migration of arbitrary version catalogs or multi-module layouts.
 - **Results migration**: existing `io.omp.mutation` installations and schema 1
   consumers need the [coordinated migration](docs/how-to/manual-setup.md#upgrade-an-existing-installation).
-- **Gradle configuration cache**: compatibility is not validated.
+- **Gradle configuration cache**: unsupported by the current results adapter;
+  use `--no-configuration-cache` when the target enables it globally.
 - **Test-quality findings**: killer data supports zombie/redundancy candidates,
   not proof that a test can safely be deleted.
 

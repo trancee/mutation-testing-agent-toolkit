@@ -28,6 +28,9 @@ The script installs the Copilot skill under
 refuses to follow symlinks or overwrite conflicting Copilot files. Resolve any
 reported conflict yourself, then rerun setup.
 
+It also installs `.omp/AGENT-USAGE.md` and appends its discovery pointer once
+to the project's existing `AGENTS.md` without replacing project policy.
+
 For KMP JVM installation, append `--kmp`. Bootstrap does not annotate sources;
 the targeting agent prepares those on a subsequent mutation-test run.
 

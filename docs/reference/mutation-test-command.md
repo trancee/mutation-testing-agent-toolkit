@@ -72,6 +72,7 @@ The `setup` subcommand installs and configures the mutation-testing system.
 | Area | Effect |
 |------|--------|
 | `.omp/` | Copies the agents, mutation-test skill, Gradle results script, and typed results source. |
+| `AGENTS.md` | Appends a single pointer to the installed `.omp/AGENT-USAGE.md`, preserving existing project policy. Differing guides or symlinked destinations stop setup. |
 | `.github/` | Installs the Copilot skill and its five custom agent profiles. Existing conflicting Copilot files cause setup to stop before modifying the target. |
 | `settings.gradle.kts` | Adds plugin repositories through `pluginManagement`. |
 | `build.gradle.kts` | Applies mutflow and the results script, enables mutflow, and configures JUnit dependencies/Platform for plain JVM. The plugin supplies mutflow integration. |
@@ -124,7 +125,7 @@ Deep mode also includes full redundant-test-group details and per-mutation kille
 | Kotlin Multiplatform | Dedicated `mutflow<Target>Test` JVM tasks; common tests stay plain `kotlin.test`. |
 | Unsupported toolkit adapters | Native, JUnit 4/Android, and JS. Upstream Native/JUnit 4 support is separate. |
 | Mutation execution | A per-JVM overlap guard rejects overlapping sessions; it does not queue them or coordinate separate Gradle processes. |
-| Configuration cache | Not validated; the adapter uses evaluation and task-graph hooks. |
+| Configuration cache | Unsupported: `prepareMutationResults` captures script references that fail cache storage. Use `--no-configuration-cache` when enabled globally. |
 
 ## Direct Gradle execution
 

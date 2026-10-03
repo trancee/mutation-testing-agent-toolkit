@@ -67,6 +67,29 @@ if [[ -d "$PROJECT_PATH/buildSrc/src/main/kotlin/io/omp/mutation" ||
     exit 1
 fi
 
+agent_usage_source="$SCRIPT_DIR/AGENT-USAGE.md"
+agent_usage_destination="$PROJECT_PATH/.omp/AGENT-USAGE.md"
+agent_pointer='For mutation-testing setup, execution, audits, or troubleshooting, read [.omp/AGENT-USAGE.md](.omp/AGENT-USAGE.md) first.'
+if [[ ! -f "$agent_usage_source" ]]; then
+    echo "Error: installed agent usage guide is missing: '$agent_usage_source'" >&2
+    exit 1
+fi
+if [[ -L "$PROJECT_PATH/.omp" || -L "$agent_usage_destination" ||
+      -L "$PROJECT_PATH/AGENTS.md" ]]; then
+    echo "Error: refusing symlinked agent guide destinations." >&2
+    exit 1
+fi
+if [[ -e "$PROJECT_PATH/.omp" && ! -d "$PROJECT_PATH/.omp" ]] ||
+    [[ -e "$PROJECT_PATH/AGENTS.md" && ! -f "$PROJECT_PATH/AGENTS.md" ]]; then
+    echo "Error: agent guide destinations have incompatible file types." >&2
+    exit 1
+fi
+if [[ -e "$agent_usage_destination" ]] &&
+    ! cmp -s "$agent_usage_source" "$agent_usage_destination"; then
+    echo "Error: existing .omp/AGENT-USAGE.md differs; merge the installed guide explicitly." >&2
+    exit 1
+fi
+
 copilot_skill_source="$REPOSITORY_ROOT/.github/skills/omp-mutation-test/SKILL.md"
 copilot_agent_sources=(
     "$REPOSITORY_ROOT/.github/agents/omp-mutation-test-reviewer.agent.md"
@@ -138,6 +161,11 @@ mkdir -p "$target_dir"
 cp -r "$SCRIPT_DIR/agents" "$target_dir/"
 cp -r "$SCRIPT_DIR/skills" "$target_dir/"
 cp "$SCRIPT_DIR/mutation-results.gradle.kts" "$target_dir/"
+cp "$agent_usage_source" "$agent_usage_destination"
+if [[ ! -f "$PROJECT_PATH/AGENTS.md" ]] ||
+    ! grep -Fxq "$agent_pointer" "$PROJECT_PATH/AGENTS.md"; then
+    printf '\n%s\n' "$agent_pointer" >> "$PROJECT_PATH/AGENTS.md"
+fi
 mkdir -p "$target_dir/mutation-results-src"
 cp "$SCRIPT_DIR/mutation-results-src/build.gradle.kts" "$target_dir/mutation-results-src/"
 cp -r "$SCRIPT_DIR/mutation-results-src/main" "$SCRIPT_DIR/mutation-results-src/test" "$target_dir/mutation-results-src/"

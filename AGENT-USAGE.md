@@ -2,7 +2,10 @@
 
 Audience: AI agents operating this repository or using its checkout to configure
 a target project. Entry point: root [AGENTS.md](AGENTS.md). This is an execution
-guide, not a human tutorial or an installed client skill. Repository policy
+guide, not a human tutorial or an installed client skill. Bootstrap installs a
+target-specific [.omp/AGENT-USAGE.md](.omp/AGENT-USAGE.md) and appends its
+discovery pointer to the target's `AGENTS.md`, preserving existing policy.
+Repository policy
 remains in `AGENTS.md`; domain terms remain in [CONTEXT.md](CONTEXT.md).
 
 ## 1. Route the request
@@ -132,6 +135,7 @@ Use [CI](.github/workflows/ci.yml) for the exact authoritative gate sequence:
 ```bash
 gradle -p sample/buildSrc test --rerun-tasks
 python3 scripts/test-mutflow-integration.py
+python3 scripts/test-documentation-examples.py
 bash scripts/test-bootstrap-copilot.sh
 python3 scripts/test-upstream-check.py
 python3 scripts/check-copilot-agent-profiles.py
@@ -148,5 +152,7 @@ and [Dependabot](.github/dependabot.yml) for automation ownership.
 
 **Verified:** changed behavior and applicable CI gates pass, source copies are
 synchronized, limitations are disclosed, and external actions have explicit
-approval. Configuration-cache compatibility and fresh live agent orchestration
-are not established by the real Gradle integration tests.
+approval. The results adapter currently fails configuration-cache storage
+because `prepareMutationResults` captures script references; use
+`--no-configuration-cache` if enabled globally. Fresh live agent orchestration
+is not established by real Gradle integration tests.

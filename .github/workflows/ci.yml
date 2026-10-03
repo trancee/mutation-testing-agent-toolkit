@@ -73,6 +73,8 @@ jobs:
           exit 1
       - name: Exercise real mutflow JVM and KMP integration
         run: python3 scripts/test-mutflow-integration.py
+      - name: Execute documented tutorials and CI score gate
+        run: python3 scripts/test-documentation-examples.py
       - name: Check dependency pin and generated-source consistency
         run: |
           python3 scripts/test-upstream-check.py

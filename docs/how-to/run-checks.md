@@ -89,6 +89,7 @@ python3 scripts/test-upstream-check.py
 python3 scripts/check-copilot-agent-profiles.py
 python3 scripts/check-mutation-agent-contracts.py
 python3 scripts/test-mutflow-integration.py
+python3 scripts/test-documentation-examples.py
 python3 scripts/check-upstream.py --offline
 ```
 
@@ -98,6 +99,11 @@ failures, timeouts, changed filters, class identities, budget counters, clean
 production artifacts, setup conflicts, cached-test report regeneration, named
 KMP JVM targets, and report freshness. CI runs the same
 gate; parser-only tests are not a substitute.
+
+The documentation-example gate extracts runnable Kotlin snippets and the CI
+score gate from their Markdown source. It executes JVM baseline-survivor/fix
+and KMP budget/full scenarios, and rejects missing, legacy, gapped, empty, and
+budget-limited reports. It does not invoke either live AI client.
 
 To verify released versions and upstream source drift online:
 

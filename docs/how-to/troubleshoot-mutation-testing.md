@@ -39,6 +39,7 @@ after an early configuration failure.
 | Score is null | Zero evaluations or any gap | Resolve gaps and confirm mutation execution was not disabled |
 | High score but untested mutations remain | Annotation/DSL budget and `MUTFLOW_MAX_RUNS` | Run deep/full scope or explicitly report budget-limited evidence |
 | A second active session fails | JUnit parallelism or concurrent runs sharing output | Avoid overlapping sessions within one JVM and competing Gradle processes |
+| Configuration-cache serialization fails | `prepareMutationResults` script references | Run with `--no-configuration-cache`; current adapter does not support it |
 | Client skill or role is unavailable | Installed skill/profile paths and active workspace | Start a fresh session; do not replace missing native delegation with another client's tools |
 
 ## Investigate timeouts without hiding them

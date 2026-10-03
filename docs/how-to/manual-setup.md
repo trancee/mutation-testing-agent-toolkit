@@ -17,6 +17,7 @@ Copy these from the mutation testing repo into your project root:
 
 - `.omp/mutation-results.gradle.kts`
 - `.omp/mutation-results-src/`, the typed module source copied to `buildSrc/`
+- `.omp/AGENT-USAGE.md`, the self-contained installed agent guide
 - `.omp/bootstrap-mutation-testing.sh` if you need the agent-driven `setup` command
 
 Copy the complete client layer(s) you intend to use:
@@ -29,6 +30,13 @@ Copy the complete client layer(s) you intend to use:
 Gradle-only execution needs neither client. Agent-driven setup expects the
 bootstrap's source layout and both client file sets; use the installer for a
 complete dual-client installation.
+
+Append a mutation-testing pointer to the target's existing `AGENTS.md` without
+replacing its policy: `For mutation-testing setup, execution, audits, or
+troubleshooting, read [.omp/AGENT-USAGE.md](.omp/AGENT-USAGE.md) first.`
+Bootstrap installs this guide and adds the pointer once. A differing installed
+guide or symlinked destination stops setup before modification; merge updates
+explicitly.
 
 ## Add plugin management
 
@@ -184,7 +192,7 @@ report. For direct filters and exit semantics, see the
    replace the installed `.omp/mutation-results-src` template sources and update
    imports in the shared results script. Preserve unrelated convention code.
 3. Merge the current build template, results script, both client skills and
-   role profiles. Resolve differing Copilot files explicitly before rerunning
+   role profiles and installed agent guide. Resolve differing Copilot files and guide explicitly before rerunning
    bootstrap; never delete user-owned customizations merely to satisfy it.
 4. Update JSON consumers for [schema 2](../reference/mutation-results-format.md#compatibility):
    discovered/evaluated/untested totals, null scores for gaps, and qualified
