@@ -30,6 +30,66 @@ if [[ ! -d "$PROJECT_PATH" ]]; then
     exit 1
 fi
 
+build_file="$PROJECT_PATH/build.gradle.kts"
+if [[ ! -f "$build_file" ]]; then
+    echo "Error: build.gradle.kts not found in '$PROJECT_PATH'" >&2
+    exit 1
+fi
+if ! grep -q '^plugins {$' "$build_file"; then
+    echo "Error: bootstrap requires a conventional multiline plugins block; use manual setup for other layouts." >&2
+    exit 1
+fi
+if [[ "$IS_KMP" == "1" ]] && ! grep -q 'kotlin("multiplatform")' "$build_file"; then
+    echo "Error: --kmp requires a Kotlin Multiplatform project." >&2
+    exit 1
+fi
+if [[ "$IS_KMP" == "0" ]] && grep -q 'kotlin("multiplatform")' "$build_file"; then
+    echo "Error: use --kmp for Kotlin Multiplatform projects." >&2
+    exit 1
+fi
+if ! grep -Eq 'kotlin\("(jvm|multiplatform)"\) version "2\.4\.20"' "$build_file"; then
+    echo "Error: mutflow 1.6.0 requires Kotlin 2.4.20. Bootstrap requires an explicit compatible Kotlin plugin pin; configure catalog/alias builds manually." >&2
+    exit 1
+fi
+if grep -q 'io.github.anschnapp.mutflow' "$build_file" &&
+    ! grep -Eq 'id\("io.github.anschnapp.mutflow"\) version "1\.6\.0"' "$build_file"; then
+    echo "Error: existing mutflow plugin is not pinned to the supported version 1.6.0." >&2
+    exit 1
+fi
+if [[ -e "$PROJECT_PATH/buildSrc/build.gradle.kts" ]] &&
+    ! cmp -s "$SCRIPT_DIR/mutation-results-src/build.gradle.kts" "$PROJECT_PATH/buildSrc/build.gradle.kts"; then
+    echo "Error: existing buildSrc/build.gradle.kts is user-owned; follow the manual setup guide to merge the results module without overwriting it." >&2
+    exit 1
+fi
+if [[ -d "$PROJECT_PATH/buildSrc/src/main/kotlin/io/omp/mutation" ||
+      -d "$PROJECT_PATH/buildSrc/src/test/kotlin/io/omp/mutation" ]]; then
+    echo "Error: legacy io.omp.mutation sources found. Follow the schema 2 migration guide before installing ch.trancee.mutation." >&2
+    exit 1
+fi
+
+agent_usage_source="$SCRIPT_DIR/AGENT-USAGE.md"
+agent_usage_destination="$PROJECT_PATH/.omp/AGENT-USAGE.md"
+agent_pointer='For mutation-testing setup, execution, audits, or troubleshooting, read [.omp/AGENT-USAGE.md](.omp/AGENT-USAGE.md) first.'
+if [[ ! -f "$agent_usage_source" ]]; then
+    echo "Error: installed agent usage guide is missing: '$agent_usage_source'" >&2
+    exit 1
+fi
+if [[ -L "$PROJECT_PATH/.omp" || -L "$agent_usage_destination" ||
+      -L "$PROJECT_PATH/AGENTS.md" ]]; then
+    echo "Error: refusing symlinked agent guide destinations." >&2
+    exit 1
+fi
+if [[ -e "$PROJECT_PATH/.omp" && ! -d "$PROJECT_PATH/.omp" ]] ||
+    [[ -e "$PROJECT_PATH/AGENTS.md" && ! -f "$PROJECT_PATH/AGENTS.md" ]]; then
+    echo "Error: agent guide destinations have incompatible file types." >&2
+    exit 1
+fi
+if [[ -e "$agent_usage_destination" ]] &&
+    ! cmp -s "$agent_usage_source" "$agent_usage_destination"; then
+    echo "Error: existing .omp/AGENT-USAGE.md differs; merge the installed guide explicitly." >&2
+    exit 1
+fi
+
 copilot_skill_source="$REPOSITORY_ROOT/.github/skills/omp-mutation-test/SKILL.md"
 copilot_agent_sources=(
     "$REPOSITORY_ROOT/.github/agents/omp-mutation-test-reviewer.agent.md"
@@ -101,7 +161,14 @@ mkdir -p "$target_dir"
 cp -r "$SCRIPT_DIR/agents" "$target_dir/"
 cp -r "$SCRIPT_DIR/skills" "$target_dir/"
 cp "$SCRIPT_DIR/mutation-results.gradle.kts" "$target_dir/"
-cp -r "$SCRIPT_DIR/mutation-results-src" "$target_dir/"
+cp "$agent_usage_source" "$agent_usage_destination"
+if [[ ! -f "$PROJECT_PATH/AGENTS.md" ]] ||
+    ! grep -Fxq "$agent_pointer" "$PROJECT_PATH/AGENTS.md"; then
+    printf '\n%s\n' "$agent_pointer" >> "$PROJECT_PATH/AGENTS.md"
+fi
+mkdir -p "$target_dir/mutation-results-src"
+cp "$SCRIPT_DIR/mutation-results-src/build.gradle.kts" "$target_dir/mutation-results-src/"
+cp -r "$SCRIPT_DIR/mutation-results-src/main" "$SCRIPT_DIR/mutation-results-src/test" "$target_dir/mutation-results-src/"
 
 # --- Install the Copilot-native adapter ---
 echo ""
@@ -177,14 +244,11 @@ if [[ ! -f "$build_file" ]]; then
     exit 1
 fi
 
-cp "$build_file" "$build_file.bak"
-
 # --- Add mutflow plugin ---
 if ! grep -q 'io.github.anschnapp.mutflow' "$build_file"; then
     if grep -q '^plugins {' "$build_file"; then
-        sed -i.bak '/^plugins {/a\
+        sed -i '/^plugins {/a\
     id("io.github.anschnapp.mutflow") version "1.6.0"' "$build_file"
-        rm -f "$build_file.bak"
         echo "  Added mutflow plugin"
     else
         {
@@ -203,45 +267,31 @@ fi
 if ! grep -q 'mutation-results.gradle.kts' "$build_file"; then
     if grep -q '^}$' "$build_file"; then
         first_close=$(grep -n '^}$' "$build_file" | head -1 | cut -d: -f1)
-        sed -i.bak "${first_close}a\\
+        sed -i "${first_close}a\\
 \\
 apply(from = rootProject.file(\".omp/mutation-results.gradle.kts\"))" "$build_file"
-        rm -f "$build_file.bak"
         echo "  Applied mutation-results.gradle.kts"
     fi
 fi
 
 # --- Add dependencies + mutflow config ---
 if [[ "$IS_KMP" == "1" ]]; then
-    # For KMP, add jvmTestImplementation dependencies + mutflow block
-    if ! grep -q 'junit-jupiter-api' "$build_file"; then
-        cat >> "$build_file" << 'EOF'
-
-dependencies {
-    jvmTestImplementation("org.junit.jupiter:junit-jupiter-api:6.1.3")
-    jvmTestImplementation("org.junit.platform:junit-platform-launcher:6.1.3")
-}
-EOF
-        echo "  Added KMP JVM test dependencies"
-    fi
     if ! grep -q '^mutflow {' "$build_file"; then
         cat >> "$build_file" << 'EOF'
 
 mutflow {
     enabled = true
-    targets = listOf("jvmTest")
 }
 EOF
-        echo "  Added mutflow KMP configuration (jvmTest)"
+        echo "  Added mutflow KMP configuration (dedicated mutflow JVM test task)"
     fi
 else
     # For JVM, use testImplementation
     if ! grep -q 'junit-jupiter-api' "$build_file"; then
         if grep -q '^dependencies {' "$build_file"; then
-            sed -i.bak '/^dependencies {/a\
+            sed -i '/^dependencies {/a\
     testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.3")\
     testImplementation("org.junit.platform:junit-platform-launcher:6.1.3")' "$build_file"
-            rm -f "$build_file.bak"
         else
             cat >> "$build_file" << 'EOF'
 
@@ -265,29 +315,18 @@ EOF
     # Merge: copy source files
 fi
 
-rm -f "$build_file.bak"
+if [[ "$IS_KMP" == "0" ]] && ! grep -q 'useJUnitPlatform' "$build_file"; then
+    cat >> "$build_file" << 'EOF'
 
-# --- Detect Kotlin version from target project ---
-KOTLIN_VERSION=$(grep -oE 'kotlin\("(jvm|multiplatform)"\) version "[0-9]+\.[0-9]+\.[0-9]+"' "$build_file" 2>/dev/null || true)
-if [[ "$KOTLIN_VERSION" =~ [0-9]+\.[0-9]+\.[0-9]+ ]]; then
-    KOTLIN_VERSION="${BASH_REMATCH[0]}"
-else
-    KOTLIN_VERSION=""
+tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach {
+    useJUnitPlatform()
+}
+EOF
+    echo "  Enabled JUnit Platform"
 fi
-if [[ -z "$KOTLIN_VERSION" ]]; then
-    KOTLIN_VERSION=$(grep -oE 'kotlin\("plugin\.serialization"\) version "[0-9]+\.[0-9]+\.[0-9]+"' "$build_file" 2>/dev/null || true)
-    if [[ "$KOTLIN_VERSION" =~ [0-9]+\.[0-9]+\.[0-9]+ ]]; then
-        KOTLIN_VERSION="${BASH_REMATCH[0]}"
-    else
-        KOTLIN_VERSION=""
-    fi
-fi
-if [[ -z "$KOTLIN_VERSION" ]]; then
-    KOTLIN_VERSION="2.4.20"
-    echo "  Warning: Could not detect Kotlin version from build.gradle.kts — using default $KOTLIN_VERSION"
-else
-    echo "  Detected Kotlin $KOTLIN_VERSION from build.gradle.kts"
-fi
+
+KOTLIN_VERSION="2.4.20"
+echo "  Verified compiler-coupled Kotlin $KOTLIN_VERSION"
 
 # --- Step 3b: Generate buildSrc for typed mutation-results module ---
 echo ""
@@ -295,25 +334,19 @@ echo "Setting up typed mutation-results module (buildSrc)..."
 
 buildsrc_dir="$PROJECT_PATH/buildSrc"
 if [[ ! -d "$buildsrc_dir" ]]; then
-    mkdir -p "$buildsrc_dir/src/main/kotlin/io/omp/mutation"
-    mkdir -p "$buildsrc_dir/src/test/kotlin/io/omp/mutation"
-    cp "$target_dir/mutation-results-src/main/kotlin/io/omp/mutation/"*.kt "$buildsrc_dir/src/main/kotlin/io/omp/mutation/"
-    cp "$target_dir/mutation-results-src/test/kotlin/io/omp/mutation/"*.kt "$buildsrc_dir/src/test/kotlin/io/omp/mutation/"
+    mkdir -p "$buildsrc_dir/src/main/kotlin/ch/trancee/mutation"
+    mkdir -p "$buildsrc_dir/src/test/kotlin/ch/trancee/mutation"
+    cp "$target_dir/mutation-results-src/main/kotlin/ch/trancee/mutation/"*.kt "$buildsrc_dir/src/main/kotlin/ch/trancee/mutation/"
+    cp "$target_dir/mutation-results-src/test/kotlin/ch/trancee/mutation/"*.kt "$buildsrc_dir/src/test/kotlin/ch/trancee/mutation/"
     cp "$target_dir/mutation-results-src/build.gradle.kts" "$buildsrc_dir/build.gradle.kts"
-    # Inject detected Kotlin version into buildSrc build.gradle.kts
-    sed -i.bak "s/kotlin(\"plugin.serialization\") version \"[0-9.]*\"/kotlin(\"plugin.serialization\") version \"$KOTLIN_VERSION\"/" "$buildsrc_dir/build.gradle.kts"
-    rm -f "$buildsrc_dir/build.gradle.kts.bak"
     echo "  Created buildSrc/ with typed MutationResults module (Kotlin $KOTLIN_VERSION)"
 else
     # Merge: copy source files
-    mkdir -p "$buildsrc_dir/src/main/kotlin/io/omp/mutation"
-    mkdir -p "$buildsrc_dir/src/test/kotlin/io/omp/mutation"
-    cp "$target_dir/mutation-results-src/main/kotlin/io/omp/mutation/"*.kt "$buildsrc_dir/src/main/kotlin/io/omp/mutation/"
-    cp "$target_dir/mutation-results-src/test/kotlin/io/omp/mutation/"*.kt "$buildsrc_dir/src/test/kotlin/io/omp/mutation/"
+    mkdir -p "$buildsrc_dir/src/main/kotlin/ch/trancee/mutation"
+    mkdir -p "$buildsrc_dir/src/test/kotlin/ch/trancee/mutation"
+    cp "$target_dir/mutation-results-src/main/kotlin/ch/trancee/mutation/"*.kt "$buildsrc_dir/src/main/kotlin/ch/trancee/mutation/"
+    cp "$target_dir/mutation-results-src/test/kotlin/ch/trancee/mutation/"*.kt "$buildsrc_dir/src/test/kotlin/ch/trancee/mutation/"
     cp "$target_dir/mutation-results-src/build.gradle.kts" "$buildsrc_dir/build.gradle.kts"
-    # Inject detected Kotlin version into buildSrc build.gradle.kts
-    sed -i.bak "s/kotlin(\"plugin.serialization\") version \"[0-9.]*\"/kotlin(\"plugin.serialization\") version \"$KOTLIN_VERSION\"/" "$buildsrc_dir/build.gradle.kts"
-    rm -f "$buildsrc_dir/build.gradle.kts.bak"
     echo "  Updated buildSrc/ with typed MutationResults module (Kotlin $KOTLIN_VERSION)"
 fi
 

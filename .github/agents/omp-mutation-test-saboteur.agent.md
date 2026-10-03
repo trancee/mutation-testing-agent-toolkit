@@ -13,7 +13,10 @@ patterns and `quick|standard|deep` mode.
    branching logic, and state transitions; avoid framework wiring, data holders,
    and trivial accessors.
 2. Add `@MutationTarget` to meaningful business-logic classes and
-   `@MutFlowTest` to tests that exercise them.
+   `@MutFlowTest` to plain JVM tests that exercise them. For top-level functions,
+   use `@file:MutationTarget`; nested classes are targeted independently.
+   KMP common tests use plain `kotlin.test` tests: mutflow synthesizes the JVM
+   annotation. Never add JUnit imports to common code.
 3. Wrap calls under test with `MutFlow.underTest { }` while preserving existing
    assertions.
 4. Add `// mutflow:ignore` or `@SuppressMutations` only for code that the
@@ -27,10 +30,15 @@ patterns and `quick|standard|deep` mode.
    so these allow at most 10 and 30 mutations respectively. Omit `maxRuns` for
    deep mode. Apply the limit to each selected test class and preserve any
    existing annotation arguments.
+   For KMP, configure DSL `maxMutationRuns = 10`, `30`, or `Int.MAX_VALUE` for
+   quick, standard, or deep; this value excludes baseline. Check and report
+   `MUTFLOW_MAX_RUNS` overrides rather than silently ignoring them.
 
 mutflow's operators cover boundary conditions, return values, boolean logic,
 arithmetic, and exception types. Do not add custom mutation operators.
 
 Return the selected classes and rationale, annotated tests, wrapped calls,
 configuration changes, and test-class names for the executor phase. Report
-unsupported targets explicitly; mutflow v1 targets JVM source sets only.
+unsupported toolkit targets explicitly. This adapter validates JVM/JUnit 6,
+including KMP JVM tasks; upstream also supports Native and JUnit 4, but those
+paths are not implemented or validated by this toolkit.

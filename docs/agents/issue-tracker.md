@@ -2,17 +2,25 @@
 
 Issues and specs for this repo live as markdown files in `.scratch/`.
 
+This convention applies to skill-generated local implementation records.
+Pull requests, CI checks, Dependabot updates, and the scheduled upstream
+monitor use GitHub. The monitor opens or updates a GitHub review issue; it does
+not mirror that issue into `.scratch/`.
+
 ## Conventions
 
 - One feature per directory: `.scratch/<feature-slug>/`
 - The spec is `.scratch/<feature-slug>/spec.md`
 - Implementation issues are one file per ticket at `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01` — never a single combined tickets file
-- Triage state is recorded as a `Status:` line near the top of each issue file (see `triage-labels.md` for the role strings)
+- Triage state is recorded as a `Status:` line near the top of each issue file
+  (see [triage labels](triage-labels.md) for the role strings)
 - Comments and conversation history append to the bottom of the file under a `## Comments` heading
 
 ## When a skill says "publish to the issue tracker"
 
-Create a new file under `.scratch/<feature-slug>/` (creating the directory if needed).
+Create a spec at `.scratch/<feature-slug>/spec.md` or an implementation ticket
+at `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, as appropriate. Do not
+publish to GitHub unless the task explicitly requests that external action.
 
 ## When a skill says "fetch the relevant ticket"
 

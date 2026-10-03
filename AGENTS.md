@@ -1,3 +1,9 @@
+## Agent entry point
+
+Before installing, running, auditing, troubleshooting, or updating this toolkit,
+read [AGENT-USAGE.md](AGENT-USAGE.md). It is the agent-only operational guide;
+human tutorials are not prerequisites.
+
 ## Agent skills
 
 ### Issue tracker

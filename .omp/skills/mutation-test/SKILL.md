@@ -11,7 +11,7 @@ Runs a mutation-testing analysis on a Kotlin (JVM-first) project using mutflow a
 
 - `project path`: Path to the Kotlin project root (default: current directory)
 - `--targets`: Optional comma-separated Gradle test class patterns (default: all `@MutFlowTest` classes)
-- `--kmp`: (setup only) Use Kotlin Multiplatform project setup (mutflow targets JVM source sets only)
+- `--kmp`: (setup only) Configure the toolkit's KMP JVM integration. Native and JUnit 4 adapters are not validated here, although upstream supports them.
 - `--auto-approve`: Permits additive or assertion-level test changes to be applied. Deleting or consolidating tests always requires explicit approval.
 - `--mode quick`: At most 10 mutation runs per selected test class (`maxRuns=11`, including the baseline). Skip refactoring — only audit and report.
 - `--mode standard`: (default) At most 30 mutation runs per selected test class (`maxRuns=31`, including the baseline). Run the full pipeline and provide refactoring suggestions.
@@ -54,14 +54,18 @@ Runs a mutation-testing analysis on a Kotlin (JVM-first) project using mutflow a
 
 Key mutflow constraints that affect orchestration:
 
-- JVM-only — no JS/Native/Android support in v1
+- Toolkit support: plain JVM/JUnit 6 and KMP JVM. Upstream Native/JUnit 4 support is separate and not implemented in this adapter.
 - Test-only mutation compilation — production artifacts stay free of mutation code
-- Global synchronized lock — serializes mutation runs within each JVM
+- Per-JVM overlap guard — avoid concurrent sessions; separate test JVMs are independent
 - Per-mutation killer evidence — mutflow records all tests that kill each mutation, supporting zombie-candidate analysis but not a complete test-outcome matrix
 - Mutation limits are applied per `@MutFlowTest` class. `maxRuns` includes the baseline run, so quick uses 11 and standard 31.
+- KMP common tests stay plain `kotlin.test`; set DSL `maxMutationRuns` to 10/30/`Int.MAX_VALUE` for quick/standard/deep. `mutationResults` selects dedicated JVM mutation tasks.
+- Require schema 2 reports: `killed / mutationsEvaluated`, null for gaps or zero evaluations; preserve discovered/untested totals and `testClass::displayName` identities. Do not reuse old JSON after failed compilation.
 - Score bands and the mock-count review heuristic are toolkit policy, not Scott-CC thresholds.
 
-For the full explanation of how mutflow's test-only mutation compilation works and why it matters for the OMP adapter, see [About mutflow's architecture](../../../docs/explanation/mutflow-architecture.md). For the 5-agent system and how each agent contributes, see [About the mutation-testing agent system](../../../docs/explanation/agent-system.md).
+The toolkit repository documents architecture in `docs/explanation/mutflow-architecture.md`
+and role handoffs in `docs/explanation/agent-system.md`. These repository docs are
+not resources shipped inside the installed skill.
 
 ### Issue tracking
 
@@ -72,4 +76,4 @@ Decisions and issues tracked in `.scratch/omp-mutation-testing/`. See `docs/agen
 This skill spawns subagents via the `task` tool:
 
 - **Setup**: `task with agent: "test-quality-reviewer", task: "Bootstrap mutation testing system into [project path] with kmp=[--kmp]"` — the orchestrator runs the bootstrap script, then invokes test-saboteur to annotate existing tests.
-- **Mutation test**: `task with agent: "test-quality-reviewer", task: "Run mutation testing on [project path] with targets [targets] focus [focus] mode [quick|standard|deep] autoApprove [true|false]"` — the orchestrator dispatches the pipeline with the specified mode, focus scope, and approval gate.
+- **Mutation test**: `task with agent: "test-quality-reviewer", task: "Run mutation testing on [project path] with targets [targets] mode [quick|standard|deep] autoApprove [true|false]"` — the orchestrator dispatches the pipeline with the specified mode, selected tests, and approval gate.

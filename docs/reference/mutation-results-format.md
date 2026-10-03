@@ -5,10 +5,12 @@ This reference describes the structured output produced by the `mutationResults`
 ## Compatibility
 
 The JSON field names, types, and meanings are consumed by toolkit agents and
-are part of the report contract. Additive optional fields are preferred. Do
-not remove or repurpose fields or enum values without updating every consumer,
-example, and this reference in the same change. Introduce schema versioning
-before making an incompatible format change.
+are part of the report contract. The current format is **schema 2**.
+Reports without `schemaVersion` are legacy schema 1; do not reinterpret them.
+Upgrade the results module, Gradle script, both client profiles, and consumers
+together. Schema 2 changes total/evaluated/gap accounting and class-qualifies
+test identities; namespace migration is described in the
+[upgrade procedure](../how-to/manual-setup.md#upgrade-an-existing-installation).
 
 ## File location
 
@@ -20,20 +22,22 @@ before making an incompatible format change.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `generatedAt` | number | Unix timestamp (milliseconds) when the results were generated |
-| `mutationScore` | number | Fraction of mutations killed (0.0–1.0). `null` when no mutations are evaluable (denominator is 0). |
+| `schemaVersion` | number | `2`; reports without this field use the legacy contract |
+| `generatedAt` | number | Unix timestamp (milliseconds) when JSON was generated; test XML may have been reused by Gradle |
+| `mutationScore` | number/null | `killed / mutationsEvaluated` (0.0–1.0). `null` for zero evaluations or any execution gap. |
 | `qualityBand` | string | Excellent / Good / Fair / Poor (see quality bands table) |
-| `confidence` | string | Low / Medium / High (based on mutation count) |
-| `totalMutations` | number | Total mutations discovered |
+| `confidence` | string | Low / Medium / High (based on evaluated outcomes, not discovered totals) |
+| `totalMutations` | number | Discovered mutations summed across selected test-class sessions, not globally deduplicated |
 | `killed` | number | Mutations caught by at least one test |
 | `survived` | number | Mutations not caught by any test |
-| `timedOut` | number | Mutations that caused infinite loops |
-| `gaps` | number | Number of detected execution-gap records excluded from the score denominator |
-| `mutationsEvaluated` | number | `totalMutations - gaps`, clamped to 0 |
-| `confidenceIntervalLow` | number | Wilson score 95% CI lower bound (z=1.96). `null` when mutationScore is null. |
-| `confidenceIntervalHigh` | number | Wilson score 95% CI upper bound (z=1.96). `null` when mutationScore is null. |
-| `testMethods` | array[string] | Test method names found in JUnit XML; may include skipped tests |
-| `testKillerMatrix` | object | Map: test displayName → array of mutation `sourceLocation` strings it killed. Records killers, not every test's result for every mutation; a missing entry is not proof that a test is unnecessary. |
+| `timedOut` | number | Mutations exceeding loop or wall-clock budgets |
+| `gaps` | number | Infrastructure-gap records; never subtracted from evaluated mutation counts |
+| `mutationsEvaluated` | number | Recorded outcomes: `killed + survived + timedOut` |
+| `untestedMutations` | number | `totalMutations - mutationsEvaluated`; budget limits are not execution gaps |
+| `confidenceIntervalLow` | number/null | Wilson score 95% CI lower bound (z=1.96). `null` when mutationScore is null. |
+| `confidenceIntervalHigh` | number/null | Wilson score 95% CI upper bound (z=1.96). `null` when mutationScore is null. |
+| `testMethods` | array[string] | `testClass::displayName` identities from XML, excluding synthetic `executionError`; may include skipped tests |
+| `testKillerMatrix` | object | Map: class-qualified identity → mutation `sourceLocation` strings it killed. Records killers, not every test outcome. Missing entries are not proof a test is unnecessary. |
 | `mutations` | array[object] | Per-mutation details |
 | `executionGaps` | array[object] | Execution gap entries (see executionGaps[].type) |
 | `redundantGroups` | array[object] | Redundant test group entries (see redundantGroups[].tests) |
@@ -41,6 +45,11 @@ before making an incompatible format change.
 ### mutations[].sourceLocation
 
 File and line of the mutated code, e.g. `Calculator.kt:8`.
+
+### mutations[].testClass
+
+JUnit suite name associated with this mutation, or `null` for manually assembled
+results. Sessions from different classes are not merged by display name.
 
 ### mutations[].originalOperator
 
@@ -56,15 +65,19 @@ One of `Killed`, `Survived`, `TimedOut`.
 
 ### mutations[].killedByTest
 
-Name of the first test that caught the mutation (JUnit display name). `null` if the mutation survived. Kept for backward compatibility.
+Class-qualified name of the first test that caught the mutation. `null` if the
+mutation survived or timed out. The field name is retained from schema 1.
 
 ### mutations[].killedByTests
 
-Array of all test display names that caught the mutation. Empty array `[]` if the mutation survived or timed out. mutflow records every test that fails during a mutation run, not only the first.
+Array of class-qualified killer names. Empty for survivors and timeouts.
+Upstream records every killer but truncates long display names in its console
+summary; unresolved identities must not be treated as exact zombie/redundancy
+evidence.
 
 ### executionGaps[].type
 
-One of `NO_OUTPUT`, `PARTIAL_RUN`, `COMPILATION_FAILURE`, `BACKSTOP_TIMEOUT`,
+One of `NO_OUTPUT`, `PARTIAL_RUN`, `TEST_FAILURE`, `COMPILATION_FAILURE`, `BACKSTOP_TIMEOUT`,
 or `IR_TRANSFORMATION_ERROR`. The current task/parser-produced types are
 described below.
 
@@ -86,30 +99,43 @@ Gradle process exit code when the gap occurred, if available.
 
 ### execution gap types
 
-The `mutationResults` Gradle task currently emits `NO_OUTPUT`, `PARTIAL_RUN`,
-and `COMPILATION_FAILURE`. A missing JUnit XML report is classified as
-`COMPILATION_FAILURE`; its reason may mention an IR transformation error.
-`BACKSTOP_TIMEOUT` and `IR_TRANSFORMATION_ERROR` can be supplied by an
-orchestration executor, but are not emitted as separate types by the current
-Gradle task. Gaps are detected at per-test-class granularity because mutations
-for a test class share an instrumented test compilation.
+The task emits `NO_OUTPUT` for missing reports or missing mutation output,
+`PARTIAL_RUN` when actual upstream tested counters disagree with detail records
+or discovered/tested/remaining counters are missing or inconsistent,
+and `TEST_FAILURE` for ordinary/baseline XML failures. Strict survivors and
+mutation timeouts remain outcomes, not gaps. All gaps invalidate aggregate
+scores and Wilson intervals.
+
+If a discovered counter is smaller than the recorded outcome count, the report
+retains those outcomes and uses their count as the minimum total, with a
+`PARTIAL_RUN` gap. Totals in a gapped report are incomplete evidence, not a
+validated discovery count. Strict survivor or timeout exceptions without
+captured mutation output also produce gaps.
+
+The executor reports compilation/process failures separately when they prevent
+the report task from running. A pre-existing JSON file is not current evidence
+after compilation or discovery failure. The report task writes JSON before
+restoring nonzero status for JUnit failures; a strict survivor can therefore
+produce a complete current report while Gradle fails.
 
 ### redundantGroups[].tests
 
-Array of test method display names that share an identical failure signature.
+Array of class-qualified test identities that share an identical failure signature.
 
 ### redundantGroups[].count
 
-Number of mutations that all fail under the same set of tests.
+Number of tests in the group.
 
 ### redundantGroups[].failureSignature
 
-List of mutation source location strings shared across the group.
+Composite mutation keys (`sourceLocation:originalOperator->variantOperator`)
+shared across the group.
 
 **Abbreviated example** from the `Calculator` sample. Array fields contain representative entries from the full report.
 
 ```json
 {
+  "schemaVersion": 2,
   "generatedAt": 1788029817104,
   "mutationScore": 1.0,
   "qualityBand": "Excellent",
@@ -120,11 +146,12 @@ List of mutation source location strings shared across the group.
   "timedOut": 0,
   "gaps": 0,
   "mutationsEvaluated": 32,
+  "untestedMutations": 0,
   "confidenceIntervalLow": 0.8928172849426366,
   "confidenceIntervalHigh": 1.0,
-  "testMethods": ["testValidateInput()"],
+  "testMethods": ["example.CalculatorTest::testValidateInput()"],
   "testKillerMatrix": {
-    "testValidateInput()": ["Calculator.kt:51"]
+    "example.CalculatorTest::testValidateInput()": ["Calculator.kt:51"]
   },
   "mutations": [
     {
@@ -132,8 +159,9 @@ List of mutation source location strings shared across the group.
       "originalOperator": "IllegalArgumentException",
       "variantOperator": "IllegalStateException",
       "result": "Killed",
-      "killedByTest": "testValidateInput()",
-      "killedByTests": ["testValidateInput()"]
+      "killedByTest": "example.CalculatorTest::testValidateInput()",
+      "killedByTests": ["example.CalculatorTest::testValidateInput()"],
+      "testClass": "example.CalculatorTest"
     }
   ],
   "executionGaps": [],
@@ -154,7 +182,7 @@ These thresholds are toolkit policy and are not inherited from Scott-CC.
 
 ## Confidence levels
 
-| Level | Mutation count |
+| Level | Evaluated mutation count |
 |-------|---------------|
 | Low | <10 |
 | Medium | 10–50 |

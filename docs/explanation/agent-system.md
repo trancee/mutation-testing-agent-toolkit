@@ -10,7 +10,7 @@ The roles are:
 
 - The reviewer coordinates the run and combines the findings.
 - The saboteur identifies business logic and configures mutflow annotations.
-- Executors run annotated test classes and capture their results.
+- The executor runs the selected mutation test tasks and captures their results.
 - The auditor calculates metrics and identifies weak tests.
 - The refactor specialist proposes or applies test improvements within the approval rules.
 
@@ -33,15 +33,21 @@ This division keeps each handoff explicit. Executors receive prepared source. Th
 
 mutflow discovers mutation points during a baseline run before it activates individual variants. That engine constraint fixes the central sequence.
 
-The saboteur must finish first because mutflow relies on `@MutationTarget`, `@MutFlowTest`, and `MutFlow.underTest`. Executors must finish before the auditor can calculate a complete score. The refactor specialist must wait for the audit because surviving mutations and zombie candidates determine which tests need attention.
+The saboteur must finish first because mutflow relies on targeted business
+logic and wrapped test calls. Plain JVM tests use `@MutFlowTest`; KMP common
+tests receive the annotation in their mutated JVM compilation. Execution must
+finish before the auditor can assess completeness and score. The refactor
+specialist waits for the audit because survivors and evidence-qualified
+zombie candidates determine which tests need attention.
 
 ## Executor dispatch
 
 Each reviewer dispatches one executor for a single aggregate Gradle invocation
 covering the selected test classes. The results task reads JUnit XML from that
 same invocation and emits one JSON report. Competing Gradle processes would
-share build and JUnit result paths; mutflow's synchronized lock is JVM-local
-and cannot protect separate Gradle processes.
+share build and JUnit result paths; mutflow's session guard is JVM-local
+and cannot protect separate Gradle processes. KMP selects dedicated JVM
+mutation tasks rather than ordinary `jvmTest`.
 
 ## Why approval remains separate
 

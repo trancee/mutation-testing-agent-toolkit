@@ -50,14 +50,8 @@ This assertion fails under the mutant (assertFalse expects false, but mutant ret
 
 ## Step 4: Use traps for persistent survivors
 
-If you're iterating on a fix over multiple sessions, trap the survivor so it runs first every time:
-
-```kotlin
-@MutFlowTest(traps = ["(Calculator.kt:35) > → >="])
-class CalculatorTest { ... }
-```
-
-Copy the display name from the survivor output. After the mutation is killed, remove the trap.
+For plain JVM tests, [trap the survivor](interpret-results.md#step-5-trap-a-mutation-youre-fixing)
+so it runs first while iterating. Remove the trap after confirming the fix.
 
 ## Common patterns for each operator type
 
@@ -75,11 +69,59 @@ Test all branches. For `a && b`, test: true/true, true/false, false/true, false/
 
 ### Arithmetic (`+` → `-`, `*` → `/`)
 
-Test neutral elements: for `a + b`, test with 0 (`a + 0 = a`); for `a * b`, test with 1 (`a * 1 = a`) and 0 (`a * 0 = 0`).
+Choose non-neutral operands. For `a + b` mutated to `a - b`, use `3` and `4`:
+expect `7`, not `-1`. Adding zero cannot distinguish these operators. For
+`a * b` mutated to `a / b`, use `6` and `2`: expect `12`, not `3`.
+Multiplication by one cannot distinguish these operators either. Add zero and
+one cases separately when those values matter to the business contract.
 
 ### Boolean return (`return true` → `return false`)
 
-Add assertions on both true and false return values. The mutation flips whatever the method returns.
+Assert the method's expected return value for the relevant inputs. Upstream
+return-value replacements and boolean-expression mutations are different
+operators; use the actual reported variant rather than assuming every boolean
+mutation flips every result.
+
+### Exception type (`IllegalArgumentException` → `IllegalStateException`)
+
+If the reported mutation changes the exception type, asserting only that
+something throws will not distinguish the behaviors. Assert the contract's
+specific type around the wrapped business call:
+
+```kotlin
+val failure = org.junit.jupiter.api.Assertions.assertThrows(
+    IllegalArgumentException::class.java,
+) {
+    MutFlow.underTest { validator.requireNonnegative(-1) }
+}
+```
+
+The source contract for this example throws `IllegalArgumentException` for
+negative input. Assert stable message or domain fields too when those are part
+of the contract, not incidental text. For KMP common tests, use
+`kotlin.test.assertFailsWith<IllegalArgumentException>` instead of JUnit.
+
+### Nullable return (non-null result → `null`)
+
+Upstream's nullable-return operator applies to explicit returns in block-bodied
+functions returning nullable types. For a source contract like:
+
+```kotlin
+fun label(value: String): String? {
+    return value
+}
+```
+
+assert the expected value, not merely that the call did not throw:
+
+```kotlin
+assertEquals("ready", MutFlow.underTest { labels.label("ready") })
+```
+
+This kills a return replaced with `null`. An expression-bodied function or a
+non-null return type is not a reliable example of that operator; confirm the
+actual mutation appeared in the report. These are assertion patterns, not a
+claim that arbitrary semantic return replacements are generated.
 
 ## Verify
 
@@ -87,6 +129,6 @@ Re-run `gradle test` or `gradle mutationResults`. The summary should show the pr
 
 ## When to stop
 
-- All mutations are killed (100% score)
+- All evaluated mutations are killed and no discovered mutations remain untested
 - Remaining survivors are behaviorally equivalent mutations or explicitly accepted gaps in test coverage
 - You reach your target mutation score, such as a score above 80% for the Excellent band

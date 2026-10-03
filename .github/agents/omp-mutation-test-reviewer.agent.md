@@ -27,6 +27,12 @@ installed adapter.
 
 ## Mutation-testing flow
 
+The supported paths are plain JVM/JUnit 6 and KMP JVM mutation tasks.
+KMP uses DSL `maxMutationRuns` (10/30/unlimited), not annotations in common tests.
+Require schema 2 reports, preserve class-qualified test identities, and report
+discovered/evaluated/untested counts separately. Scores and intervals are null
+when execution gaps exist. Never trust old JSON after compilation failure.
+
 1. Delegate target selection and mutflow configuration to
    `omp-mutation-test-saboteur`, passing the requested test-class patterns and
    mode so it can apply the per-class `maxRuns` budget. Wait for its summary

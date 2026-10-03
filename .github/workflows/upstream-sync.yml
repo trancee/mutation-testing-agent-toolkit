@@ -1,0 +1,43 @@
+name: Upstream synchronization
+
+on:
+  schedule:
+    - cron: '17 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: '3.14'
+      - name: Verify latest stable versions and upstream API drift
+        id: upstream
+        run: python3 scripts/check-upstream.py > upstream-status.txt 2>&1
+      - name: Publish upstream status
+        if: always()
+        run: cat upstream-status.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Open or update upstream review issue
+        if: failure() && steps.upstream.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Review upstream mutflow compatibility and dependency drift"
+          printf '\nWorkflow: %s/%s/actions/runs/%s\n' \
+            "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" >> upstream-status.txt
+          issue=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+            --search "$title in:title" --json number,title \
+            --jq ".[] | select(.title == \"$title\") | .number" | head -1)
+          if [ -n "$issue" ]; then
+            gh issue comment "$issue" --repo "$GITHUB_REPOSITORY" --body-file upstream-status.txt
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body-file upstream-status.txt
+          fi
