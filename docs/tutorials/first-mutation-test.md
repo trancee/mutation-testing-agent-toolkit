@@ -6,14 +6,14 @@ This tutorial assumes no prior knowledge of mutation testing.
 
 ## Prerequisites
 
-- Java 21 (or newer)
-- Gradle 9.x
-- Kotlin 2.4.x
+- Java 26
+- Gradle 9.8.0
+- Kotlin 2.4.20
 
 If you have [SDKMAN](https://sdkman.io), install Gradle:
 
 ```bash
-sdk install gradle 9.7
+sdk install gradle 9.8.0
 ```
 
 ## Step 1: Create a new Kotlin project
@@ -47,13 +47,13 @@ Then edit `build.gradle.kts` to apply the mutflow plugin:
 
 ```kotlin
 plugins {
-    kotlin("jvm") version "2.4.0"
-    id("io.github.anschnapp.mutflow") version "1.1.1"
+    kotlin("jvm") version "2.4.20"
+    id("io.github.anschnapp.mutflow") version "1.6.0"
     application
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(26)
 }
 
 repositories {
@@ -199,4 +199,4 @@ We created a Kotlin project with mutflow mutation testing. We wrote a `Calculato
 
 For how to interpret mutation testing results and quality bands, see the [How to interpret mutation testing results](../how-to/interpret-results.md) guide.
 
-To understand how mutflow works under the hood, see [About mutflow's compile-once meta-mutant](../explanation/mutflow-architecture.md).
+To understand how mutflow works under the hood, see [About mutflow's test-only mutation compilation](../explanation/mutflow-architecture.md).

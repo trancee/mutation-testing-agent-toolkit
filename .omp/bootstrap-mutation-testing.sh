@@ -183,13 +183,13 @@ cp "$build_file" "$build_file.bak"
 if ! grep -q 'io.github.anschnapp.mutflow' "$build_file"; then
     if grep -q '^plugins {' "$build_file"; then
         sed -i.bak '/^plugins {/a\
-    id("io.github.anschnapp.mutflow") version "1.1.1"' "$build_file"
+    id("io.github.anschnapp.mutflow") version "1.6.0"' "$build_file"
         rm -f "$build_file.bak"
         echo "  Added mutflow plugin"
     else
         {
             echo 'plugins {'
-            echo '    id("io.github.anschnapp.mutflow") version "1.1.1"'
+            echo '    id("io.github.anschnapp.mutflow") version "1.6.0"'
             echo '}'
             echo ''
             cat "$build_file"
@@ -220,7 +220,6 @@ if [[ "$IS_KMP" == "1" ]]; then
 dependencies {
     jvmTestImplementation("org.junit.jupiter:junit-jupiter-api:6.1.3")
     jvmTestImplementation("org.junit.platform:junit-platform-launcher:6.1.3")
-    jvmTestImplementation("io.github.anschnapp.mutflow:mutflow-junit6:1.1.1")
 }
 EOF
         echo "  Added KMP JVM test dependencies"
@@ -241,8 +240,7 @@ else
         if grep -q '^dependencies {' "$build_file"; then
             sed -i.bak '/^dependencies {/a\
     testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.3")\
-    testImplementation("org.junit.platform:junit-platform-launcher:6.1.3")\
-    testImplementation("io.github.anschnapp.mutflow:mutflow-junit6:1.1.1")' "$build_file"
+    testImplementation("org.junit.platform:junit-platform-launcher:6.1.3")' "$build_file"
             rm -f "$build_file.bak"
         else
             cat >> "$build_file" << 'EOF'
@@ -250,11 +248,10 @@ else
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.3")
     testImplementation("org.junit.platform:junit-platform-launcher:6.1.3")
-    testImplementation("io.github.anschnapp.mutflow:mutflow-junit6:1.1.1")
 }
 EOF
         fi
-        echo "  Added JUnit 6 + mutflow-junit6 dependencies"
+        echo "  Added JUnit 6 dependencies"
     fi
     if ! grep -q '^mutflow {' "$build_file"; then
         cat >> "$build_file" << 'EOF'
@@ -286,7 +283,7 @@ if [[ -z "$KOTLIN_VERSION" ]]; then
     fi
 fi
 if [[ -z "$KOTLIN_VERSION" ]]; then
-    KOTLIN_VERSION="2.4.0"
+    KOTLIN_VERSION="2.4.20"
     echo "  Warning: Could not detect Kotlin version from build.gradle.kts — using default $KOTLIN_VERSION"
 else
     echo "  Detected Kotlin $KOTLIN_VERSION from build.gradle.kts"

@@ -38,7 +38,7 @@ Given a Kotlin project path, optional test target class names, and optional mode
 ## mutflow architecture awareness
 
 - mutflow is JVM-only (no KMP/JS/Native support in v1)
-- mutflow uses compile-once meta-mutant: all mutations injected at compile time, one active per run
+- mutflow injects mutations during test-only compilation; production artifacts stay clean
 - mutflow's global synchronized lock serializes mutation runs — parallel executors will block-and-wait on the lock
 - mutflow's JUnit extension runs baseline (run 0) then mutation runs (run 1+) internally
 - One executor per test class (not per mutation)

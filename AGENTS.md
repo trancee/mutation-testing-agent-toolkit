@@ -37,3 +37,7 @@ Make changes on a feature branch and use pull requests for review; do not commit
 Add or update behavior-focused tests for code and tooling changes, including relevant boundary and failure cases. Keep tests deterministic and independent of the developer workstation, retained processes, or manual inspection. Run the narrow checks for changed behavior and applicable repository CI gates; a retry loop must still exit unsuccessfully if every attempt fails.
 
 CI is the authoritative merge gate. Validate workflow syntax and action semantics, and pin CI-installed tools and dependencies to known versions when practical. Do not impose blanket coverage targets on generated files, examples, or internal tooling without an explicitly scoped policy.
+
+### Toolchain and dependency versions
+
+Always choose the latest stable released toolchain, dependency, and CI action versions available when making or updating configuration; do not select prereleases. Verify versions against authoritative upstream release or package metadata before pinning them. Pin exact versions for reproducible builds, and update existing pins rather than adding a newer pin beside an obsolete one. Keep compiler-coupled plugins on a compatible matching version. If the latest stable release is incompatible or introduces a known blocker, state the evidence and blocker explicitly instead of silently holding back.

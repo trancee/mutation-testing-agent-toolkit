@@ -110,14 +110,14 @@ Deep mode also includes full redundant-test-group details and per-mutation kille
 | Item | Requirement or constraint |
 |------|---------------------------|
 | Project type | Kotlin JVM project using Gradle. |
-| Java | 21 or newer. |
-| Gradle | 9.x or newer. |
-| Kotlin | 2.4.x. |
+| Java | 26 (validated baseline; latest bytecode target supported by Kotlin 2.4.20). |
+| Gradle | 9.8.0 (validated baseline). |
+| Kotlin | 2.4.20 (validated baseline; must match the mutflow compiler plugin). |
 | Kotlin Multiplatform | JVM source sets only. |
 | Unsupported targets | Kotlin/JS, Kotlin/Native, and Android. |
 | Mutation execution | A global mutflow lock serializes active mutation sessions within each JVM. |
 
-For pipeline ordering and agent responsibilities, see [About the mutation-testing agent system](../explanation/agent-system.md). For the mutation engine constraints, see [About mutflow's compile-once meta-mutant](../explanation/mutflow-architecture.md).
+For pipeline ordering and agent responsibilities, see [About the mutation-testing agent system](../explanation/agent-system.md). For the mutation engine constraints, see [About mutflow's test-only mutation compilation](../explanation/mutflow-architecture.md).
 
 ## Examples
 

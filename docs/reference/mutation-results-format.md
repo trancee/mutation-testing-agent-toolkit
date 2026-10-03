@@ -91,8 +91,8 @@ and `COMPILATION_FAILURE`. A missing JUnit XML report is classified as
 `COMPILATION_FAILURE`; its reason may mention an IR transformation error.
 `BACKSTOP_TIMEOUT` and `IR_TRANSFORMATION_ERROR` can be supplied by an
 orchestration executor, but are not emitted as separate types by the current
-Gradle task. Gaps are detected at per-test-class granularity because mutflow's
-compile-once model shares a compilation cycle across a test class.
+Gradle task. Gaps are detected at per-test-class granularity because mutations
+for a test class share an instrumented test compilation.
 
 ### redundantGroups[].tests
 

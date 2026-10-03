@@ -4,9 +4,9 @@ Use this guide when the bootstrap script does not fit your project, or when you 
 
 ## Prerequisites
 
-- Java 21 (or newer)
-- Gradle 9.x
-- Kotlin 2.4.x
+- Java 26
+- Gradle 9.8.0
+- Kotlin 2.4.20
 
 ## Copy files
 
@@ -43,7 +43,7 @@ Edit `build.gradle.kts` to apply the plugin:
 
 ```kotlin
 plugins {
-    id("io.github.anschnapp.mutflow") version "1.1.1"
+    id("io.github.anschnapp.mutflow") version "1.6.0"
     // ... existing plugins
 }
 ```
@@ -72,13 +72,13 @@ The `buildSrc/build.gradle.kts` template applies the `kotlin-dsl` plugin with `k
 
 ## Add test dependencies
 
-Add the mutflow JUnit 6 integration and JUnit Jupiter to your dependencies:
+Add JUnit Jupiter dependencies. The mutflow plugin supplies its matching
+JUnit 6 integration automatically:
 
 ```kotlin
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.3")
     testImplementation("org.junit.platform:junit-platform-launcher:6.1.3")
-    testImplementation("io.github.anschnapp.mutflow:mutflow-junit6:1.1.1")
 }
 ```
 

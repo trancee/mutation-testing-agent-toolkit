@@ -22,8 +22,8 @@ Given a Kotlin project path, analyze the source code and configure mutflow mutat
 
 ## Constraints
 
-- You do NOT create mutations manually — mutflow's compiler plugin injects them at compile time
-- You do NOT create git worktrees — mutflow's compile-once meta-mutant approach doesn't need them
+- You do NOT create mutations manually — mutflow's compiler plugin injects them during test compilation
+- You do NOT create git worktrees — mutflow instruments the test compilation instead
 - You do NOT run tests — that's the test-executor's job
 - Focus on accuracy: misidentifying framework code as business logic wastes mutation runs; misidentifying business logic as framework code misses real bugs
 
