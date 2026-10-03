@@ -56,15 +56,35 @@ Array of all test display names that caught the mutation. Empty array `[]` if th
 
 ### executionGaps[].type
 
-One of: `NO_OUTPUT`, `PARTIAL_RUN`, `COMPILATION_FAILURE` (includes IR transformation errors), `IR_TRANSFORMATION_ERROR`, `BACKSTOP_TIMEOUT`. Detected at per-test-class granularity (mutflow's compile-once model means all mutations for a test class share a single compilation cycle).
+One of `NO_OUTPUT`, `PARTIAL_RUN`, `COMPILATION_FAILURE`, `BACKSTOP_TIMEOUT`,
+or `IR_TRANSFORMATION_ERROR`. The current task/parser-produced types are
+described below.
 
 ### executionGaps[].reason
 
 Human-readable description of why the gap occurred.
 
+### executionGaps[].testClass
+
+Optional test class associated with the gap.
+
+### executionGaps[].affectedSourceLocation
+
+Optional source location associated with the gap.
+
 ### executionGaps[].gradleExitCode
 
 Gradle process exit code when the gap occurred, if available.
+
+### execution gap types
+
+The `mutationResults` Gradle task currently emits `NO_OUTPUT`, `PARTIAL_RUN`,
+and `COMPILATION_FAILURE`. A missing JUnit XML report is classified as
+`COMPILATION_FAILURE`; its reason may mention an IR transformation error.
+`BACKSTOP_TIMEOUT` and `IR_TRANSFORMATION_ERROR` can be supplied by an
+orchestration executor, but are not emitted as separate types by the current
+Gradle task. Gaps are detected at per-test-class granularity because mutflow's
+compile-once model shares a compilation cycle across a test class.
 
 ### redundantGroups[].tests
 

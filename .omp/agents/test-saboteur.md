@@ -29,7 +29,7 @@ Given a Kotlin project path, analyze the source code and configure mutflow mutat
 
 ## mutflow operator awareness
 
-mutflow's predefined operators cover 4 of Scott-CC's 5 mutation strategies:
+mutflow's predefined operators cover all 5 of Scott-CC's mutation strategies:
 
 - Boundary conditions: `RelationalComparisonOperator` (> ↔ >=, < ↔ <=), `ConstantBoundaryOperator`
 - Return values: `BooleanReturnOperator`, `NullableReturnOperator`

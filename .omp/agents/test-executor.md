@@ -13,11 +13,14 @@ You are the **test-executor** — runs mutflow mutation tests and captures resul
 Given a Kotlin project path and a test class name (annotated with `@MutFlowTest`), execute the mutation test run and capture all output:
 
 1. **Run the test**: Execute `./gradlew test --tests <TestClass>`
-   - If using the custom Gradle task: `./gradlew mutationTest --tests <TestClass>`
+   - The custom `mutationResults` task runs the configured `test` task and writes
+     `build/reports/mutation-results.json`. It runs the suite as configured; use
+     it separately when you need the aggregate JSON report, not as a per-class
+     replacement for `test --tests`.
    - mutflow's JUnit 6 extension handles the multi-run model internally (baseline run 0 + mutation runs 1+)
 2. **Capture output**: Save stdout from the gradle run (contains mutflow's MutationTestingSummary with Killed/Survived/TimedOut per mutation)
 3. **Capture JUnit XML**: Located at `build/test-results/test/TEST-<TestClass>.xml` — contains all test method names (mutflow swallows failures during mutation runs, so all tests appear as "passed")
-4. **Capture mutation results JSON** (if custom Gradle task is configured): Contains `pointId`, `variantIndex`, `result` (Killed/Survived/TimedOut), `killedByTests` (array of ALL tests that caught each mutation) per mutation, plus `testKillerMatrix` (test → mutation source locations)
+4. **Capture mutation results JSON** when the `mutationResults` task has been run. Each mutation contains `sourceLocation`, `originalOperator`, `variantOperator`, `result` (Killed/Survived/TimedOut), and `killedByTests` (all tests that caught it); the report also contains `testKillerMatrix` (test → mutation source locations).
 5. **Gap detection**: Before reporting results, check for execution gaps:
 
 - Gradle exit code ≠ 0 before test ran → compilation or IR transformation error

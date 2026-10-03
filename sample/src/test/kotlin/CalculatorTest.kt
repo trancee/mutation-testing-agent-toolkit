@@ -81,8 +81,8 @@ class CalculatorTest {
 
     /**
      * Tests validateInput — throws `IllegalArgumentException` for negative values.
-     * Once ExceptionTypeSwapOperator merges upstream, mutflow will swap
-     * IllegalArgumentException → IllegalStateException on this test.
+     * ExceptionTypeSwapOperator swaps IllegalArgumentException →
+     * IllegalStateException on this test.
      */
     @Test
     fun testValidateInput() {

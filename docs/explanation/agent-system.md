@@ -35,9 +35,12 @@ mutflow discovers mutation points during a baseline run before it activates indi
 
 The saboteur must finish first because mutflow relies on `@MutationTarget`, `@MutFlowTest`, and `MutFlow.underTest`. Executors must finish before the auditor can calculate a complete score. The refactor specialist must wait for the audit because surviving mutations and zombie candidates determine which tests need attention.
 
-## Why executor dispatch is parallel
+## Executor dispatch
 
-The reviewer dispatches one executor per annotated test class in a single task batch. This lets the orchestration layer prepare independent work together. Each executor still runs its baseline before that class's mutation variants, so dispatch concurrency does not change the required per-class ordering.
+The OMP reviewer dispatches one executor per annotated test class in a batch.
+The Copilot reviewer may use parallel agent calls when supported, or run them
+sequentially. mutflow's synchronized lock serializes active mutation sessions
+within a JVM, so concurrency does not change the required per-class ordering.
 
 ## Why approval remains separate
 

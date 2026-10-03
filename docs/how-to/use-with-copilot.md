@@ -35,7 +35,7 @@ setup described in [Manual setup](manual-setup.md).
 Start Copilot CLI from the target project and invoke:
 
 ```text
-/omp-mutation-test [project-path] [--targets <pattern>] [--focus <patterns>] [--mode quick|standard|deep]
+/omp-mutation-test [project-path] [--targets <pattern>] [--focus <patterns>] [--auto-approve] [--mode quick|standard|deep]
 ```
 
 The skill delegates to `omp-mutation-test-reviewer`, which coordinates the

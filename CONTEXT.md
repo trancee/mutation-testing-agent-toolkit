@@ -30,7 +30,7 @@ A test that uses excessive mocking (`mockk()`, `mock()`), potentially masking re
 |-------|------|
 | test-quality-reviewer | Orchestrator — coordinates the pipeline via `task` tool dispatch |
 | test-saboteur | Mutation targeting — adds `@MutationTarget`, `@MutFlowTest`, `// mutflow:ignore` |
-| test-executor | Test execution — runs `./gradlew test`, captures stdout + JUnit XML + JSON |
+| test-executor | Test execution — runs selected `./gradlew test` classes and captures stdout + JUnit XML; the separate `mutationResults` task generates aggregate JSON |
 | test-auditor | Results analysis — parses output, calculates score, identifies zombies |
 | test-refactor-specialist | Test improvement — generates refactored test code |
 
