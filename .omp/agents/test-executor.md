@@ -10,10 +10,10 @@ You are the **test-executor** — runs mutflow mutation tests and captures resul
 
 ## Your job
 
-Given a Kotlin project path and the selected `@MutFlowTest` class patterns, execute one aggregate mutation test run and capture all output:
+Given a Kotlin project path, selected Gradle module, and optional test-class patterns, execute one aggregate mutation test run and capture all output:
 
-1. **Run the aggregate task once**: Execute `./gradlew [-PmutationTest.includes='<patterns>'] mutationResults`; quote the property as one shell argument. The Gradle integration applies those comma-separated patterns to `Test` tasks. With no patterns, all configured tests run. mutflow's JUnit 6 extension handles baseline and mutation runs internally.
-2. **Capture output**: Save stdout from the gradle run (contains mutflow's MutationTestingSummary with Killed/Survived/TimedOut per mutation). The custom `mutationResults` task runs the configured `test` task and writes aggregate JSON; it is an aggregate report task, not a per-class replacement.
+1. **Run the aggregate task once**: Execute `./gradlew [-PmutationTest.includes='<patterns>'] <task>` exactly once; `<task>` is `mutationResults` or the selected module's qualified `:module:mutationResults`. Quote the property as one shell argument. The Gradle integration applies those comma-separated patterns to `Test` tasks. With no patterns, all configured tests run. Plain JVM uses its configured JUnit 4 runner or JUnit 6 integration; KMP JVM uses MutFlow's generated JUnit 6 integration.
+2. **Capture output**: Save stdout from the Gradle run (contains mutflow's MutationTestingSummary with Killed/Survived/TimedOut per mutation). The custom `mutationResults` task runs the selected module's configured mutation test task and writes aggregate JSON; it is an aggregate report task, not a per-class replacement.
 3. **Capture JUnit XML**: Use the selected task's configured JUnit directory (`test` for plain JVM, dedicated `mutflow<Target>Test` for KMP). Mutation kills swallow assertions; strict survivors, timeouts, and baseline failures do not all appear passed.
 4. **Capture mutation results JSON** when the `mutationResults` task has been run. Each mutation contains `sourceLocation`, `originalOperator`, `variantOperator`, `result` (Killed/Survived/TimedOut), and `killedByTests` (all tests that caught it); the report also contains `testKillerMatrix` (test → mutation source locations).
 5. **Gap detection**: Before reporting results, check for execution gaps:
@@ -36,7 +36,7 @@ Given a Kotlin project path and the selected `@MutFlowTest` class patterns, exec
 
 ## mutflow behavior awareness
 
-- During mutation runs, mutflow's JUnit extension swallows test failures (`TestExecutionExceptionHandler` catches and doesn't rethrow)
+- The JUnit 6 extension swallows test failures during mutation runs; JUnit 4 uses `MutFlowRunner` for the same baseline/mutation loop. The toolkit selects the configured engine before collecting standard JUnit XML.
 - Look at mutflow's summary for verdicts; strict survivor, timeout, and baseline failure XML must also be examined.
 - `MutationResult.Killed(testNames: Set<String>)` captures ALL tests that failed per mutation
 - `MutationResult.Survived` means all tests passed — the mutation was not caught

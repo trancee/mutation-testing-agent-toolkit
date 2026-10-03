@@ -11,11 +11,13 @@ Use this skill as the Copilot CLI entry point. Delegate to the
 OMP's `task`, `hub`, or `tasks[]` interfaces.
 
 ```text
-/mutation-testing [project path] [--targets <patterns>] [--auto-approve] [--mode quick|standard|deep]
-/mutation-testing setup [project path] [--kmp]
+/mutation-testing [project path] [--module :path] [--targets <patterns>] [--auto-approve] [--mode quick|standard|deep]
+/mutation-testing setup [project path] [--kmp] [--junit4] [--module :path]
 ```
 
-- `--targets` selects Gradle test class patterns; by default, include all `@MutFlowTest` classes.
+- `--module` selects an installed Gradle subproject; the executor uses its
+  qualified `:module:mutationResults` task.
+- `--targets` selects Gradle test class patterns; by default, run all tests in the selected mutation task.
 - `--mode quick` allows at most 10 mutation runs per selected class (`maxRuns=11`, including baseline) and skips refactoring.
 - `--mode standard` allows at most 30 mutation runs per selected class (`maxRuns=31`, including baseline) and includes refactoring suggestions.
 - `--mode deep` runs all available mutations per selected class and includes detailed killer data.
@@ -24,8 +26,22 @@ OMP's `task`, `hub`, or `tasks[]` interfaces.
 - `setup` runs the bootstrap script and changes the target project's Gradle, `.omp`,
   `buildSrc`, and Copilot configuration. Run it only when the user explicitly asks
   for setup.
-- `--kmp` is setup-only; this toolkit validates KMP JVM mutation tasks.
-  Upstream Native and JUnit 4 support is not implemented in the adapter.
+- `--kmp` is setup-only; this toolkit validates the KMP JVM mutation task.
+  The bootstrap supports a conventional `gradle/libs.versions.toml` Kotlin
+  plugin alias and a selected module using its default directory mapping.
+- `--junit4` is setup-only and selects MutFlow's JUnit 4 runner for a plain
+  Kotlin/JVM module. The default is JUnit 6; KMP JVM uses MutFlow's generated
+  JUnit 6 integration. Select one adapter per module.
+- Supported execution includes plain JVM/JUnit 4, plain JVM/JUnit 6, and KMP
+  JVM when every declared KMP target can resolve MutFlow's common-source-set
+  dependencies. In the validated MutFlow `1.6.0` baseline, artifacts publish
+  JVM, `linuxX64`, and `mingwX64`, but not iOS or Android Native variants;
+  selecting only the JVM task does not avoid dependency resolution. The toolkit
+  does not prune unsupported targets or provide Native, Android, and JS
+  execution adapters.
+- Plain JVM/JUnit 4 test classes use `@RunWith(MutFlowRunner::class)` from
+  `io.github.anschnapp.mutflow.junit4`; do not add the JUnit 6 `@MutFlowTest`
+  annotation to those classes. KMP common tests remain plain `kotlin.test`.
 - KMP common tests use plain `kotlin.test`; configure DSL `maxMutationRuns`
   as 10/30/`Int.MAX_VALUE` for quick/standard/deep, without counting baseline.
 - Require schema 2 JSON with class-qualified identities, discovered/evaluated/

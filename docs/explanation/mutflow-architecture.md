@@ -40,9 +40,9 @@ out that mutation.
 2. **No per-mutation builds or worktrees are required.** The test artifact
    includes the mutation variants, and the test extension selects variants for
    mutation runs.
-3. **JUnit orchestrates the test runs.** `@MutFlowTest` supplies the test
-   integration, and `MutFlow.underTest { }` marks the code whose mutations are
-   activated.
+3. **JUnit orchestrates the test runs.** Plain JVM projects use either the
+   JUnit 6 `@MutFlowTest` extension or the JUnit 4 `MutFlowRunner`, and
+   `MutFlow.underTest { }` marks the code whose mutations are activated.
 4. **Do not overlap sessions within a JVM.** Upstream guards overlapping sessions;
    separate test JVMs are independent. The toolkit uses one aggregate Gradle
    invocation rather than competing processes sharing output directories.
@@ -50,9 +50,15 @@ out that mutation.
    task captures mutflow output from JUnit XML and serializes mutation results,
    gaps, per-test killer data, and redundant groups.
 
-Plain JVM uses `test`; KMP JVM uses dedicated `mutflow<Target>Test` tasks,
-with compiler-synthesized annotations on common tests. Upstream additionally
-supports Kotlin/Native and JUnit 4. Those engines are not yet toolkit adapters.
+Plain JVM uses `test` with JUnit 6 by default or the opt-in JUnit 4 runner.
+KMP JVM uses dedicated `mutflow<Target>Test` tasks with compiler-synthesized
+JUnit 6 integration on common tests. The JUnit 4 runner is a plain JVM adapter;
+Native, Android, and JS execution remain outside toolkit support. KMP
+dependencies are attached to common source sets, so every declared target
+must resolve a MutFlow variant. MutFlow's
+[1.6.0 target support table](https://github.com/anschnapp/mutflow/blob/v1.6.0/DESIGN-MULTIPLATFORM.md#supported-targets)
+omits iOS and Android Native variants. Selecting only the JVM mutation task
+does not bypass resolution of those common dependencies.
 
 The schema 2 results task declares its XML inputs, so changed tests and filters
 invalidate cached JSON. A repeated invocation can reuse up-to-date test XML and

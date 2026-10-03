@@ -7,10 +7,12 @@ adapter uses Copilot custom agents; it does not require the OMP CLI.
 
 - GitHub Copilot CLI
 - Java 26, Gradle 9.8.0, Kotlin 2.4.20, and mutflow 1.6.0 (validated baseline)
-- A Kotlin/JVM project; Kotlin Multiplatform projects can target JVM source sets only
+- A Kotlin/JVM project using JUnit 4 or 6, or a Kotlin Multiplatform project
+  whose mutation run targets JVM source sets
 
-The installer requires an explicit compatible Kotlin pin and conventional
-plugin block. For catalog-managed or customized builds, use
+The installer accepts a direct Kotlin pin or a conventional
+`gradle/libs.versions.toml` plugin alias and module directory. Custom catalogs,
+custom `projectDir` mappings, or customized builds require
 [manual setup](manual-setup.md).
 
 ## Install the adapter
@@ -31,8 +33,14 @@ reported conflict yourself, then rerun setup.
 It also installs `.omp/AGENT-USAGE.md` and appends its discovery pointer once
 to the project's existing `AGENTS.md` without replacing project policy.
 
-For KMP JVM installation, append `--kmp`. Bootstrap does not annotate sources;
-the targeting agent prepares those on a subsequent mutation-test run.
+For KMP JVM installation, append `--kmp`; for a multi-module build, select its
+Gradle path with `--module :module`. For a plain JVM module that already uses
+JUnit 4, append `--junit4`; KMP JVM uses MutFlow's generated JUnit 6
+integration. Bootstrap does not annotate sources; the targeting agent prepares
+those on a subsequent mutation-test run.
+KMP JVM execution still requires compatible MutFlow variants for every
+declared target; see
+[troubleshooting](troubleshoot-mutation-testing.md#diagnose-by-symptom).
 
 For a manual installation, copy the complete
 `.github/skills/mutation-testing/` directory and all
@@ -45,7 +53,7 @@ setup described in [Manual setup](manual-setup.md).
 Start Copilot CLI from the target project and invoke:
 
 ```text
-/mutation-testing [project-path] [--targets <patterns>] [--auto-approve] [--mode quick|standard|deep]
+/mutation-testing [project-path] [--module :path] [--targets <patterns>] [--auto-approve] [--mode quick|standard|deep]
 ```
 
 The skill delegates to `mutation-testing-reviewer`, which coordinates the
@@ -56,12 +64,14 @@ includes all available mutations and detailed killer data. The limit is per
 class, not project-wide.
 
 For KMP, common tests remain plain `kotlin.test` and the targeting agent sets
-the DSL mutation budget. See the [mode reference](../reference/mutation-testing-command.md#execution-modes).
+the DSL mutation budget. Plain JVM/JUnit 4 tests use
+`@RunWith(MutFlowRunner::class)`; JUnit 6 uses `@MutFlowTest`. See the
+[mode reference](../reference/mutation-testing-command.md#execution-modes).
 
 To configure a new target project, explicitly request:
 
 ```text
-/mutation-testing setup [project-path] [--kmp]
+/mutation-testing setup [project-path] [--kmp] [--junit4] [--module :path]
 ```
 
 Setup changes Gradle files, `buildSrc/`, `.omp/`, and `.github/`. If setup adds

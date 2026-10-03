@@ -45,6 +45,12 @@ kotlin {
 
 We declare only a JVM target. This lesson does not validate Native, Android,
 JS, or arbitrary multi-target dependency compatibility.
+MutFlow adds dependencies to KMP common source sets. As of the validated
+MutFlow `1.6.0` baseline, a project that also declares iOS or Android Native
+targets can fail variant resolution even when only `mutflowJvmTest` is
+selected. The toolkit does not rewrite the project's target model; use a
+separate, explicitly scoped JVM-only build model or wait for compatible
+upstream variants.
 
 ## Step 2: Add common business logic and tests
 

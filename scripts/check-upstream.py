@@ -13,14 +13,18 @@ import json
 ROOT = Path(__file__).resolve().parents[1]
 ARTIFACTS = {
     "mutflow": "io/github/anschnapp/mutflow/mutflow-gradle-plugin",
+    "mutflow-junit4": "io/github/anschnapp/mutflow/mutflow-junit4",
     "kotlin": "org/jetbrains/kotlin/kotlin-gradle-plugin",
     "junit": "org/junit/jupiter/junit-jupiter-api",
+    "junit4": "junit/junit",
     "serialization": "org/jetbrains/kotlinx/kotlinx-serialization-json",
 }
 PATTERNS = {
     "mutflow": r'id\("io\.github\.anschnapp\.mutflow"\) version "([^"]+)"',
+    "mutflow-junit4": r'io\.github\.anschnapp\.mutflow:mutflow-junit4:([^:"]+)',
     "kotlin": r'kotlin\("(?:jvm|multiplatform|plugin\.serialization)"\) version "([^"]+)"',
     "junit": r'org\.junit\.(?:jupiter|platform):[^:"]+:([^"]+)"',
+    "junit4": r'junit:junit:([^:"]+)',
     "serialization": r'org\.jetbrains\.kotlinx:kotlinx-serialization-json:([^"]+)"',
 }
 
@@ -63,11 +67,10 @@ def main() -> None:
                 if value != pins.get(name):
                     errors.append(f"{path.relative_to(ROOT)}: {name} {value} != {pins.get(name)}")
     bootstrap = (ROOT / ".omp/bootstrap-mutation-testing.sh").read_text()
-    for name in ["mutflow", "kotlin"]:
-        escaped_pin = pins[name].replace(".", r"\.")
-        if escaped_pin not in bootstrap:
-            errors.append(f"Bootstrap {name} compatibility preflight does not match canonical pin")
-    compiler_pin = re.search(r'^KOTLIN_VERSION="([^"]+)"$', bootstrap, re.MULTILINE)
+    escaped_mutflow_pin = pins["mutflow"].replace(".", r"\.")
+    if escaped_mutflow_pin not in bootstrap:
+        errors.append("Bootstrap mutflow compatibility preflight does not match canonical pin")
+    compiler_pin = re.search(r'^REQUIRED_KOTLIN_VERSION="([^"]+)"$', bootstrap, re.MULTILINE)
     if not compiler_pin or compiler_pin.group(1) != pins.get("kotlin"):
         errors.append("Bootstrap buildSrc compiler pin differs from canonical Kotlin")
 

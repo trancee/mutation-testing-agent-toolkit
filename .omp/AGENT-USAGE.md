@@ -15,8 +15,13 @@ authority to install, overwrite configuration, or delete tests.
 
 Use the current runtime's native delegation. Missing profiles/tools are a
 limitation to report, not a reason to substitute another client's dispatch.
-Supported paths are plain JVM/JUnit 6 and KMP JVM mutation tasks; Native,
-JUnit 4/Android, and JS are outside validated toolkit support.
+Supported paths are plain JVM/JUnit 4, plain JVM/JUnit 6, and KMP JVM mutation
+tasks through MutFlow's generated JUnit 6 integration. Every declared KMP
+target must resolve MutFlow's common-source-set dependencies. In the validated
+MutFlow `1.6.0` baseline, artifacts publish JVM, `linuxX64`, and `mingwX64`, but
+not iOS or Android Native variants; selecting only the JVM mutation task does
+not avoid that resolution. The toolkit does not prune unsupported targets or
+provide Native, Android, or JS execution adapters.
 
 ## Execute
 
@@ -27,16 +32,19 @@ budgets and exact approval rules. Quick skips refactoring, not targeting edits.
 Additive/assertion-level changes require applicable approval; deletion or
 consolidation always requires explicit approval.
 
-Use the target wrapper when available, otherwise installed Gradle:
+Use the target wrapper when available, otherwise installed Gradle. For a
+multi-module setup, keep the configured module path explicit:
 
 ```bash
 ./gradlew mutationResults '-PmutationTest.includes=example.CalculatorTest' --console=plain
+# Or: ./gradlew :service:mutationResults '-PmutationTest.includes=example.DecisionTest' --console=plain
 ```
 
-Use a qualified task such as `:service:mutationResults` for a subproject.
 `mutationTest.includes` selects whole test classes; production mutation targets
-are a separate setting. Plain JVM uses `test`; KMP uses dedicated
-`mutflow<Target>Test` JVM tasks and plain `kotlin.test` common tests.
+are a separate setting. Plain JVM uses `test` with the module's configured
+JUnit 4 or 6 engine; JUnit 4 test classes use `@RunWith(MutFlowRunner::class)`.
+KMP uses dedicated `mutflow<Target>Test` JVM tasks, generated JUnit 6
+integration, and plain `kotlin.test` common tests.
 Keep Gradle invocations sharing build/report paths sequential.
 
 Record configured budgets and effective `MUTFLOW_*` overrides. Changing

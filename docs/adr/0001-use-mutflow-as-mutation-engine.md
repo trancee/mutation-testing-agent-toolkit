@@ -43,7 +43,10 @@ Use **mutflow** as the mutation engine.
 
 ### Negative
 
-- Toolkit scope: JVM/JUnit 6 and KMP JVM mutation tasks are supported here. Upstream 1.6.0 also supports Native and JUnit 4; integrating those paths requires toolkit adapters and validation, not a claim that upstream lacks them.
+- Toolkit adapters: plain JVM supports JUnit 6 by default and JUnit 4 through
+  the dedicated `mutflow-junit4` runner. KMP JVM uses MutFlow's generated
+  JUnit 6 integration. Native, Android, and JS execution remain outside
+  toolkit scope.
 - No LLM-guided mutations: all operators are predefined and static. LLM serves as targeting specialist (suppression annotations), not as a mutation generator
 - Per-JVM overlap guard: avoid overlapping active sessions inside one JVM; separate JVMs are independent.
 

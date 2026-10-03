@@ -21,8 +21,13 @@ remains in `AGENTS.md`; domain terms remain in [CONTEXT.md](CONTEXT.md).
 
 Resolve the toolkit checkout and target module separately. Scope writes and
 commands to the approved target; inspect its instructions and existing changes.
-Supported execution: plain Kotlin JVM/JUnit 6 and KMP JVM mutation tasks.
-Native, JUnit 4/Android, and JS are not validated toolkit adapters.
+Supported execution: plain Kotlin JVM with JUnit 4 or JUnit 6, and KMP JVM
+mutation tasks through MutFlow's generated JUnit 6 integration. Every declared
+KMP target must also resolve MutFlow's common-source-set dependencies. In the
+validated MutFlow `1.6.0` baseline, the artifacts publish JVM, `linuxX64`, and
+`mingwX64`, but not iOS or Android Native variants; selecting only the JVM
+mutation task does not avoid that resolution. The toolkit does not prune
+unsupported targets or provide Native, Android, or JS execution adapters.
 
 **Ready:** request, client, target module, setup authority, and supported
 execution path are explicit. Report unsupported or missing capabilities.
@@ -33,18 +38,25 @@ Inspect [the installer](.omp/bootstrap-mutation-testing.sh) before executing it:
 
 ```bash
 bash "/absolute/toolkit/.omp/bootstrap-mutation-testing.sh" "/absolute/target"
-# For a KMP JVM module, append --kmp.
+# For a KMP JVM module, select its Gradle path, for example:
+bash "/absolute/toolkit/.omp/bootstrap-mutation-testing.sh" "/absolute/target" --kmp --module :module
+# For a plain JVM project that uses JUnit 4:
+bash "/absolute/toolkit/.omp/bootstrap-mutation-testing.sh" "/absolute/target" --junit4
 ```
 
-Preflight: explicit compatible Kotlin plugin pin, conventional multiline
-`plugins` block, matching JVM/KMP mode, and no conflicting user-owned `buildSrc`,
-legacy namespace, or Copilot files. Use the installer's actual checked pins;
-the canonical plugin pins live in [sample/build.gradle.kts](sample/build.gradle.kts).
+Preflight: compatible Kotlin plugin pin (direct or through the default
+`gradle/libs.versions.toml` plugin alias), conventional multiline `plugins`
+block, matching JVM/KMP mode, a conventional module-directory mapping, and no
+conflicting user-owned `buildSrc`, legacy namespace, or Copilot files. Use the
+installer's actual checked pins; the canonical plugin pins live in
+[sample/build.gradle.kts](sample/build.gradle.kts). `--junit4` is for plain
+JVM only; KMP JVM uses the generated JUnit 6 integration.
 Inspect existing `pluginManagement` for Maven Central: bootstrap preserves an
 existing block without repairing its repositories.
 
-Installation copies Gradle/results and both client layers. It edits builds in
-place, preserves existing `.bak` files, and does not itself annotate sources.
+Installation copies toolkit files to the project root, edits the selected
+module's build and the root `buildSrc`, preserves existing `.bak` files, and
+does not itself annotate sources.
 For custom builds or an upgrade, merge toolkit-owned files explicitly while
 preserving convention code. Legacy `io.omp.mutation` sources, current
 `ch.trancee.mutation` sources, the results script, and schema consumers require
@@ -83,10 +95,12 @@ Inspect the target build for the task/module and use its wrapper when present:
 ./gradlew :service:mutationResults '-PmutationTest.includes=example.OrderTest,example.PriceTest' --console=plain
 ```
 
-For a standalone module use `mutationResults` without `:service:`. Without a
-wrapper use its installed `gradle`; this toolkit checkout has no wrapper.
-Run one aggregate invocation, not competing per-class Gradle processes sharing
-build/report paths. Plain JVM selects `test`; KMP selects dedicated
+For a standalone module use `mutationResults` without `:service:`. A
+multi-module setup selected with `--module :service` runs
+`:service:mutationResults`. Without a wrapper use its installed `gradle`; this
+toolkit checkout has no wrapper. Run one aggregate invocation, not competing
+per-class Gradle processes sharing build/report paths. Plain JVM selects `test`
+with its configured JUnit 4 or 6 engine; KMP selects dedicated
 `mutflow<Target>Test` JVM tasks, not ordinary `jvmTest`.
 
 Check effective `MUTFLOW_*` overrides and configured mutation budgets.

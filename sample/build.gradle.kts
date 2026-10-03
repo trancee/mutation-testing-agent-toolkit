@@ -13,12 +13,13 @@ repositories {
     mavenCentral()
 }
 dependencies {
-    testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.3")
-    testImplementation("org.junit.platform:junit-platform-launcher:6.1.3")
+    testImplementation("io.github.anschnapp.mutflow:mutflow-junit4:1.6.0")
+    testImplementation("junit:junit:4.13.2")
 }
 
+extra["mutationTest.junitFramework"] = "junit4"
+
 tasks.test {
-    useJUnitPlatform()
     testLogging {
         showStandardStreams = true
         events("passed", "skipped", "failed")

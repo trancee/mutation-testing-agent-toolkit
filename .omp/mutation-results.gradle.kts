@@ -34,6 +34,10 @@ tasks.matching { it.name.startsWith("compile") }.configureEach {
 
 // KMP creates its dedicated mutation tasks after evaluation.
 afterEvaluate {
+    val mutationTestFramework = findProperty("mutationTest.junitFramework")?.toString() ?: "junit6"
+    require(mutationTestFramework in setOf("junit4", "junit6")) {
+        "mutationTest.junitFramework must be 'junit4' or 'junit6'"
+    }
     val isKmp = plugins.hasPlugin("org.jetbrains.kotlin.multiplatform")
     val selectedTests = tasks.withType<Test>().matching {
         if (isKmp) it.name.startsWith("mutflow") && it.name.endsWith("Test") else it.name == "test"
@@ -43,7 +47,11 @@ afterEvaluate {
     }
     selectedTests.configureEach {
         dependsOn(prepareMutationResults)
-        useJUnitPlatform()
+        if (mutationTestFramework == "junit6") {
+            useJUnitPlatform()
+        } else {
+            useJUnit()
+        }
         reports.junitXml.required.set(true)
         testLogging.showStandardStreams = true
         mutationTestIncludes.forEach { filter.includeTestsMatching(it) }

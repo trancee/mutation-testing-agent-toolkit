@@ -29,7 +29,7 @@ A test that uses excessive mocking (`mockk()`, `mock()`), potentially masking re
 | Agent | Role |
 |-------|------|
 | test-quality-reviewer | Orchestrator — coordinates the pipeline via `task` tool dispatch |
-| test-saboteur | Mutation targeting — selects source/test classes, adds `@MutationTarget`, `@MutFlowTest` with the mode budget, and applicable `// mutflow:ignore` annotations |
+| test-saboteur | Mutation targeting — selects source/test classes, adds `@MutationTarget`, configures the module's JUnit adapter and mode budget, and applies applicable `// mutflow:ignore` annotations |
 | test-executor | Test execution — runs one aggregate `mutationResults` Gradle invocation for the selected classes and captures stdout, JUnit XML, and JSON |
 | test-auditor | Results analysis — parses aggregate output, calculates score, and identifies evidence-qualified zombie candidates |
 | test-refactor-specialist | Test improvement — generates refactored test code |
@@ -70,8 +70,9 @@ The `mutationResults` Gradle task outputs `mutation-results.json` including `kil
 
 ## Decisions deferred to v2
 
-- Native and JUnit 4 toolkit adapters. Upstream mutflow supports these paths,
-  but this toolkit currently validates plain JVM/JUnit 6 and KMP JVM only.
+- Native, Android, and JS toolkit adapters. The toolkit validates plain
+  JVM/JUnit 4, plain JVM/JUnit 6, and KMP JVM through MutFlow's generated
+  JUnit 6 integration.
 
 ## Results module ownership
 
