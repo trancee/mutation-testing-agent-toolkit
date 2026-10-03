@@ -10,9 +10,10 @@ The toolkit adapts the five-role orchestration and test-quality workflow from [S
 ## Quick start
 
 Clone this repository and run the installer from its root. The target project
-must use an explicit Kotlin `2.4.20` plugin pin and a conventional multiline
-`plugins` block. For version catalogs, existing convention builds, or migration,
-use [manual setup](docs/how-to/manual-setup.md).
+must use a conventional multiline Kotlin DSL `plugins` block and pin Kotlin
+`2.4.20` directly or through the default `gradle/libs.versions.toml` plugin
+alias. Custom catalogs, convention builds, or project-directory mappings need
+[manual setup](docs/how-to/manual-setup.md).
 
 ```bash
 git clone https://github.com/trancee/mutation-testing-agent-toolkit.git
@@ -23,7 +24,9 @@ cd mutation-testing-agent-toolkit
 ```
 
 Validated with Java `26`, Gradle `9.8.0`, Kotlin `2.4.20`, and mutflow `1.6.0`.
-For KMP JVM projects, append `--kmp`; see [KMP setup](docs/how-to/manual-setup.md#configure-kmp-jvm-projects).
+For KMP JVM projects, append `--kmp` and select a subproject with
+`--module :module` when needed. For a plain JVM project already using JUnit 4,
+append `--junit4`; see [manual setup](docs/how-to/manual-setup.md).
 
 The installer configures Gradle and installs both client adapters; it does not
 annotate your sources. Choose your client from the target project:
@@ -54,9 +57,11 @@ For failed or incomplete runs, use [troubleshooting](docs/how-to/troubleshoot-mu
 ## Sample project
 
 The `sample/` directory contains a reference Kotlin project with a `Calculator`
-class: **32/32 mutations killed** (100% score, Excellent band, Medium
-confidence). This is a result for the selected operators, not proof of complete
-behavioral coverage. Reproduce it from the repository root:
+class and the JUnit 4 `MutFlowRunner`: **32/32 mutations killed** (100% score,
+Excellent band, Medium confidence). The real Gradle integration harness also
+keeps the JUnit 6 path covered. These results apply to the selected operators,
+not proof of complete behavioral coverage. Reproduce the JUnit 4 sample from
+the repository root:
 
 ```bash
 gradle -p sample mutationResults
@@ -75,9 +80,9 @@ in [AGENTS.md](AGENTS.md).
 
 ## Known limitations
 
-- **Kotlin Multiplatform (JVM-first)**: `--kmp` installs the toolkit's JVM mutation-task adapter. Upstream also supports Native and JUnit 4; those adapters are not validated here.
-- **Setup scope**: the installer supports conventional Kotlin DSL module builds,
-  not automatic migration of arbitrary version catalogs or multi-module layouts.
+- **Kotlin Multiplatform (JVM-first)**: `--kmp` installs the JVM mutation-task adapter and supports a selected module using the default `gradle/libs.versions.toml` catalog and module directory. Every declared KMP target must resolve MutFlow's common-source-set dependencies. In the validated MutFlow `1.6.0` baseline, artifacts publish JVM, `linuxX64`, and `mingwX64`, but not iOS or Android Native variants; selecting only the JVM task does not avoid that resolution. The toolkit does not prune unsupported targets or provide Native, Android, or JS execution adapters.
+- **JUnit adapters**: plain JVM supports JUnit 4 (`--junit4`) and JUnit 6 (default). KMP JVM uses MutFlow's generated JUnit 6 integration.
+- **Setup scope**: custom version catalogs, nonstandard plugin-block layouts, and `projectDir` mappings require manual setup.
 - **Results migration**: existing `io.omp.mutation` installations and schema 1
   consumers need the [coordinated migration](docs/how-to/manual-setup.md#upgrade-an-existing-installation).
 - **Gradle configuration cache**: unsupported by the current results adapter;

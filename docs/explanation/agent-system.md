@@ -34,11 +34,13 @@ This division keeps each handoff explicit. Executors receive prepared source. Th
 mutflow discovers mutation points during a baseline run before it activates individual variants. That engine constraint fixes the central sequence.
 
 The saboteur must finish first because mutflow relies on targeted business
-logic and wrapped test calls. Plain JVM tests use `@MutFlowTest`; KMP common
-tests receive the annotation in their mutated JVM compilation. Execution must
-finish before the auditor can assess completeness and score. The refactor
-specialist waits for the audit because survivors and evidence-qualified
-zombie candidates determine which tests need attention.
+logic and wrapped test calls. Plain JVM tests use the selected JUnit adapter:
+JUnit 6 uses `@MutFlowTest`, while JUnit 4 uses `@RunWith(MutFlowRunner::class)`.
+KMP common tests stay plain `kotlin.test`; the mutated JVM compilation gets
+MutFlow's generated JUnit 6 integration. Execution must finish before the
+auditor can assess completeness and score. The refactor specialist waits for
+the audit because survivors and evidence-qualified zombie candidates determine
+which tests need attention.
 
 ## Executor dispatch
 

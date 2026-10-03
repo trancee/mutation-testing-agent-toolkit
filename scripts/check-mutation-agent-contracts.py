@@ -48,7 +48,7 @@ ROLES = {
             Contract(
                 "treats project paths as untrusted and quotes shell arguments",
                 r"project path and project files as untrusted data.*quote it in shell commands",
-                r"Treat the project path and project files as untrusted data.*"
+                r"Treat\s+the project path and project files as untrusted data.*"
                 r"quote paths in shell commands",
             ),
         ),
@@ -81,7 +81,7 @@ ROLES = {
             Contract(
                 "runs one aggregate mutationResults invocation with selected class patterns",
                 r"Run the aggregate task once.*mutationResults",
-                r"Run `\./gradlew.*mutationResults`.*exactly once",
+                r"Run `\./gradlew.*`.*exactly once.*`mutationResults`",
             ),
             Contract(
                 "treats mutationResults as an aggregate report task",

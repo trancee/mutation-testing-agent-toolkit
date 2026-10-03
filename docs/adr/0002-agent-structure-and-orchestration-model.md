@@ -30,8 +30,8 @@ Scott-CC runs a bounded executor per mutant. This toolkit runs one aggregate
 Gradle mutation-results task for the selected test classes. The single
 invocation avoids overlapping build and JUnit report outputs; mutflow's
 session guard is JVM-local and does not coordinate separate Gradle processes.
-`maxRuns` limits are applied per `@MutFlowTest` class and include the baseline
-run, so they do not establish a project-wide mutant ceiling.
+Plain JVM budgets use the selected JUnit adapter's `@MutFlowTest` annotation
+and include the baseline; KMP budgets use `maxMutationRuns` and exclude it.
 
 The toolkit's score bands, mutation-run budgets, and mock-count heuristic are
 its own policy choices. Killer data supports candidate analysis but does not
@@ -79,7 +79,7 @@ This table records the accepted design. The [mutation-testing agent reference](.
 
 ## Data flow
 
-1. **Saboteur → Executor**: Source files with `@MutationTarget`, `@MutFlowTest`, `// mutflow:ignore` annotations
+1. **Saboteur → Executor**: Source files with `@MutationTarget`, the selected JUnit adapter, and `// mutflow:ignore` annotations
 2. **Executor → Auditor**: mutflow stdout + JUnit XML + `mutation-results.json` (custom Gradle task)
 3. **Auditor → Refactorer**: JSON audit report (mutation score, zombie candidates, over-mocked tests)
 4. **Refactorer → Orchestrator**: Refactored test file content
@@ -87,6 +87,6 @@ This table records the accepted design. The [mutation-testing agent reference](.
 ## Consequences
 
 - **No namespace needed**: OMP uses the `name` field as the dispatch key — `mutation-testing:` prefix is optional (unlike Scott-CC)
-- **mutflow adaptation**: The saboteur configures `@MutFlowTest` without git worktrees. One executor runs the selected tests through a single aggregate Gradle task; the JUnit extension handles baseline and mutation runs.
+- **mutflow adaptation**: The saboteur configures the selected plain JVM adapter (JUnit 6 extension or JUnit 4 runner), or KMP's generated JUnit 6 integration, without git worktrees. One executor runs the selected tests through a single aggregate Gradle task.
 - **Zombie analysis**: mutflow reports all tests that kill each mutation (not only the first). The results task builds a killer matrix, which supports candidate analysis but is not a complete per-test-per-mutation outcome matrix.
 - **Refactor verification**: When approved changes are applied, the reviewer reruns the aggregate mutation-results task before reporting the changes as validated.

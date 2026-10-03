@@ -73,6 +73,30 @@ for agent in \
     "$project/.github/agents/$agent.agent.md"
 done
 
+invalid_module_project="$tmp_root/invalid-module-project"
+write_minimal_project "$invalid_module_project"
+cp "$invalid_module_project/build.gradle.kts" "$tmp_root/invalid-module-build.gradle.kts"
+if "$bootstrap" "$invalid_module_project" --module ":../outside" >"$tmp_root/invalid-module.log" 2>&1; then
+  echo "Expected bootstrap to reject a module path that escapes the project root." >&2
+  exit 1
+fi
+cmp "$tmp_root/invalid-module-build.gradle.kts" "$invalid_module_project/build.gradle.kts"
+[[ ! -e "$invalid_module_project/.omp" ]]
+
+module_project="$tmp_root/module-project"
+mkdir -p "$module_project/service"
+printf '%s\n' 'plugins {' '}' > "$module_project/build.gradle.kts"
+printf '%s\n' 'rootProject.name = "module-project"' 'include(":service")' > \
+  "$module_project/settings.gradle.kts"
+write_minimal_project "$module_project/service"
+cp "$module_project/build.gradle.kts" "$tmp_root/module-root-build.gradle.kts"
+"$bootstrap" "$module_project" --module :service >"$tmp_root/module-project.log" 2>&1
+cmp "$tmp_root/module-root-build.gradle.kts" "$module_project/build.gradle.kts"
+grep -Fq 'id("io.github.anschnapp.mutflow") version "1.6.0"' \
+  "$module_project/service/build.gradle.kts"
+grep -Fq 'Run: /mutation-testing' "$tmp_root/module-project.log"
+grep -Fq 'gradle :service:mutationResults' "$tmp_root/module-project.log"
+
 conflict_project="$tmp_root/conflict-project"
 write_minimal_project "$conflict_project"
 mkdir -p "$conflict_project/.github/agents"

@@ -164,6 +164,52 @@ class TimeoutTest {
         run(gradle + ["-PmutationTest.includes=fixture.StrongTest", "mutationResults"], success=False)
         assert not (jvm / "build/reports/mutation-results.json").exists()
 
+        junit4 = base / "junit4"
+        write(junit4, "build.gradle.kts", """
+plugins {
+    kotlin("jvm") version "2.4.20"
+}
+repositories { mavenCentral() }
+kotlin { jvmToolchain(26) }
+dependencies {
+    testImplementation("junit:junit:4.13.2")
+}
+tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach { useJUnitPlatform() }
+""")
+        write(junit4, "src/main/kotlin/Decision.kt", """
+package fixture
+import io.github.anschnapp.mutflow.MutationTarget
+@MutationTarget
+class Decision {
+    fun positive(value: Int): Boolean = value > 0
+}
+""")
+        write(junit4, "src/test/kotlin/DecisionTest.kt", """
+package fixture
+import io.github.anschnapp.mutflow.MutFlow
+import io.github.anschnapp.mutflow.junit4.MutFlowRunner
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import org.junit.runner.RunWith
+@RunWith(MutFlowRunner::class)
+class DecisionTest {
+    @Test fun boundary() {
+        assertTrue(MutFlow.underTest { Decision().positive(1) })
+        assertFalse(MutFlow.underTest { Decision().positive(0) })
+        assertFalse(MutFlow.underTest { Decision().positive(-1) })
+    }
+}
+""")
+        run(["bash", bootstrap, str(junit4), "--junit4"])
+        junit4_gradle = [args.gradle, "-p", str(junit4), "--console=plain"]
+        run(junit4_gradle + [
+            "-PmutationTest.includes=fixture.DecisionTest", "mutationResults",
+        ])
+        junit4_report = report(junit4)
+        assert junit4_report["totalMutations"] == junit4_report["killed"] == 4, junit4_report
+        assert junit4_report["gaps"] == 0, junit4_report
+
         kmp = base / "kmp"
         write(kmp, "build.gradle.kts", """
 plugins {
@@ -238,6 +284,78 @@ class DecisionTest {
         rejected = run(["bash", bootstrap, str(incompatible)], success=False)
         assert "requires Kotlin 2.4.20" in rejected.stdout, rejected.stdout
         assert not (incompatible / ".omp").exists()
+
+        catalog_kmp = base / "catalog-kmp"
+        write(catalog_kmp, "settings.gradle.kts", """
+pluginManagement {
+    repositories { gradlePluginPortal(); mavenCentral() }
+}
+dependencyResolutionManagement {
+    repositories { mavenCentral() }
+}
+rootProject.name = "catalog-kmp-fixture"
+include(":kompact")
+""")
+        write(catalog_kmp, "gradle/libs.versions.toml", """
+[versions]
+kotlin = "2.4.20"
+
+[plugins]
+kmp = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+""")
+        root_build = """
+plugins {
+    alias(libs.plugins.kmp) apply false
+}
+"""
+        write(catalog_kmp, "build.gradle.kts", root_build)
+        write(catalog_kmp, "kompact/build.gradle.kts", """
+plugins {
+    alias(libs.plugins.kmp)
+}
+kotlin {
+    jvm()
+    linuxX64()
+    jvmToolchain(26)
+    sourceSets {
+      commonTest.dependencies { implementation(kotlin("test")) }
+    }
+}
+""")
+        write(catalog_kmp, "kompact/src/commonMain/kotlin/Decision.kt", """
+package fixture
+import io.github.anschnapp.mutflow.MutationTarget
+@MutationTarget
+class Decision {
+    fun positive(value: Int): Boolean = value > 0
+}
+""")
+        write(catalog_kmp, "kompact/src/commonTest/kotlin/DecisionTest.kt", """
+package fixture
+import io.github.anschnapp.mutflow.MutFlow
+import kotlin.test.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+class DecisionTest {
+    @Test fun boundary() {
+      assertTrue(MutFlow.underTest { Decision().positive(1) })
+      assertFalse(MutFlow.underTest { Decision().positive(0) })
+      assertFalse(MutFlow.underTest { Decision().positive(-1) })
+    }
+}
+""")
+        root_build_before = (catalog_kmp / "build.gradle.kts").read_bytes()
+        run(["bash", bootstrap, str(catalog_kmp), "--kmp", "--module", ":kompact"])
+        assert (catalog_kmp / "build.gradle.kts").read_bytes() == root_build_before
+        catalog_gradle = [args.gradle, "-p", str(catalog_kmp), "--console=plain"]
+        catalog_result = run(catalog_gradle + [
+            "-PmutationTest.includes=fixture.DecisionTest", ":kompact:mutationResults",
+        ])
+        assert ":kompact:mutflowJvmTest" in catalog_result.stdout, catalog_result.stdout
+        assert ":kompact:mutflowLinuxX64Test" not in catalog_result.stdout, catalog_result.stdout
+        catalog_report = report(catalog_kmp / "kompact")
+        assert catalog_report["totalMutations"] == catalog_report["killed"] == 4, catalog_report
+        assert catalog_report["gaps"] == 0, catalog_report
 
     print("Real mutflow JVM/KMP integration scenarios passed.")
 

@@ -1,18 +1,19 @@
 package example
 
 import io.github.anschnapp.mutflow.MutFlow
-import io.github.anschnapp.mutflow.junit.MutFlowTest
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.*
+import io.github.anschnapp.mutflow.junit4.MutFlowRunner
+import org.junit.Assert.*
+import org.junit.Test
+import org.junit.runner.RunWith
 
 /**
- * Tests for [Calculator] — annotated with @MutFlowTest so mutflow's
- * JUnit 6 extension runs baseline (run 0) + one mutation per run (run 1+).
+ * Tests for [Calculator] use MutFlowRunner to run baseline (run 0) and
+ * one mutation per run (run 1+).
  *
  * Each test wraps business logic calls in MutFlow.underTest { } so
  * mutflow can activate mutations during mutation runs.
  */
-@MutFlowTest
+@RunWith(MutFlowRunner::class)
 class CalculatorTest {
 
     private val calc = Calculator()
@@ -95,8 +96,11 @@ class CalculatorTest {
         } catch (e: IllegalArgumentException) {
             "IllegalArgumentException"
         }
-        assertEquals("IllegalArgumentException", exception,
-            "validateInput(-1) should throw IllegalArgumentException")
+        assertEquals(
+            "validateInput(-1) should throw IllegalArgumentException",
+            "IllegalArgumentException",
+            exception,
+        )
     }
 
     /**

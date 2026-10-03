@@ -6,15 +6,17 @@ This tutorial assumes you have a Kotlin JVM project with Gradle. If you don't, s
 
 ## Prerequisites
 
-- An existing Kotlin JVM project with an explicit `kotlin("jvm") version "2.4.20"`
-  pin in a conventional multiline `plugins` block
+- An existing Kotlin JVM project with Kotlin `2.4.20` pinned directly or
+  through the conventional `gradle/libs.versions.toml` plugin alias, using a
+  multiline `plugins` block
 - Java 26 and Gradle 9.8.0
 - The Mutation Testing Agent Toolkit cloned to a known location
 
 Start with a clean worktree or save your changes. The script edits the build
 in place; it preserves existing `.bak` files but does not create a backup.
-If you have a version catalog, user-owned `buildSrc`, or legacy toolkit
-installation, follow [manual setup](../how-to/manual-setup.md) instead.
+If you have a custom catalog, nonstandard module directory mapping, user-owned
+`buildSrc`, or legacy toolkit installation, follow
+[manual setup](../how-to/manual-setup.md) instead.
 
 ## Step 1: Run the bootstrap script
 
@@ -32,12 +34,14 @@ We'll see output like:
 ```
 Bootstrapping mutation testing into: .
 Mode: JVM
+Module: :
+Test framework: JUnit 6
 
 Copying .omp agents, skills, and scripts...
 Installing GitHub Copilot skill and agents...
 Configuring settings.gradle.kts...
   Added pluginManagement block
-Configuring build.gradle.kts...
+Configuring module build.gradle.kts...
   Added mutflow plugin
   Applied mutation-results.gradle.kts
   Added JUnit 6 dependencies
@@ -59,6 +63,13 @@ It also installs `.github/skills/mutation-testing/` and the five
 `.github/agents/mutation-testing-*.agent.md` profiles. Start Copilot CLI in the
 target project and invoke `/mutation-testing`; if Copilot is already running,
 use `/skills reload` first.
+
+For a plain JVM project that already uses JUnit 4, append `--junit4` to the
+bootstrap command. The installed runner uses
+`@RunWith(MutFlowRunner::class)`; it does not convert the project to JUnit 6.
+For a catalog-based KMP subproject, use `--kmp --module :module` and run the
+qualified task from the build root. See [manual setup](../how-to/manual-setup.md)
+for both configurations and their limits.
 
 ## Step 2: Verify the Gradle setup
 

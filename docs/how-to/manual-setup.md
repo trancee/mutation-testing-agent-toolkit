@@ -88,9 +88,11 @@ cp .omp/mutation-results-src/build.gradle.kts buildSrc/build.gradle.kts
 The template applies Kotlin JVM and serialization plugins, not `kotlin-dsl`.
 For an existing `buildSrc`, merge its dependencies and source files instead of
 overwriting the build. mutflow 1.6.0 requires Kotlin 2.4.20; do not independently
-upgrade or downgrade the compiler. Bootstrap rejects unknown alias/catalog
-versions, nonstandard plugin-block layouts, and user-owned `buildSrc` builds;
-configure those manually.
+upgrade or downgrade the compiler. Bootstrap resolves direct Kotlin plugin pins
+and aliases in the default `gradle/libs.versions.toml` catalog, including
+version references. Custom catalog names, nonstandard plugin-block layouts,
+custom `projectDir` mappings, and user-owned `buildSrc` builds require manual
+setup.
 
 ## Add test dependencies
 
@@ -108,6 +110,27 @@ tasks.test {
 }
 ```
 
+### Use JUnit 4 in a plain JVM module
+
+Pass `--junit4` to bootstrap instead of the default JUnit 6 adapter. For manual
+setup, keep the project's JUnit 4 engine and add the MutFlow runner:
+
+```kotlin
+dependencies {
+    testImplementation("io.github.anschnapp.mutflow:mutflow-junit4:1.6.0")
+    testImplementation("junit:junit:4.13.2")
+}
+
+extra["mutationTest.junitFramework"] = "junit4"
+```
+
+The results script selects Gradle's JUnit 4 runner for the `test` task. A
+mutation-tested class uses `@RunWith(MutFlowRunner::class)` from
+`io.github.anschnapp.mutflow.junit4`. If a per-class budget is required, use
+that package's `@MutFlowTest(maxRuns = ...)`; do not combine the JUnit 4 and
+JUnit 6 integrations in one test source set. Existing custom JUnit 4 runners
+need a manual MutFlow adapter.
+
 ## Configure mutflow
 
 Add the mutflow configuration block to `build.gradle.kts`:
@@ -120,9 +143,11 @@ mutflow {
 
 ## Annotate your code
 
-Add `@MutationTarget` to business-logic classes and `@MutFlowTest` to plain JVM
-test classes. The targeting agent handles this through either client entry
-point. To do it by hand, see the [bootstrap tutorial](../tutorials/bootstrap-existing-project.md)
+Add `@MutationTarget` to business-logic classes. Plain JVM/JUnit 6 classes use
+`@MutFlowTest`; plain JVM/JUnit 4 classes use
+`@RunWith(MutFlowRunner::class)`; KMP common tests stay plain `kotlin.test`.
+The targeting agent handles this through either client entry point. To do it
+by hand, see the [bootstrap tutorial](../tutorials/bootstrap-existing-project.md)
 for annotation and `MutFlow.underTest` patterns. Use `@file:MutationTarget`
 before the package declaration for top-level functions; nested classes must
 be targeted independently.
@@ -163,8 +188,25 @@ mutflow {
 ```
 
 Run `gradle mutationResults`; the adapter selects dedicated `mutflow<Target>Test`
-tasks and their report directories. Normal `jvmTest` is not a mutation run.
-This toolkit does not collect Native or JUnit 4 results.
+JVM tasks and their report directories. Normal `jvmTest` is not a mutation run.
+KMP JVM uses MutFlow's generated JUnit 6 integration; `--junit4` is for plain
+JVM modules, not KMP.
+MutFlow dependencies are added to common source sets, so all declared targets
+must resolve compatible variants. In the validated `1.6.0` baseline, MutFlow
+publishes JVM, `linuxX64`, and `mingwX64`, but not iOS or Android Native
+variants. Selecting only `mutflowJvmTest` does not avoid those dependencies;
+use a separate JVM-only build model for unsupported target combinations.
+
+For a conventional multi-module project with a catalog alias and the default
+module directory mapping, install from the build root and select the module:
+
+```bash
+bash "/absolute/toolkit/.omp/bootstrap-mutation-testing.sh" "/absolute/target" --kmp --module :module
+./gradlew :module:mutationResults
+```
+
+The toolkit files and `buildSrc` are installed at the root; only the selected
+module build file receives the mutflow and results wiring.
 
 ## Verify setup
 
@@ -203,14 +245,15 @@ report. For direct filters and exit semantics, see the
 
 ## Configure a multi-module project
 
-Keep the shared typed module in root `buildSrc` and apply mutflow and the
-results script in each supported module that owns mutation tests. Module-local
-results go under that module's build directory:
+Bootstrap can configure one conventional Gradle module at a time with
+`--module :path`. Keep the shared typed module in root `buildSrc`; module-local
+results go under the selected module's build directory:
 
 ```bash
 ./gradlew :service:mutationResults
 ```
 
 The toolkit does not install every subproject automatically or combine
-module reports into one score. Use manual wiring and qualified tasks; see
+module reports into one score. Repeat setup for each supported module, and use
+qualified tasks; see
 [multi-module CI](run-in-github-actions.md#adjust-a-multi-module-build).
