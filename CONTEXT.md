@@ -36,10 +36,10 @@ A test that uses excessive mocking (`mockk()`, `mock()`), potentially masking re
 
 ## Client adapters
 
-- **OMP**: `/mutation-test` dispatches through `.omp/skills/mutation-test/` and
+- **OMP**: `/mutation-testing` dispatches through `.omp/skills/mutation-testing/` and
   `.omp/agents/` using OMP's `task` and `hub` tools.
-- **GitHub Copilot CLI**: `/omp-mutation-test` dispatches through
-  `.github/skills/omp-mutation-test/` and the five `omp-mutation-test-*`
+- **GitHub Copilot CLI**: `/mutation-testing` dispatches through
+  `.github/skills/mutation-testing/` and the five `mutation-testing-*`
   profiles in `.github/agents/` using Copilot's `agent` tool.
 
 The adapters keep the same mutation-testing phases and approval boundaries but

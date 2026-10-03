@@ -90,19 +90,19 @@ if [[ -e "$agent_usage_destination" ]] &&
     exit 1
 fi
 
-copilot_skill_source="$REPOSITORY_ROOT/.github/skills/omp-mutation-test/SKILL.md"
+copilot_skill_source="$REPOSITORY_ROOT/.github/skills/mutation-testing/SKILL.md"
 copilot_agent_sources=(
-    "$REPOSITORY_ROOT/.github/agents/omp-mutation-test-reviewer.agent.md"
-    "$REPOSITORY_ROOT/.github/agents/omp-mutation-test-saboteur.agent.md"
-    "$REPOSITORY_ROOT/.github/agents/omp-mutation-test-executor.agent.md"
-    "$REPOSITORY_ROOT/.github/agents/omp-mutation-test-auditor.agent.md"
-    "$REPOSITORY_ROOT/.github/agents/omp-mutation-test-refactor-specialist.agent.md"
+    "$REPOSITORY_ROOT/.github/agents/mutation-testing-reviewer.agent.md"
+    "$REPOSITORY_ROOT/.github/agents/mutation-testing-saboteur.agent.md"
+    "$REPOSITORY_ROOT/.github/agents/mutation-testing-executor.agent.md"
+    "$REPOSITORY_ROOT/.github/agents/mutation-testing-auditor.agent.md"
+    "$REPOSITORY_ROOT/.github/agents/mutation-testing-refactor-specialist.agent.md"
 )
 copilot_destination_dirs=(
     "$PROJECT_PATH/.github"
     "$PROJECT_PATH/.github/agents"
     "$PROJECT_PATH/.github/skills"
-    "$PROJECT_PATH/.github/skills/omp-mutation-test"
+    "$PROJECT_PATH/.github/skills/mutation-testing"
 )
 
 for source_file in "$copilot_skill_source" "${copilot_agent_sources[@]}"; do
@@ -139,7 +139,7 @@ assert_copilot_file_available() {
 
 assert_copilot_file_available \
     "$copilot_skill_source" \
-    "$PROJECT_PATH/.github/skills/omp-mutation-test/SKILL.md"
+    "$PROJECT_PATH/.github/skills/mutation-testing/SKILL.md"
 for source_file in "${copilot_agent_sources[@]}"; do
     assert_copilot_file_available \
         "$source_file" \
@@ -175,7 +175,7 @@ echo ""
 echo "Installing GitHub Copilot skill and agents..."
 
 copilot_agents_dir="$PROJECT_PATH/.github/agents"
-copilot_skill_dir="$PROJECT_PATH/.github/skills/omp-mutation-test"
+copilot_skill_dir="$PROJECT_PATH/.github/skills/mutation-testing"
 mkdir -p "$copilot_agents_dir" "$copilot_skill_dir"
 copy_copilot_file() {
     local source_file="$1"
@@ -355,11 +355,11 @@ echo ""
 echo "✅ Bootstrap complete!"
 echo ""
 echo "Next steps:"
-echo "  1. Run: /mutation-test $PROJECT_PATH"
+echo "  1. Run: /mutation-testing $PROJECT_PATH"
 echo "     The saboteur agent will annotate @MutationTarget and @MutFlowTest"
 echo "  2. test-executor runs: gradle mutationResults"
 echo "  3. test-auditor parses results and reports score"
 echo "  4. test-refactor-specialist proposes boundary tests for survivors"
-echo "  5. Copilot CLI: restart or run /skills reload, then use /omp-mutation-test"
+echo "  5. Copilot CLI: restart or run /skills reload, then use /mutation-testing"
 echo ""
 echo "Or run directly: cd $PROJECT_PATH && gradle mutationResults"

@@ -35,17 +35,17 @@ The other four agents do not declare child agents.
 
 ## Copilot CLI agent profiles
 
-The Copilot skill at `.github/skills/omp-mutation-test/SKILL.md` delegates to
+The Copilot skill at `.github/skills/mutation-testing/SKILL.md` delegates to
 the reviewer with Copilot's native `agent` tool. The worker profiles are
 programmatic-only (`user-invocable: false`) and cannot spawn further agents.
 
 | Role | Profile | Tools | User selectable |
 |------|---------|-------|-----------------|
-| Reviewer | [`omp-mutation-test-reviewer`](../../.github/agents/omp-mutation-test-reviewer.agent.md) | `read`, `search`, `execute`, `agent` | Yes |
-| Saboteur | [`omp-mutation-test-saboteur`](../../.github/agents/omp-mutation-test-saboteur.agent.md) | `read`, `search`, `edit` | No |
-| Executor | [`omp-mutation-test-executor`](../../.github/agents/omp-mutation-test-executor.agent.md) | `read`, `search`, `execute` | No |
-| Auditor | [`omp-mutation-test-auditor`](../../.github/agents/omp-mutation-test-auditor.agent.md) | `read`, `search` | No |
-| Refactor specialist | [`omp-mutation-test-refactor-specialist`](../../.github/agents/omp-mutation-test-refactor-specialist.agent.md) | `read`, `search`, `edit` | No |
+| Reviewer | [`mutation-testing-reviewer`](../../.github/agents/mutation-testing-reviewer.agent.md) | `read`, `search`, `execute`, `agent` | Yes |
+| Saboteur | [`mutation-testing-saboteur`](../../.github/agents/mutation-testing-saboteur.agent.md) | `read`, `search`, `edit` | No |
+| Executor | [`mutation-testing-executor`](../../.github/agents/mutation-testing-executor.agent.md) | `read`, `search`, `execute` | No |
+| Auditor | [`mutation-testing-auditor`](../../.github/agents/mutation-testing-auditor.agent.md) | `read`, `search` | No |
+| Refactor specialist | [`mutation-testing-refactor-specialist`](../../.github/agents/mutation-testing-refactor-specialist.agent.md) | `read`, `search`, `edit` | No |
 
 The Copilot adapter does not use OMP's `task`, `hub`, or `tasks[]` protocols.
 Both clients share the phase order, mutflow result contract, a single aggregate

@@ -55,9 +55,9 @@ and the Copilot files. It has not changed production or test sources yet.
 If `pluginManagement` already existed, verify that its repositories include
 `mavenCentral()`; the script leaves existing plugin-management blocks alone.
 
-It also installs `.github/skills/omp-mutation-test/` and the five
-`.github/agents/omp-mutation-test-*.agent.md` profiles. Start Copilot CLI in the
-target project and invoke `/omp-mutation-test`; if Copilot is already running,
+It also installs `.github/skills/mutation-testing/` and the five
+`.github/agents/mutation-testing-*.agent.md` profiles. Start Copilot CLI in the
+target project and invoke `/mutation-testing`; if Copilot is already running,
 use `/skills reload` first.
 
 ## Step 2: Verify the Gradle setup

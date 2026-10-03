@@ -1,5 +1,5 @@
 ---
-name: omp-mutation-test-executor
+name: mutation-testing-executor
 description: Runs selected JVM mutation tests in one aggregate Gradle invocation and captures JUnit XML and schema 2 evidence without changing source files.
 tools: ["read", "search", "execute"]
 user-invocable: false

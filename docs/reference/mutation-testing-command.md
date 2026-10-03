@@ -1,28 +1,30 @@
-# mutation-test command reference
+# Mutation testing command reference
 
-`mutation-test` runs or configures the OMP mutation-testing pipeline for a Kotlin project. GitHub Copilot CLI has a separate native entry point, `/omp-mutation-test`.
+`mutation-testing` runs or configures the mutation-testing pipeline for a Kotlin
+project. OMP and GitHub Copilot CLI use separate native skill packages and
+dispatch protocols, but expose the same command name in their respective clients.
 
 ## Invocation
 
 ```text
-/mutation-test [project-path] [--targets <patterns>] [--auto-approve] [--mode quick|standard|deep]
-/mutation-test setup [project-path] [--kmp]
+/mutation-testing [project-path] [--targets <patterns>] [--auto-approve] [--mode quick|standard|deep]
+/mutation-testing setup [project-path] [--kmp]
 ```
 
 The shell form prefixes the skill name with `omp`:
 
 ```text
-omp mutation-test [project-path] [options]
+omp mutation-testing [project-path] [options]
 ```
 
 ## Copilot CLI invocation
 
 ```text
-/omp-mutation-test [project-path] [--targets <patterns>] [--auto-approve] [--mode quick|standard|deep]
-/omp-mutation-test setup [project-path] [--kmp]
+/mutation-testing [project-path] [--targets <patterns>] [--auto-approve] [--mode quick|standard|deep]
+/mutation-testing setup [project-path] [--kmp]
 ```
 
-The Copilot skill delegates to the `omp-mutation-test-*` custom agents in
+The Copilot skill delegates to the `mutation-testing-*` custom agents in
 `.github/agents/`. It uses Copilot's native `agent` tool, not OMP's `task` or
 `hub` tools. For installation and activation steps, see
 [How to use mutation testing with Copilot CLI](../how-to/use-with-copilot.md).
@@ -30,7 +32,7 @@ The Copilot skill delegates to the `omp-mutation-test-*` custom agents in
 ## Mutation test command
 
 ```text
-/mutation-test [project-path] [options]
+/mutation-testing [project-path] [options]
 ```
 
 ### Argument
@@ -50,7 +52,7 @@ The Copilot skill delegates to the `omp-mutation-test-*` custom agents in
 ## Setup command
 
 ```text
-/mutation-test setup [project-path] [--kmp]
+/mutation-testing setup [project-path] [--kmp]
 ```
 
 The `setup` subcommand installs and configures the mutation-testing system.
@@ -71,7 +73,7 @@ The `setup` subcommand installs and configures the mutation-testing system.
 
 | Area | Effect |
 |------|--------|
-| `.omp/` | Copies the agents, mutation-test skill, Gradle results script, and typed results source. |
+| `.omp/` | Copies the agents, mutation-testing skill, Gradle results script, and typed results source. |
 | `AGENTS.md` | Appends a single pointer to the installed `.omp/AGENT-USAGE.md`, preserving existing project policy. Differing guides or symlinked destinations stop setup. |
 | `.github/` | Installs the Copilot skill and its five custom agent profiles. Existing conflicting Copilot files cause setup to stop before modifying the target. |
 | `settings.gradle.kts` | Adds plugin repositories through `pluginManagement`. |
@@ -159,17 +161,17 @@ For pipeline ordering and agent responsibilities, see [About the mutation-testin
 Standard mode against the current directory:
 
 ```text
-/mutation-test
+/mutation-testing
 ```
 
 Quick mode for selected test classes:
 
 ```text
-/mutation-test /work/orders --targets "*OrderServiceTest" --mode quick
+/mutation-testing /work/orders --targets "*OrderServiceTest" --mode quick
 ```
 
 Kotlin Multiplatform setup:
 
 ```text
-/mutation-test setup /work/shared-library --kmp
+/mutation-testing setup /work/shared-library --kmp
 ```

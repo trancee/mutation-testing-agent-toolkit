@@ -47,7 +47,7 @@ copilot
 Invoke:
 
 ```text
-/omp-mutation-test . --targets example.CalculatorTest --mode quick
+/mutation-testing . --targets example.CalculatorTest --mode quick
 ```
 
 Review requested command/edit permissions before approving them. Targeting may
@@ -69,7 +69,7 @@ score derived from old JSON.
 Invoke:
 
 ```text
-/omp-mutation-test . --targets example.CalculatorTest --mode standard
+/mutation-testing . --targets example.CalculatorTest --mode standard
 ```
 
 Without `--auto-approve`, the refactor specialist should propose changes only.
@@ -82,7 +82,7 @@ because they have no recorded killer entry.
 After reviewing the proposal, request the additive change:
 
 ```text
-/omp-mutation-test . --targets example.CalculatorTest --mode standard --auto-approve
+/mutation-testing . --targets example.CalculatorTest --mode standard --auto-approve
 ```
 
 This permits additive/assertion-level refactors, not test deletion or
@@ -103,6 +103,6 @@ yourself and rerun. Do not treat a proposal as an applied, verified change.
 
 ## Continue
 
-OMP uses `/mutation-test` with the same options and approval boundaries; see
-the [command reference](../reference/mutation-test-command.md). For a shared
+OMP uses `/mutation-testing` with the same options and approval boundaries; see
+the [command reference](../reference/mutation-testing-command.md). For a shared
 source-set project, continue with [the KMP JVM tutorial](kmp-jvm-mutation-test.md).

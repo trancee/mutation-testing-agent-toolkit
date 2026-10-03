@@ -1,5 +1,5 @@
 ---
-name: omp-mutation-test
+name: mutation-testing
 description: Run, bootstrap, or analyze mutflow-powered mutation testing for Kotlin/JVM projects with the Mutation Testing Agent Toolkit's Copilot-native workflow. Use for explicit mutation-testing requests, not ordinary unit-test tasks.
 compatibility: GitHub Copilot CLI with the project agents in .github/agents.
 ---
@@ -7,12 +7,12 @@ compatibility: GitHub Copilot CLI with the project agents in .github/agents.
 # Mutation testing in Copilot CLI
 
 Use this skill as the Copilot CLI entry point. Delegate to the
-`omp-mutation-test-reviewer` custom agent with Copilot's `agent` tool. Do not use
+`mutation-testing-reviewer` custom agent with Copilot's `agent` tool. Do not use
 OMP's `task`, `hub`, or `tasks[]` interfaces.
 
 ```text
-/omp-mutation-test [project path] [--targets <patterns>] [--auto-approve] [--mode quick|standard|deep]
-/omp-mutation-test setup [project path] [--kmp]
+/mutation-testing [project path] [--targets <patterns>] [--auto-approve] [--mode quick|standard|deep]
+/mutation-testing setup [project path] [--kmp]
 ```
 
 - `--targets` selects Gradle test class patterns; by default, include all `@MutFlowTest` classes.

@@ -16,7 +16,7 @@
 
 | Topic | Document |
 |-------|----------|
-| `mutation-test` arguments, options, and modes | [Reference: mutation-test command](reference/mutation-test-command.md) |
+| `mutation-testing` arguments, options, and modes | [Reference: mutation-testing command](reference/mutation-testing-command.md) |
 
 ## Working with results
 

@@ -24,8 +24,8 @@ Copy the complete client layer(s) you intend to use:
 
 | Client | Files |
 |--------|-------|
-| OMP | `.omp/agents/` and `.omp/skills/mutation-test/` |
-| Copilot CLI | `.github/skills/omp-mutation-test/` and all five `.github/agents/omp-mutation-test-*.agent.md` profiles |
+| OMP | `.omp/agents/` and `.omp/skills/mutation-testing/` |
+| Copilot CLI | `.github/skills/mutation-testing/` and all five `.github/agents/mutation-testing-*.agent.md` profiles |
 
 Gradle-only execution needs neither client. Agent-driven setup expects the
 bootstrap's source layout and both client file sets; use the installer for a
@@ -179,7 +179,7 @@ Replace the filter with your test class. Expect
 class-qualified identities. Strict survivors/timeouts fail the task after
 writing the report. Compilation or no-match discovery failures may produce no
 report. For direct filters and exit semantics, see the
-[command reference](../reference/mutation-test-command.md#direct-gradle-execution).
+[command reference](../reference/mutation-testing-command.md#direct-gradle-execution).
 
 ## Upgrade an existing installation
 
@@ -191,9 +191,10 @@ report. For direct filters and exit semantics, see the
    test directory. Replace them with the `ch/trancee/mutation` copies. Also
    replace the installed `.omp/mutation-results-src` template sources and update
    imports in the shared results script. Preserve unrelated convention code.
-3. Merge the current build template, results script, both client skills and
-   role profiles and installed agent guide. Resolve differing Copilot files and guide explicitly before rerunning
-   bootstrap; never delete user-owned customizations merely to satisfy it.
+3. Merge the current build template, results script, both client skills, role
+   profiles, and installed agent guide. Resolve differing Copilot files and
+   guide explicitly; never delete user-owned customizations merely to satisfy
+   it.
 4. Update JSON consumers for [schema 2](../reference/mutation-results-format.md#compatibility):
    discovered/evaluated/untested totals, null scores for gaps, and qualified
    identities. Unversioned schema 1 data is not interchangeable.

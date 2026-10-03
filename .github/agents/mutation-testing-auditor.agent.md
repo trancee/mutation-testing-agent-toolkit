@@ -1,5 +1,5 @@
 ---
-name: omp-mutation-test-auditor
+name: mutation-testing-auditor
 description: Audits completed mutflow results, calculates mutation-quality metrics, and identifies zombie tests, survivors, gaps, and redundant test groups.
 tools: ["read", "search"]
 user-invocable: false

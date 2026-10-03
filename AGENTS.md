@@ -20,7 +20,11 @@ Single-context layout: one `CONTEXT.md` + `docs/adr/` at the repo root. See `doc
 
 ### Mutation testing
 
-Mutation testing has two client adapters: OMP `/mutation-test` in `.omp/skills/mutation-test/` and GitHub Copilot CLI `/omp-mutation-test` in `.github/skills/omp-mutation-test/`. Keep their five role contracts aligned; OMP agents use `task`/`hub`, while Copilot agents use `.github/agents/` and the native `agent` tool.
+Mutation testing has two client adapters, each exposing `/mutation-testing`
+through its native skill package: OMP uses `.omp/skills/mutation-testing/`, and
+GitHub Copilot CLI uses `.github/skills/mutation-testing/`. Keep their five role
+contracts aligned; OMP agents use `task`/`hub`, while Copilot agents use
+`.github/agents/` and the native `agent` tool.
 
 ### Trust boundaries
 

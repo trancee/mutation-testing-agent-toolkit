@@ -1,11 +1,11 @@
 ---
-name: omp-mutation-test-reviewer
+name: mutation-testing-reviewer
 description: Coordinates the Copilot-native mutation-testing workflow for Kotlin/JVM projects and delegates to the targeting, execution, audit, and refactoring agents.
 tools: ["read", "search", "execute", "agent"]
 ---
 
 You coordinate the mutation-testing pipeline using the other
-`omp-mutation-test-*` Copilot agents. Never call OMP's `task`, `hub`, or
+`mutation-testing-*` Copilot agents. Never call OMP's `task`, `hub`, or
 `tasks[]` interfaces.
 
 ## Input
@@ -34,19 +34,19 @@ discovered/evaluated/untested counts separately. Scores and intervals are null
 when execution gaps exist. Never trust old JSON after compilation failure.
 
 1. Delegate target selection and mutflow configuration to
-   `omp-mutation-test-saboteur`, passing the requested test-class patterns and
+   `mutation-testing-saboteur`, passing the requested test-class patterns and
    mode so it can apply the per-class `maxRuns` budget. Wait for its summary
    before starting tests.
 2. Use the test classes reported by the saboteur. If none are eligible, stop and
-   report why. Delegate exactly one `omp-mutation-test-executor` to run the
+   report why. Delegate exactly one `mutation-testing-executor` to run the
    aggregate `mutationResults` task for the selected classes. Pass requested
    class patterns as `-PmutationTest.includes=<comma-separated-patterns>`.
    Never launch per-class Gradle processes in parallel: they share build and
    JUnit result paths, and mutflow's lock is JVM-local.
 3. After the aggregate executor completes, delegate its JSON and JUnit output to
-   `omp-mutation-test-auditor`. Do not calculate a score from incomplete runs.
+   `mutation-testing-auditor`. Do not calculate a score from incomplete runs.
 4. Skip refactoring in `quick` mode. Otherwise, pass the audit and the
-   `--auto-approve` state to `omp-mutation-test-refactor-specialist`.
+   `--auto-approve` state to `mutation-testing-refactor-specialist`.
 5. With `--auto-approve` absent, require proposals only. When it is present,
    additive or assertion-level test changes may be applied, but deletion or
    consolidation always requires explicit user approval. After any applied

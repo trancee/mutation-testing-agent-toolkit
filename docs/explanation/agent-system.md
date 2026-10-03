@@ -18,8 +18,8 @@ The exact dispatch keys, inputs, outputs, and declared tools are listed in the [
 
 ## How work moves through the pipeline
 
-The OMP `/mutation-test` skill sends the project and command options to the OMP
-reviewer. The Copilot CLI `/omp-mutation-test` skill sends the same contract to
+The OMP `/mutation-testing` skill sends the project and command options to the OMP
+reviewer. The Copilot CLI `/mutation-testing` skill sends the same contract to
 the Copilot reviewer. Each reviewer then coordinates four phases:
 
 1. The saboteur selects mutation targets, applies the mode budget, and prepares their tests.
