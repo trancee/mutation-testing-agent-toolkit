@@ -156,9 +156,13 @@ or files instead.
 
 Plain JVM selects `test`; KMP selects dedicated `mutflow<Target>Test` JVM
 tasks. No filter means ordinary tests on those tasks can also run. JSON is
-written to `build/reports/mutation-results.json`. Strict survivors, mutation
-timeouts, test failures, and gaps produce nonzero status; compilation or
-discovery failures may leave no JSON. Never reuse an earlier report.
+written to `build/reports/mutation-results.json`; a human-readable summary is
+written to `build/reports/mutation-results.md` and printed in Gradle output.
+GitHub Actions also appends that summary to the workflow run's job summary when
+`GITHUB_STEP_SUMMARY` is available. Strict survivors, mutation timeouts, test
+failures, and gaps produce nonzero status after the reports are written;
+compilation or discovery failures may leave no current report. Never reuse an
+earlier report.
 
 Upstream `MUTFLOW_VERIFICATION_MODE` can override verification with `STRICT`,
 `LENIENT`, or `DISABLED`. Disabled mutation execution is not a quality result.

@@ -217,10 +217,12 @@ gradle mutationResults '-PmutationTest.includes=example.CalculatorTest'
 ```
 
 Replace the filter with your test class. Expect
+`build/reports/mutation-results.md` for the human-readable summary and
 `build/reports/mutation-results.json` with `schemaVersion: 2` and current
-class-qualified identities. Strict survivors/timeouts fail the task after
-writing the report. Compilation or no-match discovery failures may produce no
-report. For direct filters and exit semantics, see the
+class-qualified identities. GitHub Actions also adds the summary table to the
+workflow run's job summary. Strict survivors/timeouts fail the task after
+writing both reports. Compilation or no-match discovery failures may produce
+no current report. For direct filters and exit semantics, see the
 [command reference](../reference/mutation-testing-command.md#direct-gradle-execution).
 
 ## Upgrade an existing installation

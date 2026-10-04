@@ -89,9 +89,11 @@ This permits additive/assertion-level refactors, not test deletion or
 consolidation. The reviewer must rerun the same selected aggregate task after
 applying changes and report its actual exit status.
 
-Inspect the changed test and `build/reports/mutation-results.json`. Confirm
-schema 2, four evaluated mutations, zero untested mutations/gaps, and all four
-killed. Independently reproduce the result:
+Inspect the changed test, `build/reports/mutation-results.md`, and
+`build/reports/mutation-results.json`. The Markdown summary is also printed in
+Gradle output and added to the GitHub Actions job summary when run there.
+Confirm schema 2, four evaluated mutations, zero untested mutations/gaps, and
+all four killed. Independently reproduce the result:
 
 ```bash
 gradle mutationResults '-PmutationTest.includes=example.CalculatorTest' --rerun-tasks

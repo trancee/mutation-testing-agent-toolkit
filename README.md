@@ -44,9 +44,12 @@ Neither client is required to run an already-prepared suite:
 gradle -p /path/to/kotlin-project mutationResults
 ```
 
-Read `build/reports/mutation-results.json` in the target project. Strict
-survivors and timeouts return a failing exit status even when the report is
-complete; see [interpreting results](docs/how-to/interpret-results.md).
+The task prints an aggregate summary and writes
+`build/reports/mutation-results.md` alongside the structured
+`build/reports/mutation-results.json`. In GitHub Actions, the summary table is
+also added to the workflow run's job summary. Strict survivors and timeouts
+return a failing exit status even when the reports are complete; see
+[interpreting results](docs/how-to/interpret-results.md).
 
 See the [documentation index](docs/index.md) for tutorials, how-to guides, reference material, and explanations.
 Start with [your first mutation test](docs/tutorials/first-mutation-test.md),
@@ -66,6 +69,10 @@ the repository root:
 ```bash
 gradle -p sample mutationResults
 ```
+
+The sample run writes its human-readable summary to
+`sample/build/reports/mutation-results.md` and its machine-readable results to
+`sample/build/reports/mutation-results.json`.
 
 The sample exercises boundary, boolean, arithmetic, return-value, and
 exception-type categories, not every operator in upstream's catalog.
