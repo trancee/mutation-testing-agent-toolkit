@@ -8,7 +8,8 @@
 | Add mutation testing to an existing project | [Tutorial: Bootstrap an existing project](tutorials/bootstrap-existing-project.md) |
 | Audit and improve tests through the five-role workflow | [Tutorial: Agent-assisted mutation testing](tutorials/agent-assisted-mutation-test.md) |
 | Mutation-test common code with budgets and full JVM runs | [Tutorial: KMP JVM mutation testing](tutorials/kmp-jvm-mutation-test.md) |
-| Set up Gradle manually without the bootstrap script | [How-to: Manual Gradle setup](how-to/manual-setup.md) |
+| Set up Gradle manually without the root installer command | [How-to: Manual Gradle setup](how-to/manual-setup.md) |
+| Safely update an existing toolkit installation | [How-to: Update an installation](how-to/update-installation.md) |
 | Use the native GitHub Copilot CLI adapter | [How-to: Use mutation testing with Copilot CLI](how-to/use-with-copilot.md) |
 | Run mutation testing in GitHub Actions | [How-to: Run mutation testing in GitHub Actions](how-to/run-in-github-actions.md) |
 
@@ -58,5 +59,6 @@
 |------|----------|
 | Write documentation following the Diataxis framework | [How-to: Contribute documentation](how-to/contribute-documentation.md) |
 | Run tests, documentation checks, and upstream monitoring | [How-to: Run repository checks](how-to/run-checks.md) |
+| Upgrade installed toolkit files safely | [How-to: Update an installation](how-to/update-installation.md) |
 | Upgrade namespaces and JSON consumers | [How-to: Upgrade an existing installation](how-to/manual-setup.md#upgrade-an-existing-installation) |
 | Read contributor and commit rules | [AGENTS.md](../AGENTS.md) |

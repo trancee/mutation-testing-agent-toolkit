@@ -3,7 +3,7 @@ plugins {
     id("io.github.anschnapp.mutflow") version "1.6.0"
 }
 
-apply(from = rootProject.file("../.omp/mutation-results.gradle.kts"))
+apply(from = rootProject.file("../.mutation-testing/mutation-results.gradle.kts"))
 
 kotlin {
     jvmToolchain(26)

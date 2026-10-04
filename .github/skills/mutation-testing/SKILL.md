@@ -23,11 +23,10 @@ OMP's `task`, `hub`, or `tasks[]` interfaces.
 - `--mode deep` runs all available mutations per selected class and includes detailed killer data.
 - `--auto-approve` permits applying proposed test refactors; it never permits deleting
   zombie tests or redundant groups without explicit user approval.
-- `setup` runs the bootstrap script and changes the target project's Gradle, `.omp`,
-  `buildSrc`, and Copilot configuration. Run it only when the user explicitly asks
-  for setup.
+- `setup` invokes the toolkit checkout root command, `bootstrap.sh install [project-path] [--kmp] [--junit4] [--module :path]`, and changes Gradle files, `.mutation-testing/`, `buildSrc/`, and both native client adapters.
+  Run it only when the user explicitly asks for setup.
 - `--kmp` is setup-only; this toolkit validates the KMP JVM mutation task.
-  The bootstrap supports a conventional `gradle/libs.versions.toml` Kotlin
+  The `bootstrap.sh install` command supports a conventional `gradle/libs.versions.toml` Kotlin
   plugin alias and a selected module using its default directory mapping.
 - `--junit4` is setup-only and selects MutFlow's JUnit 4 runner for a plain
   Kotlin/JVM module. The default is JUnit 6; KMP JVM uses MutFlow's generated
@@ -47,6 +46,13 @@ OMP's `task`, `hub`, or `tasks[]` interfaces.
 - Require schema 2 JSON with class-qualified identities, discovered/evaluated/
   untested totals, and null scores for gaps. Never reuse a report left by an
   earlier invocation after compilation or discovery failure.
+
+Setup and update require Python 3.10 or newer in the toolkit checkout. To
+update an existing installation, run `"/absolute/toolkit/bootstrap.sh"
+update "/absolute/target" --dry-run` from a fast-forwarded checkout. Apply with
+the same root command after reviewing the preview; conflicts are preserved unless
+a reviewed file is named with `--force`. A valid `.mutation-testing/manifest.json`
+is required; an absent manifest stops the update before writing.
 
 If the Copilot agent profiles are unavailable, report that limitation rather than
 falling back to OMP-specific dispatch. Preserve existing user changes and present

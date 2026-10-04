@@ -30,10 +30,10 @@ From the tutorial project:
 
 ```bash
 MUTATION_TOOLKIT_DIR="/path/to/mutation-testing-agent-toolkit"
-bash "$MUTATION_TOOLKIT_DIR/.omp/bootstrap-mutation-testing.sh" .
+"$MUTATION_TOOLKIT_DIR/bootstrap.sh" install .
 ```
 
-Replace the path with your clone. The installer adds the shared results module
+Replace the path with your clone. The setup command adds the shared results module
 and both client adapters; it does not edit business logic or tests.
 
 Start a fresh session from this project:

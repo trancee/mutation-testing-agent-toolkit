@@ -63,7 +63,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--gradle", default="gradle", help="Gradle executable")
     args = parser.parse_args()
-    bootstrap = str(ROOT / ".omp/bootstrap-mutation-testing.sh")
+    bootstrap_command = str(ROOT / "bootstrap.sh")
 
     with tempfile.TemporaryDirectory(prefix="mutflow-integration-") as temporary:
         base = Path(temporary)
@@ -134,9 +134,9 @@ class TimeoutTest {
             "GITHUB_ACTIONS": "true",
             "GITHUB_STEP_SUMMARY": str(workflow_summary),
         }
-        run(["bash", bootstrap, str(jvm)])
+        run([bootstrap_command, "install", str(jvm)])
         write(jvm, "build.gradle.kts.bak", "user-owned backup\n")
-        run(["bash", bootstrap, str(jvm)])  # Repeat setup must preserve an installed project.
+        run([bootstrap_command, "install", str(jvm)])  # Repeat setup must preserve an installed project.
         assert (jvm / "build.gradle.kts.bak").read_text() == "user-owned backup\n"
         gradle = [args.gradle, "-p", str(jvm), "--console=plain"]
         run(
@@ -242,7 +242,7 @@ class DecisionTest {
     }
 }
 """)
-        run(["bash", bootstrap, str(junit4), "--junit4"])
+        run([bootstrap_command, "install", str(junit4), "--junit4"])
         junit4_gradle = [args.gradle, "-p", str(junit4), "--console=plain"]
         run(junit4_gradle + [
             "-PmutationTest.includes=fixture.DecisionTest", "mutationResults",
@@ -287,7 +287,7 @@ class DecisionTest {
     }
 }
 """)
-        run(["bash", bootstrap, str(kmp), "--kmp"])
+        run([bootstrap_command, "install", str(kmp), "--kmp"])
         kmp_gradle = [args.gradle, "-p", str(kmp), "--console=plain"]
         # DSL budgets count mutations, not the baseline; commonTest has no JUnit annotation.
         with (kmp / "build.gradle.kts").open("a") as build:
@@ -316,13 +316,13 @@ class DecisionTest {
         shutil.copy(kmp / "build.gradle.kts", preserved / "build.gradle.kts")
         write(preserved, "buildSrc/build.gradle.kts", "// user-owned convention build\n")
         original = (preserved / "build.gradle.kts").read_bytes()
-        run(["bash", bootstrap, str(preserved), "--kmp"], success=False)
+        run([bootstrap_command, "install", str(preserved), "--kmp"], success=False)
         assert (preserved / "build.gradle.kts").read_bytes() == original
         assert not (preserved / ".omp").exists()
         assert (preserved / "buildSrc/build.gradle.kts").read_text() == "// user-owned convention build\n"
         incompatible = base / "incompatible"
         write(incompatible, "build.gradle.kts", 'plugins {\n    kotlin("jvm") version "2.3.0"\n}\n')
-        rejected = run(["bash", bootstrap, str(incompatible)], success=False)
+        rejected = run([bootstrap_command, "install", str(incompatible)], success=False)
         assert "requires Kotlin 2.4.20" in rejected.stdout, rejected.stdout
         assert not (incompatible / ".omp").exists()
 
@@ -386,7 +386,7 @@ class DecisionTest {
 }
 """)
         root_build_before = (catalog_kmp / "build.gradle.kts").read_bytes()
-        run(["bash", bootstrap, str(catalog_kmp), "--kmp", "--module", ":kompact"])
+        run([bootstrap_command, "install", str(catalog_kmp), "--kmp", "--module", ":kompact"])
         assert (catalog_kmp / "build.gradle.kts").read_bytes() == root_build_before
         catalog_gradle = [args.gradle, "-p", str(catalog_kmp), "--console=plain"]
         catalog_result = run(catalog_gradle + [

@@ -32,13 +32,13 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
 }
 """)
-        self.write(".omp/mutation-results-src/build.gradle.kts", """
+        self.write(".mutation-testing/mutation-results-src/build.gradle.kts", """
 plugins { kotlin("plugin.serialization") version "2.4.20" }
 dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0") }
 """)
         self.write("sample/buildSrc/build.gradle.kts",
-                   (self.root / ".omp/mutation-results-src/build.gradle.kts").read_text())
-        self.write(".omp/bootstrap-mutation-testing.sh",
+                   (self.root / ".mutation-testing/mutation-results-src/build.gradle.kts").read_text())
+        self.write(".mutation-testing/bootstrap-mutation-testing.sh",
                    'REQUIRED_KOTLIN_VERSION="2.4.20"\n# mutflow preflight pin: 1\\.6\\.0\n')
         for path in [".github/workflows/ci.yml", "scripts/test-bootstrap-copilot.sh",
                      "scripts/test-mutflow-integration.py"]:
@@ -105,7 +105,7 @@ dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:
             self.check()
 
     def test_stale_bootstrap_compiler_pin_is_rejected(self):
-        self.write(".omp/bootstrap-mutation-testing.sh",
+        self.write(".mutation-testing/bootstrap-mutation-testing.sh",
                    'REQUIRED_KOTLIN_VERSION="2.3.0"\n# mutflow preflight pin: 1\\.6\\.0\n')
         with self.assertRaises(SystemExit):
             self.check()
@@ -121,7 +121,7 @@ dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:
             self.check()
 
     def test_stale_sample_source_is_rejected(self):
-        self.write(".omp/mutation-results-src/main/kotlin/ch/trancee/mutation/Example.kt", "source")
+        self.write(".mutation-testing/mutation-results-src/main/kotlin/ch/trancee/mutation/Example.kt", "source")
         self.write("sample/buildSrc/src/main/kotlin/ch/trancee/mutation/Example.kt", "stale")
         with self.assertRaises(SystemExit):
             self.check()
@@ -132,7 +132,7 @@ dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:
             self.check()
 
     def test_missing_sample_source_is_rejected(self):
-        self.write(".omp/mutation-results-src/main/kotlin/ch/trancee/mutation/Example.kt", "source")
+        self.write(".mutation-testing/mutation-results-src/main/kotlin/ch/trancee/mutation/Example.kt", "source")
 
         with self.assertRaises(SystemExit) as failure:
             self.check()

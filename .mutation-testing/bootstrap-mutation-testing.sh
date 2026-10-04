@@ -2,14 +2,13 @@
 set -euo pipefail
 
 # bootstrap-mutation-testing.sh
-# Installs the Mutation Testing Agent Toolkit's OMP and Copilot adapters into
-# a Kotlin project.
+# Installs shared toolkit assets and the native OMP and Copilot adapters.
 #
-# Usage:
-#   ./bootstrap-mutation-testing.sh <project-root> [--kmp] [--junit4] [--module :path]
+# Invoke through the root command:
+#   ./bootstrap.sh install <project-root> [--kmp] [--junit4] [--module :path]
 #
-# Copies .omp/ agents, skills, and Gradle scripts into the target project,
-# configures build.gradle.kts and settings.gradle.kts.
+# Shared payload lives under .mutation-testing/; client files stay native.
+# The safe manager preflights managed paths before Gradle configuration changes.
 
 PROJECT_PATH="."
 IS_KMP=0
@@ -32,14 +31,14 @@ while [[ $# -gt 0 ]]; do
             ;;
         --module)
             if [[ $# -lt 2 ]]; then
-                echo "Usage: $0 <project-root> [--kmp] [--junit4] [--module :path]" >&2
+                echo "Usage: ./bootstrap.sh install [project-root] [--kmp] [--junit4] [--module :path]" >&2
                 exit 1
             fi
             MODULE_PATH="$2"
             shift
             ;;
         *)
-            echo "Usage: $0 <project-root> [--kmp] [--junit4] [--module :path]"
+            echo "Usage: ./bootstrap.sh install [project-root] [--kmp] [--junit4] [--module :path]"
             exit 1
             ;;
     esac
@@ -249,95 +248,11 @@ if grep -q 'io.github.anschnapp.mutflow' "$build_file" &&
     echo "Error: existing mutflow plugin is not pinned to the supported version 1.6.0." >&2
     exit 1
 fi
-if [[ -e "$PROJECT_PATH/buildSrc/build.gradle.kts" ]] &&
-    ! cmp -s "$SCRIPT_DIR/mutation-results-src/build.gradle.kts" "$PROJECT_PATH/buildSrc/build.gradle.kts"; then
-    echo "Error: existing buildSrc/build.gradle.kts is user-owned; follow the manual setup guide to merge the results module without overwriting it." >&2
-    exit 1
-fi
 if [[ -d "$PROJECT_PATH/buildSrc/src/main/kotlin/io/omp/mutation" ||
       -d "$PROJECT_PATH/buildSrc/src/test/kotlin/io/omp/mutation" ]]; then
     echo "Error: legacy io.omp.mutation sources found. Follow the schema 2 migration guide before installing ch.trancee.mutation." >&2
     exit 1
 fi
-
-agent_usage_source="$SCRIPT_DIR/AGENT-USAGE.md"
-agent_usage_destination="$PROJECT_PATH/.omp/AGENT-USAGE.md"
-agent_pointer='For mutation-testing setup, execution, audits, or troubleshooting, read [.omp/AGENT-USAGE.md](.omp/AGENT-USAGE.md) first.'
-if [[ ! -f "$agent_usage_source" ]]; then
-    echo "Error: installed agent usage guide is missing: '$agent_usage_source'" >&2
-    exit 1
-fi
-if [[ -L "$PROJECT_PATH/.omp" || -L "$agent_usage_destination" ||
-      -L "$PROJECT_PATH/AGENTS.md" ]]; then
-    echo "Error: refusing symlinked agent guide destinations." >&2
-    exit 1
-fi
-if [[ -e "$PROJECT_PATH/.omp" && ! -d "$PROJECT_PATH/.omp" ]] ||
-    [[ -e "$PROJECT_PATH/AGENTS.md" && ! -f "$PROJECT_PATH/AGENTS.md" ]]; then
-    echo "Error: agent guide destinations have incompatible file types." >&2
-    exit 1
-fi
-if [[ -e "$agent_usage_destination" ]] &&
-    ! cmp -s "$agent_usage_source" "$agent_usage_destination"; then
-    echo "Error: existing .omp/AGENT-USAGE.md differs; merge the installed guide explicitly." >&2
-    exit 1
-fi
-
-copilot_skill_source="$REPOSITORY_ROOT/.github/skills/mutation-testing/SKILL.md"
-copilot_agent_sources=(
-    "$REPOSITORY_ROOT/.github/agents/mutation-testing-reviewer.agent.md"
-    "$REPOSITORY_ROOT/.github/agents/mutation-testing-saboteur.agent.md"
-    "$REPOSITORY_ROOT/.github/agents/mutation-testing-executor.agent.md"
-    "$REPOSITORY_ROOT/.github/agents/mutation-testing-auditor.agent.md"
-    "$REPOSITORY_ROOT/.github/agents/mutation-testing-refactor-specialist.agent.md"
-)
-copilot_destination_dirs=(
-    "$PROJECT_PATH/.github"
-    "$PROJECT_PATH/.github/agents"
-    "$PROJECT_PATH/.github/skills"
-    "$PROJECT_PATH/.github/skills/mutation-testing"
-)
-
-for source_file in "$copilot_skill_source" "${copilot_agent_sources[@]}"; do
-    if [[ ! -f "$source_file" ]]; then
-        echo "Error: Copilot adapter source file is missing: '$source_file'" >&2
-        exit 1
-    fi
-done
-
-for destination_dir in "${copilot_destination_dirs[@]}"; do
-    if [[ -L "$destination_dir" ]]; then
-        echo "Error: refusing to follow symlink at Copilot destination '$destination_dir'" >&2
-        exit 1
-    fi
-    if [[ -e "$destination_dir" && ! -d "$destination_dir" ]]; then
-        echo "Error: Copilot destination '$destination_dir' is not a directory" >&2
-        exit 1
-    fi
-done
-
-assert_copilot_file_available() {
-    local source_file="$1"
-    local destination_file="$2"
-
-    if [[ -L "$destination_file" ]]; then
-        echo "Error: refusing to follow symlink at Copilot file '$destination_file'" >&2
-        exit 1
-    fi
-    if [[ -e "$destination_file" ]] && ! cmp -s "$source_file" "$destination_file"; then
-        echo "Error: refusing to overwrite existing Copilot file '$destination_file'" >&2
-        exit 1
-    fi
-}
-
-assert_copilot_file_available \
-    "$copilot_skill_source" \
-    "$PROJECT_PATH/.github/skills/mutation-testing/SKILL.md"
-for source_file in "${copilot_agent_sources[@]}"; do
-    assert_copilot_file_available \
-        "$source_file" \
-        "$PROJECT_PATH/.github/agents/$(basename "$source_file")"
-done
 
 echo "Bootstrapping mutation testing into: $PROJECT_PATH"
 echo "Mode: $( ((IS_KMP)) && echo "KMP" || echo "JVM" )"
@@ -348,48 +263,15 @@ else
     echo "Test framework: JUnit 6"
 fi
 
-# --- Step 1: Copy .omp directory ---
+# --- Install toolkit-managed payload and both native client adapters ---
 echo ""
-echo "Copying .omp agents, skills, and scripts..."
-
-target_dir="$PROJECT_PATH/.omp"
-if [[ -d "$target_dir" ]]; then
-    echo "  Warning: .omp directory already exists — merging"
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "Error: Python 3.10 or newer is required by the bootstrap command." >&2
+    exit 1
 fi
-mkdir -p "$target_dir"
-cp -r "$SCRIPT_DIR/agents" "$target_dir/"
-cp -r "$SCRIPT_DIR/skills" "$target_dir/"
-cp "$SCRIPT_DIR/mutation-results.gradle.kts" "$target_dir/"
-cp "$agent_usage_source" "$agent_usage_destination"
-if [[ ! -f "$PROJECT_PATH/AGENTS.md" ]] ||
-    ! grep -Fxq "$agent_pointer" "$PROJECT_PATH/AGENTS.md"; then
-    printf '\n%s\n' "$agent_pointer" >> "$PROJECT_PATH/AGENTS.md"
-fi
-mkdir -p "$target_dir/mutation-results-src"
-cp "$SCRIPT_DIR/mutation-results-src/build.gradle.kts" "$target_dir/mutation-results-src/"
-cp -r "$SCRIPT_DIR/mutation-results-src/main" "$SCRIPT_DIR/mutation-results-src/test" "$target_dir/mutation-results-src/"
-
-# --- Install the Copilot-native adapter ---
-echo ""
-echo "Installing GitHub Copilot skill and agents..."
-
-copilot_agents_dir="$PROJECT_PATH/.github/agents"
-copilot_skill_dir="$PROJECT_PATH/.github/skills/mutation-testing"
-mkdir -p "$copilot_agents_dir" "$copilot_skill_dir"
-copy_copilot_file() {
-    local source_file="$1"
-    local destination_file="$2"
-
-    if [[ -f "$destination_file" ]] && cmp -s "$source_file" "$destination_file"; then
-        return
-    fi
-    cp "$source_file" "$destination_file"
-}
-
-copy_copilot_file "$copilot_skill_source" "$copilot_skill_dir/SKILL.md"
-for source_file in "${copilot_agent_sources[@]}"; do
-    copy_copilot_file "$source_file" "$copilot_agents_dir/$(basename "$source_file")"
-done
+echo "Checking and installing toolkit-managed files..."
+python3 "$SCRIPT_DIR/manage-installation.py" --bootstrap "$PROJECT_PATH" --dry-run
+python3 "$SCRIPT_DIR/manage-installation.py" --bootstrap "$PROJECT_PATH"
 
 # --- Step 2: Configure settings.gradle.kts ---
 echo ""
@@ -470,7 +352,7 @@ if ! grep -q 'mutation-results.gradle.kts' "$build_file"; then
         first_close=$(grep -n '^}$' "$build_file" | head -1 | cut -d: -f1)
         sed -i "${first_close}a\\
 \\
-apply(from = rootProject.file(\".omp/mutation-results.gradle.kts\"))" "$build_file"
+apply(from = rootProject.file(\".mutation-testing/mutation-results.gradle.kts\"))" "$build_file"
         echo "  Applied mutation-results.gradle.kts"
     fi
 fi
@@ -551,31 +433,18 @@ fi
 KOTLIN_VERSION="$REQUIRED_KOTLIN_VERSION"
 echo "  Verified compiler-coupled Kotlin $KOTLIN_VERSION"
 
-# --- Step 3b: Generate buildSrc for typed mutation-results module ---
+# --- Step 3b: The manager synchronized typed results sources into buildSrc ---
 echo ""
-echo "Setting up typed mutation-results module (buildSrc)..."
-
-buildsrc_dir="$PROJECT_PATH/buildSrc"
-if [[ ! -d "$buildsrc_dir" ]]; then
-    mkdir -p "$buildsrc_dir/src/main/kotlin/ch/trancee/mutation"
-    mkdir -p "$buildsrc_dir/src/test/kotlin/ch/trancee/mutation"
-    cp "$target_dir/mutation-results-src/main/kotlin/ch/trancee/mutation/"*.kt "$buildsrc_dir/src/main/kotlin/ch/trancee/mutation/"
-    cp "$target_dir/mutation-results-src/test/kotlin/ch/trancee/mutation/"*.kt "$buildsrc_dir/src/test/kotlin/ch/trancee/mutation/"
-    cp "$target_dir/mutation-results-src/build.gradle.kts" "$buildsrc_dir/build.gradle.kts"
-    echo "  Created buildSrc/ with typed MutationResults module (Kotlin $KOTLIN_VERSION)"
-else
-    # Merge: copy source files
-    mkdir -p "$buildsrc_dir/src/main/kotlin/ch/trancee/mutation"
-    mkdir -p "$buildsrc_dir/src/test/kotlin/ch/trancee/mutation"
-    cp "$target_dir/mutation-results-src/main/kotlin/ch/trancee/mutation/"*.kt "$buildsrc_dir/src/main/kotlin/ch/trancee/mutation/"
-    cp "$target_dir/mutation-results-src/test/kotlin/ch/trancee/mutation/"*.kt "$buildsrc_dir/src/test/kotlin/ch/trancee/mutation/"
-    cp "$target_dir/mutation-results-src/build.gradle.kts" "$buildsrc_dir/build.gradle.kts"
-    echo "  Updated buildSrc/ with typed MutationResults module (Kotlin $KOTLIN_VERSION)"
-fi
+echo "Typed mutation-results sources are installed in buildSrc/"
 
 # --- Step 4: Summary ---
 echo ""
 echo "✅ Bootstrap complete!"
+echo "Installed paths:"
+echo "  $PROJECT_PATH/.mutation-testing/ — shared payload and manifest"
+echo "  $PROJECT_PATH/.omp/agents/ and .omp/skills/ — OMP-native adapter"
+echo "  $PROJECT_PATH/.github/agents/ and .github/skills/ — Copilot-native adapter"
+echo "  $PROJECT_PATH/buildSrc/ — generated typed results module"
 echo ""
 echo "Next steps:"
 if [[ "$MODULE_PATH" != ":" ]]; then

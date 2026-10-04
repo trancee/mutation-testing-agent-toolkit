@@ -8,10 +8,27 @@ authority to install, overwrite configuration, or delete tests.
 
 | Task/runtime | Read first |
 |--------------|------------|
-| OMP pipeline | [skills/mutation-testing/SKILL.md](skills/mutation-testing/SKILL.md), then `agents/test-quality-reviewer.md` |
+| OMP pipeline | [OMP skill](../.omp/skills/mutation-testing/SKILL.md), then `../.omp/agents/test-quality-reviewer.md` |
 | Copilot CLI pipeline | [../.github/skills/mutation-testing/SKILL.md](../.github/skills/mutation-testing/SKILL.md), then `../.github/agents/mutation-testing-reviewer.agent.md` |
 | Prepared Gradle execution | Inspect the owning module build and [mutation-results.gradle.kts](mutation-results.gradle.kts) |
 | Existing report audit | Establish the evidence contract below |
+
+## Update installed files
+
+Run the updater from a fast-forwarded toolkit checkout, not from a copied target
+script. Python 3.10 or newer is required. It uses that checkout only and never fetches or
+executes remote `main`.
+This toolkit currently has no tagged stable release channel.
+
+```bash
+"/absolute/toolkit/bootstrap.sh" update "/absolute/target" --dry-run
+"/absolute/toolkit/bootstrap.sh" update "/absolute/target"
+```
+
+Review conflicts and diffs. Managed-file edits are preserved; approve only a
+reviewed relative path with `--force <path>`. Updates require a valid
+`.mutation-testing/manifest.json`; if it is absent, the updater stops before
+writing. OMP-native agents and skills remain in `.omp/agents/` and `.omp/skills/`.
 
 Use the current runtime's native delegation. Missing profiles/tools are a
 limitation to report, not a reason to substitute another client's dispatch.

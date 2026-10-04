@@ -20,7 +20,7 @@ Maintain a separate Copilot adapter:
   least-privilege worker profiles.
 - The reviewer uses Copilot's native `agent` tool; worker profiles cannot spawn
   more agents.
-- The bootstrap installs both client adapters. It refuses symlinked Copilot
+- The root `bootstrap.sh install` command installs both client adapters. It refuses symlinked Copilot
   destinations and differing files with matching names before modifying the
   target.
 - The OMP adapter remains separate and uses its own files and `task`/`hub`
@@ -43,11 +43,11 @@ metadata stay separate to avoid unsupported cross-client tool assumptions.
 
 - The behavior contracts are intentionally represented in two client-specific
   profile sets and can drift; `docs/agents/mutation-testing-agents.md` records
-  both sets, and the bootstrap test checks Copilot installation and conflict
+  both sets, and the root-command setup test checks Copilot installation and conflict
   handling.
 - Package integrity, installation, profile metadata, and shared role contracts
   are checked locally and in CI. Fresh end-to-end delegated execution in both
   clients is not covered by those checks.
 - Existing installations must merge changed toolkit-owned skill and profile
-  files explicitly; bootstrap refuses differing Copilot files and legacy
+  files explicitly; the setup command refuses differing Copilot files and legacy
   results namespaces. See the [upgrade procedure](../how-to/manual-setup.md#upgrade-an-existing-installation).

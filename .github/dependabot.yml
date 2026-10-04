@@ -8,7 +8,7 @@ updates:
     directories:
       - /sample
       - /sample/buildSrc
-      - /.omp/mutation-results-src
+      - /.mutation-testing/mutation-results-src
     schedule:
       interval: weekly
     groups:

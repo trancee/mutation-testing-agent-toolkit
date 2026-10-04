@@ -6,6 +6,7 @@ adapter uses Copilot custom agents; it does not require the OMP CLI.
 ## Prerequisites
 
 - GitHub Copilot CLI
+- Python 3.10 or newer for root `bootstrap.sh` install and update commands
 - Java 26, Gradle 9.8.0, Kotlin 2.4.20, and mutflow 1.6.0 (validated baseline)
 - A Kotlin/JVM project using JUnit 4 or 6, or a Kotlin Multiplatform project
   whose mutation run targets JVM source sets
@@ -17,26 +18,30 @@ custom `projectDir` mappings, or customized builds require
 
 ## Install the adapter
 
-From the mutation-testing repository, run the bootstrap script against the
+From the mutation-testing repository, run the root `bootstrap.sh install` command against the
 target project:
 
 ```bash
-./.omp/bootstrap-mutation-testing.sh /path/to/kotlin-project
+./bootstrap.sh install /path/to/kotlin-project
 ```
 
-The script installs the Copilot skill under
-`.github/skills/mutation-testing/` and five custom agents under
-`.github/agents/`, alongside the OMP and Gradle mutation-testing files. It
-refuses to follow symlinks or overwrite conflicting Copilot files. Resolve any
-reported conflict yourself, then rerun setup.
+The command installs the shared guide, results sources, script, and manifest under
+`.mutation-testing/`; OMP-native files remain under `.omp/`, and the Copilot
+skill and five custom agents remain under `.github/`. It refuses symlinked
+destinations and stops before writing if a managed file conflicts. Setup itself
+does not accept force options. On a first install, do not use `update --force`:
+updates require a valid manifest. Review and resolve the conflicting destination
+manually while preserving user-owned content, then rerun setup. For a later
+manifest-managed update, follow the [safe update guide](update-installation.md)
+to preview and approve only the exact path with `--force`.
 
-It also installs `.omp/AGENT-USAGE.md` and appends its discovery pointer once
+It also installs `.mutation-testing/AGENT-USAGE.md` and appends its discovery pointer once
 to the project's existing `AGENTS.md` without replacing project policy.
 
 For KMP JVM installation, append `--kmp`; for a multi-module build, select its
 Gradle path with `--module :module`. For a plain JVM module that already uses
 JUnit 4, append `--junit4`; KMP JVM uses MutFlow's generated JUnit 6
-integration. Bootstrap does not annotate sources; the targeting agent prepares
+integration. Setup does not annotate sources; the targeting agent prepares
 those on a subsequent mutation-test run.
 KMP JVM execution still requires compatible MutFlow variants for every
 declared target; see
@@ -47,6 +52,21 @@ For a manual installation, copy the complete
 `.github/agents/mutation-testing-*.agent.md` files from this repository. This
 installs only the Copilot client layer; also apply the Gradle and results-module
 setup described in [Manual setup](manual-setup.md).
+
+## Update an existing installation
+
+Update from a fast-forwarded toolkit checkout. This updater never fetches or
+executes remote code; no tagged stable release channel is published today.
+Preview and inspect file diffs before applying:
+
+```bash
+git -C "/absolute/toolkit" pull --ff-only
+"/absolute/toolkit/bootstrap.sh" update "/absolute/target" --dry-run
+"/absolute/toolkit/bootstrap.sh" update "/absolute/target"
+```
+
+See the [upgrade procedure](manual-setup.md#upgrade-an-existing-installation)
+for the required manifest and per-file conflict approval.
 
 ## Run mutation testing
 
@@ -74,7 +94,8 @@ To configure a new target project, explicitly request:
 /mutation-testing setup [project-path] [--kmp] [--junit4] [--module :path]
 ```
 
-Setup changes Gradle files, `buildSrc/`, `.omp/`, and `.github/`. If setup adds
+Setup changes Gradle files, `.mutation-testing/`, generated `buildSrc/`, and
+both native client adapters in `.omp/` and `.github/`. If setup adds
 the skill while Copilot CLI is already running, reload skills with
 `/skills reload` or start a new CLI session.
 
