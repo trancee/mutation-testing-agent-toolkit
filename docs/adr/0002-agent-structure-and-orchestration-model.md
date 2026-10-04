@@ -17,6 +17,15 @@ Key architectural differences:
 
 Use 5 separate OMP agent files in `.omp/agents/`, orchestrated via a sequential handshake pattern, with the `/mutation-testing` skill as a thin entry point. Copilot CLI has a corresponding native adapter with the same role boundaries and result contracts.
 
+Installed assets follow client ownership boundaries: shared toolkit-managed guides,
+results sources and script, and manifest live under `.mutation-testing/`.
+OMP-native agents and skills remain under `.omp/`; Copilot agents and skills
+remain under `.github/`. The target root `AGENTS.md` is the neutral discovery
+pointer. There is no universal `.agent/` discovery root. The source checkout's
+root `bootstrap.sh` command dispatches install to the neutral bootstrap
+implementation and updates to the manifest manager; no client-specific wrapper
+is retained.
+
 ### Adaptation boundaries
 
 This toolkit adapts Scott-CC's five-role collaboration and broad test-quality

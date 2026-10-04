@@ -3,7 +3,7 @@
 Audience: AI agents operating this repository or using its checkout to configure
 a target project. Entry point: root [AGENTS.md](AGENTS.md). This is an execution
 guide, not a human tutorial or an installed client skill. Bootstrap installs a
-target-specific [.omp/AGENT-USAGE.md](.omp/AGENT-USAGE.md) and appends its
+target-specific [.mutation-testing/AGENT-USAGE.md](.mutation-testing/AGENT-USAGE.md) and appends its
 discovery pointer to the target's `AGENTS.md`, preserving existing policy.
 Repository policy
 remains in `AGENTS.md`; domain terms remain in [CONTEXT.md](CONTEXT.md).
@@ -13,6 +13,7 @@ remains in `AGENTS.md`; domain terms remain in [CONTEXT.md](CONTEXT.md).
 | Request | Action |
 |---------|--------|
 | Install into a target project | Follow section 2 only with explicit setup approval |
+| Update an existing target installation | Follow the safe update procedure in section 2 |
 | Run the five-role pipeline | Load the matching native skill in section 3 |
 | Execute prepared tests without a client | Follow section 4 |
 | Audit existing results | Check evidence in section 5 before assigning a score |
@@ -34,33 +35,54 @@ execution path are explicit. Report unsupported or missing capabilities.
 
 ## 2. Install
 
-Inspect [the installer](.omp/bootstrap-mutation-testing.sh) before executing it:
+Inspect the root [bootstrap command](bootstrap.sh) and installer implementation
+before executing it. Install and update require Python 3.10 or newer:
 
 ```bash
-bash "/absolute/toolkit/.omp/bootstrap-mutation-testing.sh" "/absolute/target"
+"/absolute/toolkit/bootstrap.sh" install "/absolute/target"
 # For a KMP JVM module, select its Gradle path, for example:
-bash "/absolute/toolkit/.omp/bootstrap-mutation-testing.sh" "/absolute/target" --kmp --module :module
+"/absolute/toolkit/bootstrap.sh" install "/absolute/target" --kmp --module :module
 # For a plain JVM project that uses JUnit 4:
-bash "/absolute/toolkit/.omp/bootstrap-mutation-testing.sh" "/absolute/target" --junit4
+"/absolute/toolkit/bootstrap.sh" install "/absolute/target" --junit4
 ```
 
 Preflight: compatible Kotlin plugin pin (direct or through the default
 `gradle/libs.versions.toml` plugin alias), conventional multiline `plugins`
 block, matching JVM/KMP mode, a conventional module-directory mapping, and no
-conflicting user-owned `buildSrc`, legacy namespace, or Copilot files. Use the
+conflicting user-owned `buildSrc`, legacy namespace, or managed OMP/Copilot files. Use the
 installer's actual checked pins; the canonical plugin pins live in
 [sample/build.gradle.kts](sample/build.gradle.kts). `--junit4` is for plain
 JVM only; KMP JVM uses the generated JUnit 6 integration.
 Inspect existing `pluginManagement` for Maven Central: bootstrap preserves an
 existing block without repairing its repositories.
 
-Installation copies toolkit files to the project root, edits the selected
-module's build and the root `buildSrc`, preserves existing `.bak` files, and
-does not itself annotate sources.
-For custom builds or an upgrade, merge toolkit-owned files explicitly while
-preserving convention code. Legacy `io.omp.mutation` sources, current
-`ch.trancee.mutation` sources, the results script, and schema consumers require
-a coordinated migration.
+Installation places the shared guide, results script, canonical sources, and a
+hash manifest under `.mutation-testing/`; OMP files remain under `.omp/agents/`
+and `.omp/skills/`, while Copilot files remain under `.github/`. The installer
+edits the selected module build and root `buildSrc`, and does not annotate
+sources. For custom builds, legacy namespace changes, and schema consumers,
+preserve convention code and use the coordinated migration guide.
+
+### Update an existing installation
+
+Use a local toolkit checkout as the source. Fast-forward that checkout first;
+the updater does not fetch or execute remote code, and this repository does not
+currently publish a tagged stable release channel. It records the checkout commit
+SHA in `.mutation-testing/manifest.json` when Git metadata is available.
+
+```bash
+git -C "/absolute/toolkit" pull --ff-only
+"/absolute/toolkit/bootstrap.sh" update "/absolute/target" --dry-run
+"/absolute/toolkit/bootstrap.sh" update "/absolute/target"
+```
+
+Review the preview and diffs before applying. A changed managed file is
+preserved and reported as a conflict. After reviewing an individual diff, approve
+only that file with a repeated `--force <project-relative-path>` option. Updates
+require a valid `.mutation-testing/manifest.json`; if it is absent, the updater
+stops before writing. The updater does not migrate untracked installations or
+rewrite project Gradle build wiring. OMP-native discovery files remain under
+`.omp/agents/` and `.omp/skills/`.
 
 **Installed:** setup exits zero, the expected client files and typed module
 exist, and build configuration resolves. A preflight conflict is a stop, not
@@ -118,9 +140,9 @@ summary when present.
 ## 5. Audit and classify evidence
 
 Read `<module>/build/reports/mutation-results.json` only as current-run evidence.
-Contract owners: [MutationResults.kt](.omp/mutation-results-src/main/kotlin/ch/trancee/mutation/MutationResults.kt),
-[the XML reader](.omp/mutation-results-src/main/kotlin/ch/trancee/mutation/JUnitMutationReport.kt),
-and [the results task](.omp/mutation-results.gradle.kts).
+Contract owners: [MutationResults.kt](.mutation-testing/mutation-results-src/main/kotlin/ch/trancee/mutation/MutationResults.kt),
+[the XML reader](.mutation-testing/mutation-results-src/main/kotlin/ch/trancee/mutation/JUnitMutationReport.kt),
+and [the results task](.mutation-testing/mutation-results.gradle.kts).
 
 | Evidence | Interpretation |
 |----------|----------------|
@@ -145,16 +167,18 @@ same selection and effective settings.
 
 ## 6. Maintain the toolkit
 
-Canonical results sources/tests: `.omp/mutation-results-src/`.
+Canonical results sources/tests: `.mutation-testing/mutation-results-src/`.
 Generated copies: `sample/buildSrc/src/`. Preserve byte parity. Contract changes
 also affect both client skills/profiles, bootstrap, sample, and documentation.
 Use [CI](.github/workflows/ci.yml) for the exact authoritative gate sequence:
 
 ```bash
 gradle -p sample/buildSrc test --rerun-tasks
+python3 scripts/test-mutation-testing-command.py
+python3 scripts/test-update-installation.py
+bash scripts/test-bootstrap-copilot.sh
 python3 scripts/test-mutflow-integration.py
 python3 scripts/test-documentation-examples.py
-bash scripts/test-bootstrap-copilot.sh
 python3 scripts/test-upstream-check.py
 python3 scripts/check-copilot-agent-profiles.py
 python3 scripts/check-mutation-agent-contracts.py

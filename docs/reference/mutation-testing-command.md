@@ -17,6 +17,14 @@ The shell form prefixes the skill name with `omp`:
 omp mutation-testing [project-path] [options]
 ```
 
+The toolkit checkout also provides a root command for installing or updating
+target files; it is separate from the client skill invocation:
+
+```bash
+./bootstrap.sh install [project-path] [--kmp] [--junit4] [--module :path]
+./bootstrap.sh update [project-path] [--dry-run] [--force RELATIVE_PATH]...
+```
+
 ## Copilot CLI invocation
 
 ```text
@@ -78,16 +86,28 @@ The `setup` subcommand installs and configures the mutation-testing system.
 
 | Area | Effect |
 |------|--------|
-| `.omp/` | Copies the agents, mutation-testing skill, Gradle results script, and typed results source. |
-| `AGENTS.md` | Appends a single pointer to the installed `.omp/AGENT-USAGE.md`, preserving existing project policy. Differing guides or symlinked destinations stop setup. |
-| `.github/` | Installs the Copilot skill and its five custom agent profiles. Existing conflicting Copilot files cause setup to stop before modifying the target. |
+| `.mutation-testing/` | Installs the neutral guide, results script, canonical typed sources, and hash manifest. |
+| `.omp/` | Installs OMP-native agents and skills only; their native discovery paths stay unchanged. |
+| `AGENTS.md` | Adds the current toolkit discovery pointer while preserving project policy. Symlinked destinations stop setup. |
+| `.github/` | Installs the Copilot skill and five custom agent profiles; manifest-backed updates preserve local edits and report conflicts. |
 | `settings.gradle.kts` | Adds plugin repositories through `pluginManagement` when a Kotlin settings file is used. |
 | Selected module build | Applies mutflow and the results script, enables mutflow, and configures the selected JUnit adapter. JUnit 6 is the default; `--junit4` selects `mutflow-junit4` for plain JVM. |
-| `buildSrc/` | Installs the typed mutation-results module. |
+| `buildSrc/` | Installs generated copies of the typed mutation-results module and tracks their hashes for safe synchronization. |
 | Production sources | The setup agent adds `@MutationTarget` and applicable suppressions; the shell installer alone does not annotate source. |
 | Test sources | The agent wraps calls in `MutFlow.underTest`; plain JVM uses JUnit 6 `@MutFlowTest` or JUnit 4 `@RunWith(MutFlowRunner::class)`, while KMP common tests retain `kotlin.test`. |
 
 For an executable setup walkthrough, see [Tutorial: Bootstrap mutation testing into an existing Kotlin project](../tutorials/bootstrap-existing-project.md).
+
+## Update an existing installation
+
+Updates use the root `bootstrap.sh update` command from a local toolkit
+checkout. The `bootstrap.sh install` command is the separate first-install
+path. Fast-forward the checkout yourself, review
+`--dry-run` output, and use repeated per-file `--force` options only after
+reviewing each conflict. A valid `.mutation-testing/manifest.json` is required;
+if it is absent or invalid, the updater stops before writing. The manifest records
+the source revision and managed-file SHA-256 hashes. See the
+[update guide](../how-to/update-installation.md).
 
 ## Execution modes
 
@@ -126,6 +146,7 @@ Deep mode also includes full redundant-test-group details and per-mutation kille
 | Item | Requirement or constraint |
 |------|---------------------------|
 | Project type | Plain Kotlin/JVM with JUnit 4 or 6, or KMP with a JVM target using the generated JUnit 6 integration and a MutFlow-compatible variant for every declared target; Gradle Kotlin DSL. |
+| Python | 3.10 or newer, required by the root `bootstrap.sh` install/update command. |
 | Java | 26 (validated baseline; latest bytecode target supported by Kotlin 2.4.20). |
 | Gradle | 9.8.0 (validated baseline). |
 | Kotlin | 2.4.20 (validated baseline; must match the mutflow compiler plugin). |

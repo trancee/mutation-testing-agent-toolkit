@@ -1,6 +1,6 @@
 # Tutorial: Bootstrap mutation testing into an existing Kotlin project
 
-In this tutorial, we'll take an existing Kotlin project and add mutation testing to it. We will run a bootstrap script that installs all the necessary files, configure mutflow, annotate our code, and run our first mutation test. By the end, we'll have mutation testing running on our existing code.
+In this tutorial, we'll take an existing Kotlin project and add mutation testing to it. We will run the toolkit checkout's root `bootstrap.sh install` command to install the necessary files and configure mutflow, annotate our code, and run our first mutation test. By the end, we'll have mutation testing running on our existing code.
 
 This tutorial assumes you have a Kotlin JVM project with Gradle. If you don't, see the [first mutation test tutorial](first-mutation-test.md) instead.
 
@@ -10,23 +10,25 @@ This tutorial assumes you have a Kotlin JVM project with Gradle. If you don't, s
   through the conventional `gradle/libs.versions.toml` plugin alias, using a
   multiline `plugins` block
 - Java 26 and Gradle 9.8.0
+- Python 3.10 or newer for the root `bootstrap.sh` command
 - The Mutation Testing Agent Toolkit cloned to a known location
 
 Start with a clean worktree or save your changes. The script edits the build
 in place; it preserves existing `.bak` files but does not create a backup.
-If you have a custom catalog, nonstandard module directory mapping, user-owned
-`buildSrc`, or legacy toolkit installation, follow
-[manual setup](../how-to/manual-setup.md) instead.
+If you have a custom catalog, nonstandard module directory mapping, or user-owned
+`buildSrc`, follow [manual setup](../how-to/manual-setup.md) instead. If the
+project already has a toolkit installation, review the
+[update guide](../how-to/update-installation.md) first.
 
-## Step 1: Run the bootstrap script
+## Step 1: Run the root `bootstrap.sh install` command
 
-We'll use the bootstrap script to copy the .omp files and configure Gradle. From your project root:
+Run the root command from your toolkit checkout to install shared assets and configure Gradle:
 
 ```bash
 # Replace with the path to the Mutation Testing Agent Toolkit
 MUTATION_TOOLKIT_DIR="/path/to/mutation-testing-agent-toolkit"
 
-"$MUTATION_TOOLKIT_DIR/.omp/bootstrap-mutation-testing.sh" .
+"$MUTATION_TOOLKIT_DIR/bootstrap.sh" install .
 ```
 
 We'll see output like:
@@ -37,8 +39,14 @@ Mode: JVM
 Module: :
 Test framework: JUnit 6
 
-Copying .omp agents, skills, and scripts...
-Installing GitHub Copilot skill and agents...
+Checking and installing toolkit-managed files...
+CREATE .mutation-testing/AGENT-USAGE.md
+CREATE .mutation-testing/mutation-results.gradle.kts
+CREATE .omp/agents/test-quality-reviewer.md
+CREATE .omp/skills/mutation-testing/SKILL.md
+CREATE .github/skills/mutation-testing/SKILL.md
+CREATE buildSrc/src/main/kotlin/ch/trancee/mutation/MutationResults.kt
+UPDATED .mutation-testing/manifest.json
 Configuring settings.gradle.kts...
   Added pluginManagement block
 Configuring module build.gradle.kts...
@@ -48,14 +56,15 @@ Configuring module build.gradle.kts...
   Added mutflow configuration
   Enabled JUnit Platform
   Verified compiler-coupled Kotlin 2.4.20
-Setting up typed mutation-results module (buildSrc)...
-  Created buildSrc/ with typed MutationResults module (Kotlin 2.4.20)
+Typed mutation-results sources are installed in buildSrc/
 
 ✅ Bootstrap complete!
 ```
 
-The script modified our Gradle configuration and installed `.omp/`, `buildSrc/`,
-and the Copilot files. It has not changed production or test sources yet.
+The script modified Gradle configuration and installed shared assets under
+`.mutation-testing/`, OMP-native files under `.omp/`, Copilot files under
+`.github/`, and generated sources under `buildSrc/`. It has not changed
+production or test sources yet.
 If `pluginManagement` already existed, verify that its repositories include
 `mavenCentral()`; the script leaves existing plugin-management blocks alone.
 
@@ -65,7 +74,7 @@ target project and invoke `/mutation-testing`; if Copilot is already running,
 use `/skills reload` first.
 
 For a plain JVM project that already uses JUnit 4, append `--junit4` to the
-bootstrap command. The installed runner uses
+setup command. The installed runner uses
 `@RunWith(MutFlowRunner::class)`; it does not convert the project to JUnit 6.
 For a catalog-based KMP subproject, use `--kmp --module :module` and run the
 qualified task from the build root. See [manual setup](../how-to/manual-setup.md)
@@ -87,7 +96,7 @@ plugins {
 1. The mutation-results script applied:
 
 ```kotlin
-apply(from = rootProject.file(".omp/mutation-results.gradle.kts"))
+apply(from = rootProject.file(".mutation-testing/mutation-results.gradle.kts"))
 ```
 
 1. JUnit 6 dependencies added:
@@ -195,7 +204,7 @@ Run the `mutationResults` task:
 gradle mutationResults
 ```
 
-The mutflow plugin supplies its matching JUnit integration. Bootstrap requires
+The mutflow plugin supplies its matching JUnit integration. The setup command requires
 the compatible Kotlin pin before changing files; it does not guess a compiler
 version or fall back to a default.
 
@@ -219,4 +228,4 @@ If some mutations survived, we can add boundary tests to kill them. See the [int
 
 ## Summary
 
-We bootstrapped the Mutation Testing Agent Toolkit into our existing Kotlin project. The bootstrap script handled file copying and Gradle configuration. We annotated our business logic with `@MutationTarget` and our tests with `@MutFlowTest`, wrapping calls in `MutFlow.underTest { }`. Our first mutation test run shows the results.
+We bootstrapped the Mutation Testing Agent Toolkit into our existing Kotlin project. The root `bootstrap.sh install` command handled file copying and Gradle configuration. We annotated our business logic with `@MutationTarget` and our tests with `@MutFlowTest`, wrapping calls in `MutFlow.underTest { }`. Our first mutation test run shows the results.

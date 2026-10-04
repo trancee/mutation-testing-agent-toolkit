@@ -94,7 +94,7 @@ the JVM annotation in the dedicated mutated test compilation.
 
 ```bash
 MUTATION_TOOLKIT_DIR="/path/to/mutation-testing-agent-toolkit"
-bash "$MUTATION_TOOLKIT_DIR/.omp/bootstrap-mutation-testing.sh" . --kmp
+"$MUTATION_TOOLKIT_DIR/bootstrap.sh" install . --kmp
 ```
 
 Use the absolute path to your clone. The installer adds mutflow, its plugin

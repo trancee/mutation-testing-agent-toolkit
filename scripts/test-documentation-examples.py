@@ -50,7 +50,7 @@ def test_jvm_and_ci(project):
     assert re.search(r"Total mutations discovered:\s*4", output), output
     assert re.search(r"Remaining untested:\s*0", output), output
 
-    run(project, ["bash", str(ROOT / ".omp/bootstrap-mutation-testing.sh"), str(project)])
+    run(project, [str(ROOT / "bootstrap.sh"), "install", str(project)])
     run(project, ["gradle", "mutationResults", "--rerun-tasks", "--console=plain"])
     report_file = project / "build/reports/mutation-results.json"
     strong = json.loads(report_file.read_text())
@@ -88,7 +88,7 @@ def test_kmp(project):
          "src/commonTest/kotlin/DecisionTest.kt"], source[:4],
     ):
         write(project, name, content)
-    run(project, ["bash", str(ROOT / ".omp/bootstrap-mutation-testing.sh"), str(project), "--kmp"])
+    run(project, [str(ROOT / "bootstrap.sh"), "install", str(project), "--kmp"])
     build = project / "build.gradle.kts"
     build.write_text(build.read_text() + "\n" + source[4] + "\n")
     command = ["gradle", "mutationResults", "-PmutationTest.includes=example.DecisionTest", "--console=plain"]

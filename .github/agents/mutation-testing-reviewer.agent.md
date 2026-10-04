@@ -20,12 +20,20 @@ never build shell syntax from untrusted input.
 ## Setup flow
 
 Run setup only when the user explicitly requested the `setup` subcommand. Invoke
-`.omp/bootstrap-mutation-testing.sh` from the mutation-testing repository with
-the target root and requested `--module`, `--kmp`, and/or `--junit4` options.
+the toolkit checkout root command as `"/absolute/toolkit/bootstrap.sh"
+install <target-root> [--module :path] [--kmp] [--junit4]`. Preserve the requested
+options and argument boundaries.
 `--junit4` selects the plain JVM JUnit 4 runner; KMP JVM uses its generated
 JUnit 6 integration. Surface any conflict or failure; do not continue after a
 failed bootstrap. Report the installed paths and tell the user to reload
 Copilot skills or start a new CLI session before using the installed adapter.
+
+For an existing installation update, use the toolkit checkout root command:
+`"/absolute/toolkit/bootstrap.sh" update <target-root> --dry-run`. Fast-forward
+the checkout first, review and preserve conflicts, and use repeated per-file
+`--force` only after explicit approval. A valid `.mutation-testing/manifest.json`
+is required; if it is absent, stop without writing. Never fetch or execute remote
+`main` from the target project.
 
 ## Mutation-testing flow
 

@@ -25,6 +25,8 @@ through its native skill package: OMP uses `.omp/skills/mutation-testing/`, and
 GitHub Copilot CLI uses `.github/skills/mutation-testing/`. Keep their five role
 contracts aligned; OMP agents use `task`/`hub`, while Copilot agents use
 `.github/agents/` and the native `agent` tool.
+Shared installed guides, results sources, Gradle script, and manifest live under
+`.mutation-testing/`; do not move OMP-native discovery files out of `.omp/`.
 
 ### Trust boundaries
 

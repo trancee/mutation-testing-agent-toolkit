@@ -20,10 +20,12 @@ git clone https://github.com/trancee/mutation-testing-agent-toolkit.git
 cd mutation-testing-agent-toolkit
 
 # Install into a separate Kotlin JVM project
-./.omp/bootstrap-mutation-testing.sh /path/to/kotlin-project
+./bootstrap.sh install /path/to/kotlin-project
 ```
 
 Validated with Java `26`, Gradle `9.8.0`, Kotlin `2.4.20`, and mutflow `1.6.0`.
+Python 3.10 or newer is required by the root `./bootstrap.sh`
+install/update command.
 For KMP JVM projects, append `--kmp` and select a subproject with
 `--module :module` when needed. For a plain JVM project already using JUnit 4,
 append `--junit4`; see [manual setup](docs/how-to/manual-setup.md).
@@ -56,6 +58,26 @@ Start with [your first mutation test](docs/tutorials/first-mutation-test.md),
 then follow the [agent-assisted workflow](docs/tutorials/agent-assisted-mutation-test.md)
 or [KMP JVM tutorial](docs/tutorials/kmp-jvm-mutation-test.md).
 For failed or incomplete runs, use [troubleshooting](docs/how-to/troubleshoot-mutation-testing.md).
+
+## Update an existing installation
+
+Fast-forward the toolkit checkout, preview the target changes, review conflicts,
+then apply the update. The script does not fetch remote code. This repository has
+no tagged stable release channel, so updates use the current local checkout and
+record its commit SHA when available.
+
+```bash
+git -C "/path/to/mutation-testing-agent-toolkit" pull --ff-only
+"/path/to/mutation-testing-agent-toolkit/bootstrap.sh" update "/path/to/kotlin-project" --dry-run
+"/path/to/mutation-testing-agent-toolkit/bootstrap.sh" update "/path/to/kotlin-project"
+```
+
+The updater preserves local edits and prints diffs. Approve only reviewed files
+with repeated `--force <project-relative-path>` options. Updates require a valid
+`.mutation-testing/manifest.json`; if it is absent, the updater stops before
+writing. See the [update guide](docs/how-to/update-installation.md). The separate
+[results-contract upgrade guide](docs/how-to/manual-setup.md#upgrade-an-existing-installation)
+covers `io.omp.mutation` and schema 1 migrations.
 
 ## Sample project
 

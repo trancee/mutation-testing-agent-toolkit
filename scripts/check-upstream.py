@@ -41,7 +41,7 @@ def main() -> None:
     args = parser.parse_args()
     errors = []
     sample = (ROOT / "sample/build.gradle.kts").read_text()
-    template = (ROOT / ".omp/mutation-results-src/build.gradle.kts").read_text()
+    template = (ROOT / ".mutation-testing/mutation-results-src/build.gradle.kts").read_text()
     pins = {}
     for name, pattern in PATTERNS.items():
         matches = re.findall(pattern, sample + template)
@@ -51,7 +51,7 @@ def main() -> None:
             pins[name] = matches[0]
 
     paths = [
-        ROOT / ".omp/bootstrap-mutation-testing.sh",
+        ROOT / ".mutation-testing/bootstrap-mutation-testing.sh",
         ROOT / ".github/workflows/ci.yml",
         ROOT / "scripts/test-bootstrap-copilot.sh",
         ROOT / "scripts/test-mutflow-integration.py",
@@ -66,7 +66,7 @@ def main() -> None:
                     continue
                 if value != pins.get(name):
                     errors.append(f"{path.relative_to(ROOT)}: {name} {value} != {pins.get(name)}")
-    bootstrap = (ROOT / ".omp/bootstrap-mutation-testing.sh").read_text()
+    bootstrap = (ROOT / ".mutation-testing/bootstrap-mutation-testing.sh").read_text()
     escaped_mutflow_pin = pins["mutflow"].replace(".", r"\.")
     if escaped_mutflow_pin not in bootstrap:
         errors.append("Bootstrap mutflow compatibility preflight does not match canonical pin")
@@ -74,7 +74,7 @@ def main() -> None:
     if not compiler_pin or compiler_pin.group(1) != pins.get("kotlin"):
         errors.append("Bootstrap buildSrc compiler pin differs from canonical Kotlin")
 
-    canonical = ROOT / ".omp/mutation-results-src"
+    canonical = ROOT / ".mutation-testing/mutation-results-src"
     for source, destination in [("main/kotlin", "main/kotlin"), ("test/kotlin", "test/kotlin")]:
         source_root = canonical / source
         copy_root = ROOT / "sample/buildSrc/src" / destination

@@ -15,6 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
+      - name: Verify root install/update command
+        run: python3 scripts/test-mutation-testing-command.py
+      - name: Verify safe installation updater
+        run: python3 scripts/test-update-installation.py
       - name: Verify Copilot adapter bootstrap
         run: bash scripts/test-bootstrap-copilot.sh
       - uses: actions/setup-java@v6.0.1
@@ -35,8 +39,8 @@ jobs:
         run: |
           mkdir -p /tmp/ci-test/src/main/kotlin/ch/trancee/mutation
           mkdir -p /tmp/ci-test/src/test/kotlin/ch/trancee/mutation
-          cp .omp/mutation-results-src/main/kotlin/ch/trancee/mutation/*.kt /tmp/ci-test/src/main/kotlin/ch/trancee/mutation/
-          cp .omp/mutation-results-src/test/kotlin/ch/trancee/mutation/*.kt /tmp/ci-test/src/test/kotlin/ch/trancee/mutation/
+          cp .mutation-testing/mutation-results-src/main/kotlin/ch/trancee/mutation/*.kt /tmp/ci-test/src/main/kotlin/ch/trancee/mutation/
+          cp .mutation-testing/mutation-results-src/test/kotlin/ch/trancee/mutation/*.kt /tmp/ci-test/src/test/kotlin/ch/trancee/mutation/
       - name: Write build.gradle.kts (standalone, non-kotlin-dsl)
         run: |
           cat > /tmp/ci-test/build.gradle.kts << 'EOF'

@@ -27,13 +27,21 @@ Runs a mutation-testing analysis on a Kotlin (JVM-first) project using mutflow a
 ### Setup subcommand
 
 `/mutation-testing setup [project path] [--kmp] [--junit4] [--module :path]`
-bootstraps the system into the selected project or Gradle module:
+sets up the system in the selected project or Gradle module:
 
-1. **`.omp/` files copied**: agents, skills, `mutation-results.gradle.kts`, `mutation-results-src/` copied to `project-path/.omp/`
+1. **Shared toolkit payload**: guide, Gradle results script, canonical typed sources, and manifest installed under `project-path/.mutation-testing/`; OMP agents and skills remain under `.omp/`
 2. **`settings.gradle.kts`**: `pluginManagement` block added with `mavenCentral()` + `gradlePluginPortal()`
 3. **Selected module `build.gradle.kts`**: mutflow plugin, results script, and framework-specific wiring; `--junit4` installs the JUnit 4 runner for plain JVM, while the default and KMP JVM use JUnit 6
-4. **`buildSrc/` generated**: typed `MutationResults` module copied from `.omp/mutation-results-src/` with Kotlin JVM and serialization plugins
+4. **`buildSrc/` generated**: typed `MutationResults` module copied from `.mutation-testing/mutation-results-src/` with Kotlin JVM and serialization plugins
 5. **`test-saboteur`** (via `task`) annotates business-logic and test classes, applies the per-class mode budget, and wraps applicable calls in `MutFlow.underTest { }`
+
+Setup and update use the root command in the toolkit checkout. For example,
+run `"/absolute/toolkit/bootstrap.sh" install "/absolute/target"` for an
+explicitly requested setup. To update, fast-forward the toolkit checkout and run
+`"/absolute/toolkit/bootstrap.sh" update "/absolute/target" --dry-run`, then
+apply after reviewing conflicts. A valid `.mutation-testing/manifest.json` is
+required; an absent manifest stops the update before writing. OMP agents and
+skills remain OMP-native under `.omp/agents/` and `.omp/skills/`.
 
 ### What happens (full mutation test run, standard mode by default)
 
@@ -53,7 +61,7 @@ bootstraps the system into the selected project or Gradle module:
 ### Prerequisites
 
 - Kotlin JVM project with Gradle
-- Java 26, Gradle 9.8.0, Kotlin 2.4.20, mutflow 1.6.0 (validated baseline)
+- Python 3.10 or newer for setup/update; Java 26, Gradle 9.8.0, Kotlin 2.4.20, mutflow 1.6.0 (validated baseline)
 - For fresh projects, use `/mutation-testing setup` first
 
 ### mutflow architecture notes
@@ -88,5 +96,5 @@ Decisions and issues tracked in `.scratch/omp-mutation-testing/`. See `docs/agen
 
 This skill spawns subagents via the `task` tool:
 
-- **Setup**: `task with agent: "test-quality-reviewer", task: "Bootstrap mutation testing into [project path], module [Gradle path], KMP [true|false], JUnit 4 [true|false]"` — the orchestrator runs the bootstrap script, then invokes test-saboteur to configure tests.
+- **Setup**: `task with agent: "test-quality-reviewer", task: "Bootstrap mutation testing into [project path], module [Gradle path], KMP [true|false], JUnit 4 [true|false]"` — the orchestrator runs the toolkit checkout root `bootstrap.sh install` command, then invokes test-saboteur to configure tests.
 - **Mutation test**: `task with agent: "test-quality-reviewer", task: "Run mutation testing on [project path], module [Gradle path], targets [targets], mode [quick|standard|deep], autoApprove [true|false]"` — the orchestrator dispatches the pipeline with the specified module, mode, selected tests, and approval gate.

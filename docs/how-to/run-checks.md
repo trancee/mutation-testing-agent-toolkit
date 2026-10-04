@@ -84,6 +84,8 @@ With the repository's Java 26 and Gradle 9.8.0 baseline installed:
 ```bash
 gradle -p sample/buildSrc test --rerun-tasks
 gradle -p sample mutationResults --rerun-tasks
+python3 scripts/test-mutation-testing-command.py
+python3 scripts/test-update-installation.py
 bash scripts/test-bootstrap-copilot.sh
 python3 scripts/test-upstream-check.py
 python3 scripts/check-copilot-agent-profiles.py
