@@ -20,8 +20,14 @@ def write(project: Path, path: str, content: str) -> None:
     target.write_text(content, encoding="utf-8")
 
 
-def run(command: list[str], *, success: bool = True) -> subprocess.CompletedProcess:
+def run(
+    command: list[str],
+    *,
+    success: bool = True,
+    extra_environment: dict[str, str] | None = None,
+) -> subprocess.CompletedProcess:
     environment = {name: value for name, value in os.environ.items() if not name.startswith("MUTFLOW_")}
+    environment.update(extra_environment or {})
     result = subprocess.run(
         command, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
         timeout=300, env=environment,
@@ -37,6 +43,19 @@ def report(project: Path) -> dict:
     assert data["mutationsEvaluated"] == data["killed"] + data["survived"] + data["timedOut"], data
     assert data["totalMutations"] == data["mutationsEvaluated"] + data["untestedMutations"], data
     assert data["mutationScore"] is None or 0 <= data["mutationScore"] <= 1, data
+    summary_path = project / "build/reports/mutation-results.md"
+    assert summary_path.is_file(), summary_path
+    summary = summary_path.read_text()
+    assert "| Gradle task | PASSED |" in summary or "| Gradle task | FAILED |" in summary, summary
+    assert (
+        f"| Outcomes | {data['killed']} killed, {data['survived']} survived, "
+        f"{data['timedOut']} timed out |"
+    ) in summary, summary
+    assert f"| Execution gaps | {data['gaps']} |" in summary, summary
+    if data["mutationScore"] is None:
+        assert "| Mutation score | Unavailable |" in summary, summary
+    else:
+        assert f"| Mutation score | {data['mutationScore']:.2%} (" in summary, summary
     return data
 
 
@@ -109,16 +128,29 @@ class TimeoutTest {
     @Test fun loopCompletes() { assertEquals(1, MutFlow.underTest { Loop().count() }) }
 }
 """)
+        workflow_summary = jvm / "workflow-summary.md"
+        write(jvm, "workflow-summary.md", "Prior workflow summary")
+        github_environment = {
+            "GITHUB_ACTIONS": "true",
+            "GITHUB_STEP_SUMMARY": str(workflow_summary),
+        }
         run(["bash", bootstrap, str(jvm)])
         write(jvm, "build.gradle.kts.bak", "user-owned backup\n")
         run(["bash", bootstrap, str(jvm)])  # Repeat setup must preserve an installed project.
         assert (jvm / "build.gradle.kts.bak").read_text() == "user-owned backup\n"
         gradle = [args.gradle, "-p", str(jvm), "--console=plain"]
-        run(gradle + ["-PmutationTest.includes=fixture.StrongTest", "mutationResults"])
+        run(
+            gradle + ["-PmutationTest.includes=fixture.StrongTest", "mutationResults"],
+            extra_environment=github_environment,
+        )
         strong = report(jvm)
         assert strong["killed"] == strong["totalMutations"] == 4, strong
         assert strong["gaps"] == 0 and strong["mutationScore"] == 1, strong
         assert all(name.startswith("fixture.StrongTest::") for name in strong["testKillerMatrix"]), strong
+        successful_summary = workflow_summary.read_text()
+        assert successful_summary.startswith("Prior workflow summary\n"), successful_summary
+        assert successful_summary.count("## Mutation testing results") == 1, successful_summary
+        assert "| Gradle task | PASSED |" in successful_summary, successful_summary
 
         repeated = run(gradle + ["-PmutationTest.includes=fixture.StrongTest", "mutationResults"])
         assert ":test UP-TO-DATE" in repeated.stdout, repeated.stdout
@@ -131,11 +163,18 @@ class TimeoutTest {
         assert budgeted["totalMutations"] == 4 and budgeted["mutationsEvaluated"] == 1, budgeted
         assert budgeted["untestedMutations"] == 3 and budgeted["gaps"] == 0, budgeted
 
-        run(gradle + ["-PmutationTest.includes=fixture.WeakTest", "mutationResults"], success=False)
+        run(
+            gradle + ["-PmutationTest.includes=fixture.WeakTest", "mutationResults"],
+            success=False,
+            extra_environment=github_environment,
+        )
         weak = report(jvm)
         assert weak["survived"] == 4 and weak["killed"] == 0 and weak["gaps"] == 0, weak
         assert weak["testMethods"] == ["fixture.WeakTest::sameName()"], weak
         assert weak["generatedAt"] != strong["generatedAt"], (strong, weak)
+        failed_summary = workflow_summary.read_text()
+        assert failed_summary.count("## Mutation testing results") == 2, failed_summary
+        assert "| Gradle task | FAILED |" in failed_summary, failed_summary
 
         run(gradle + ["-PmutationTest.includes=fixture.StrongTest,fixture.BrokenTest", "mutationResults"], success=False)
         broken = report(jvm)
@@ -159,10 +198,12 @@ class TimeoutTest {
         assert b"MutationRegistry" in mutated.read_bytes(), mutated
         run(gradle + ["-PmutationTest.includes=fixture.MissingTest", "mutationResults"], success=False)
         assert not (jvm / "build/reports/mutation-results.json").exists()
+        assert not (jvm / "build/reports/mutation-results.md").exists()
         run(gradle + ["-PmutationTest.includes=,", "help"], success=False)
         write(jvm, "src/main/kotlin/Broken.kt", "this is not valid Kotlin")
         run(gradle + ["-PmutationTest.includes=fixture.StrongTest", "mutationResults"], success=False)
         assert not (jvm / "build/reports/mutation-results.json").exists()
+        assert not (jvm / "build/reports/mutation-results.md").exists()
 
         junit4 = base / "junit4"
         write(junit4, "build.gradle.kts", """

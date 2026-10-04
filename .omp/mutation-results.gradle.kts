@@ -2,6 +2,7 @@ import ch.trancee.mutation.ExecutionGap
 import ch.trancee.mutation.JUnitMutationReportReader
 import ch.trancee.mutation.MutationResultsParser
 import ch.trancee.mutation.MutationResultsSerializer
+import ch.trancee.mutation.MutationResultsSummary
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
@@ -21,11 +22,14 @@ require(includesProperty == null || mutationTestIncludes.all { it.isNotEmpty() }
 
 val mutationResults = tasks.register<MutationResultsTask>("mutationResults") {
     group = "verification"
-    description = "Writes schema 2 mutation results from current JVM JUnit reports"
+    description = "Writes schema 2 mutation results and a readable summary from current JVM JUnit reports"
 }
 val prepareMutationResults = tasks.register("prepareMutationResults") {
     doLast {
-        delete(mutationResults.get().resultsFile.get().asFile)
+        delete(
+            mutationResults.get().resultsFile.get().asFile,
+            mutationResults.get().summaryFile.get().asFile,
+        )
     }
 }
 tasks.matching { it.name.startsWith("compile") }.configureEach {
@@ -77,6 +81,10 @@ open class MutationResultsTask : DefaultTask() {
     val resultsFile: RegularFileProperty = project.objects.fileProperty()
         .convention(project.layout.buildDirectory.file("reports/mutation-results.json"))
 
+    @get:OutputFile
+    val summaryFile: RegularFileProperty = project.objects.fileProperty()
+        .convention(project.layout.buildDirectory.file("reports/mutation-results.md"))
+
     @TaskAction
     fun generateResults() {
         val xmlFiles = junitReports.files.flatMap { directory ->
@@ -95,17 +103,57 @@ open class MutationResultsTask : DefaultTask() {
             gaps = gaps,
             discoveredMutations = reports.sumOf { it.discoveredMutations },
         )
+        val runFailed = reports.any { it.hasTestFailures } || gaps.isNotEmpty()
+        val summary = MutationResultsSummary.render(results, runFailed)
         resultsFile.get().asFile.apply {
             parentFile.mkdirs()
             writeText(MutationResultsSerializer.toJson(results))
         }
-        logger.lifecycle("Mutation results written to: ${resultsFile.get().asFile}")
-        val score = results.mutationScore?.let { "${it * 100}%" } ?: "N/A"
-        logger.lifecycle("  Score: $score")
-        logger.lifecycle("  Killed: ${results.killed}, Survived: ${results.survived}, Timed out: ${results.timedOut}")
-        logger.lifecycle("  Evaluated: ${results.mutationsEvaluated}, Untested: ${results.untestedMutations}, Gaps: ${results.gaps}")
-        if (reports.any { it.hasTestFailures } || gaps.isNotEmpty()) {
-            throw GradleException("Mutation run failed or was incomplete; inspect mutation-results.json and JUnit XML")
+        summaryFile.get().asFile.apply {
+            parentFile.mkdirs()
+            writeText("$summary\n")
+        }
+        logger.lifecycle(summary)
+        logger.lifecycle("Readable report written to: ${summaryFile.get().asFile}")
+        logger.lifecycle("JSON report written to: ${resultsFile.get().asFile}")
+        appendGithubStepSummary(summary)
+        if (runFailed) {
+            throw GradleException(
+                "Mutation run failed or was incomplete; inspect mutation-results.md, mutation-results.json, and JUnit XML",
+            )
+        }
+    }
+
+    private fun appendGithubStepSummary(summary: String) {
+        if (System.getenv("GITHUB_ACTIONS") != "true") return
+
+        val summaryPath = System.getenv("GITHUB_STEP_SUMMARY")
+        if (summaryPath.isNullOrBlank()) {
+            logger.warn(
+                "GITHUB_STEP_SUMMARY is unavailable; the readable mutation report is at ${summaryFile.get().asFile}",
+            )
+            return
+        }
+
+        val githubSummaryFile = java.io.File(summaryPath)
+        if (!githubSummaryFile.isAbsolute || !githubSummaryFile.isFile) {
+            logger.warn(
+                "GITHUB_STEP_SUMMARY must be an existing absolute file; " +
+                    "the readable mutation report is at ${summaryFile.get().asFile}",
+            )
+            return
+        }
+
+        try {
+            val separator = if (githubSummaryFile.length() == 0L) "" else "\n"
+            githubSummaryFile.appendText("$separator$summary\n\n")
+            logger.lifecycle("Mutation results added to the GitHub Actions job summary")
+        } catch (failure: java.io.IOException) {
+            logger.warn(
+                "Could not update the GitHub Actions job summary; " +
+                    "the readable mutation report is at ${summaryFile.get().asFile}",
+                failure,
+            )
         }
     }
 }

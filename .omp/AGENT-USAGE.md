@@ -49,7 +49,10 @@ Keep Gradle invocations sharing build/report paths sequential.
 
 Record configured budgets and effective `MUTFLOW_*` overrides. Changing
 environment-based settings requires `--rerun-tasks` to avoid reused XML.
-Capture command, exit status, current JUnit XML, and current JSON when available.
+Capture command, exit status, current JUnit XML, JSON, and the readable
+`build/reports/mutation-results.md` when available. In GitHub Actions, the
+`mutationResults` task also appends the summary table to the workflow run's job
+summary through `GITHUB_STEP_SUMMARY`.
 The results adapter does not support Gradle configuration cache; use
 `--no-configuration-cache` when enabled globally in the target.
 

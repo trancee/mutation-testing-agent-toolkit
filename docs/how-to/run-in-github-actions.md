@@ -93,6 +93,7 @@ jobs:
           name: mutation-results
           path: |
             build/reports/mutation-results.json
+            build/reports/mutation-results.md
             build/test-results/
           if-no-files-found: warn
           retention-days: 14
@@ -104,6 +105,11 @@ The example enforces a full discovered run: omit plain JVM annotation limits,
 or use KMP `maxMutationRuns = Int.MAX_VALUE`, and remove ambient
 `MUTFLOW_MAX_RUNS` limits. If your policy intentionally permits budgeted runs,
 change the untested check explicitly and label the score as partial.
+
+The `mutationResults` task also appends its Markdown results table to the
+GitHub Actions job summary. The same human-readable report is written to
+`build/reports/mutation-results.md`, while the JSON, Markdown, and JUnit XML
+remain available in the uploaded artifact.
 
 The wrapper owns the Gradle version; keep it at the validated compatible
 baseline. `--rerun-tasks` avoids reusing XML generated under another environment
@@ -120,7 +126,10 @@ If the mutflow plugin and `mutationResults` task belong to a subproject, use its
   run: ./gradlew :service:mutationResults --rerun-tasks --no-daemon --console=plain
 ```
 
-Change `report_path` and the uploaded artifact path to `service/build/reports/mutation-results.json`. Keep the test results path under the same subproject.
+Change `report_path` to `service/build/reports/mutation-results.json` and
+include `service/build/reports/mutation-results.json`,
+`service/build/reports/mutation-results.md`, and the test-results directory
+under `service/build/` in the uploaded artifact.
 
 Apply mutflow and the shared results script in that subproject, with the typed
 results module available from root `buildSrc`. There is no built-in
@@ -134,6 +143,8 @@ Open a pull request or start the workflow from the Actions page. The `mutation-t
 
 1. Run the annotated tests and their generated mutations.
 2. Print the mutation score and configured minimum.
-3. Upload `mutation-results.json` and the JUnit XML files, including when the quality check fails.
+3. Show the mutation summary table on the workflow run's job summary page.
+4. Upload `mutation-results.json`, `mutation-results.md`, and the JUnit XML
+   files, including when the quality check fails.
 
 If the quality check fails, download the `mutation-results` artifact and follow [How to interpret and act on mutation testing results](interpret-results.md).

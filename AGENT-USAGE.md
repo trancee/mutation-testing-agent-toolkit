@@ -106,10 +106,14 @@ with its configured JUnit 4 or 6 engine; KMP selects dedicated
 Check effective `MUTFLOW_*` overrides and configured mutation budgets.
 Environment changes require `--rerun-tasks` to avoid reusing XML from another
 verification/budget setting. A JSON timestamp is not a test-execution timestamp.
+The task prints a human-readable summary and writes
+`build/reports/mutation-results.md`; GitHub Actions runs also append it to the
+workflow job summary when `GITHUB_STEP_SUMMARY` is available.
 For full-scope evidence, require zero untested mutations as well as zero gaps.
 
 **Executed:** capture command, effective overrides/budget, exit status, current
-JUnit XML under the owning module's `build/test-results/`, and JSON when present.
+JUnit XML under the owning module's `build/test-results/`, JSON, and Markdown
+summary when present.
 
 ## 5. Audit and classify evidence
 
