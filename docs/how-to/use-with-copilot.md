@@ -7,7 +7,7 @@ adapter uses Copilot custom agents; it does not require the OMP CLI.
 
 - GitHub Copilot CLI
 - Python 3.10 or newer for root `bootstrap.sh` install and update commands
-- Java 26, Gradle 9.8.0, Kotlin 2.4.20, and mutflow 1.6.0 (validated baseline)
+- Java 26, Gradle 9.8.0, Kotlin 2.4.20, and mutflow 1.6.1 (validated baseline)
 - A Kotlin/JVM project using JUnit 4 or 6, or a Kotlin Multiplatform project
   whose mutation run targets JVM source sets
 

@@ -88,7 +88,7 @@ Open `build.gradle.kts`. We should see:
 
 ```kotlin
 plugins {
-    id("io.github.anschnapp.mutflow") version "1.6.0"
+    id("io.github.anschnapp.mutflow") version "1.6.1"
     // ... existing plugins
 }
 ```

@@ -23,7 +23,7 @@ cd mutation-testing-agent-toolkit
 ./bootstrap.sh install /path/to/kotlin-project
 ```
 
-Validated with Java `26`, Gradle `9.8.0`, Kotlin `2.4.20`, and mutflow `1.6.0`.
+Validated with Java `26`, Gradle `9.8.0`, Kotlin `2.4.20`, and mutflow `1.6.1`.
 Python 3.10 or newer is required by the root `./bootstrap.sh`
 install/update command.
 For KMP JVM projects, append `--kmp` and select a subproject with
@@ -109,7 +109,7 @@ in [AGENTS.md](AGENTS.md).
 
 ## Known limitations
 
-- **Kotlin Multiplatform (JVM-first)**: `--kmp` installs the JVM mutation-task adapter and supports a selected module using the default `gradle/libs.versions.toml` catalog and module directory. Every declared KMP target must resolve MutFlow's common-source-set dependencies. In the validated MutFlow `1.6.0` baseline, artifacts publish JVM, `linuxX64`, and `mingwX64`, but not iOS or Android Native variants; selecting only the JVM task does not avoid that resolution. The toolkit does not prune unsupported targets or provide Native, Android, or JS execution adapters.
+- **Kotlin Multiplatform (JVM-first)**: `--kmp` installs the JVM mutation-task adapter and supports a selected module using the default `gradle/libs.versions.toml` catalog and module directory. Every declared KMP target must resolve MutFlow's common-source-set dependencies. In the validated MutFlow `1.6.1` baseline, artifacts publish JVM, `linuxX64`, and `mingwX64`, but not iOS or Android Native variants; selecting only the JVM task does not avoid that resolution. The toolkit does not prune unsupported targets or provide Native, Android, or JS execution adapters.
 - **JUnit adapters**: plain JVM supports JUnit 4 (`--junit4`) and JUnit 6 (default). KMP JVM uses MutFlow's generated JUnit 6 integration.
 - **Setup scope**: custom version catalogs, nonstandard plugin-block layouts, and `projectDir` mappings require manual setup.
 - **Results migration**: existing `io.omp.mutation` installations and schema 1
