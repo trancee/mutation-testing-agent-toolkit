@@ -18,6 +18,22 @@ test identities; namespace migration is described in the
 <project>/build/reports/mutation-results.json
 ```
 
+## Human-readable summary
+
+The `mutationResults` task also writes
+`<project>/build/reports/mutation-results.md` and prints the same summary in the
+Gradle output. It includes the score, confidence interval, discovered and
+evaluated counts, survivors, timeouts, and execution gaps. The task writes this
+summary before returning a nonzero status for test failures or execution gaps,
+so it remains available when the build fails.
+
+In GitHub Actions, the task appends the summary as a Markdown table to the
+workflow run's job summary using `GITHUB_STEP_SUMMARY`. This is separate from
+the machine-readable JSON contract below; no `schemaVersion` change is
+required. A compilation, configuration, or discovery failure that prevents the
+results task from running may leave no current summary; do not reuse an older
+file as evidence.
+
 ## JSON schema
 
 | Field | Type | Description |

@@ -41,6 +41,7 @@ fi
 
 assert_file "$project/.omp/skills/mutation-testing/SKILL.md"
 assert_file "$project/.omp/skills/mutation-testing/agents/openai.yaml"
+assert_file "$project/.omp/mutation-results-src/main/kotlin/ch/trancee/mutation/MutationResultsSummary.kt"
 assert_file "$project/.github/skills/mutation-testing/SKILL.md"
 assert_file "$project/.omp/AGENT-USAGE.md"
 cmp "$repo_root/.omp/AGENT-USAGE.md" "$project/.omp/AGENT-USAGE.md"

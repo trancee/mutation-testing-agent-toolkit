@@ -48,7 +48,9 @@ out that mutation.
    invocation rather than competing processes sharing output directories.
 5. **The results task reads test reports.** The toolkit's `mutationResults`
    task captures mutflow output from JUnit XML and serializes mutation results,
-   gaps, per-test killer data, and redundant groups.
+   gaps, per-test killer data, and redundant groups. It also writes and prints
+   a Markdown summary, appending the table to the GitHub Actions job summary
+   when `GITHUB_STEP_SUMMARY` is available.
 
 Plain JVM uses `test` with JUnit 6 by default or the opt-in JUnit 4 runner.
 KMP JVM uses dedicated `mutflow<Target>Test` tasks with compiler-synthesized

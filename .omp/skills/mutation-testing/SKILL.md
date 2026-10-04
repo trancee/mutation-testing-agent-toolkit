@@ -39,7 +39,10 @@ bootstraps the system into the selected project or Gradle module:
 
 1. **`test-quality-reviewer`** (orchestrator) receives the task and coordinates the pipeline
 2. **`test-saboteur`** analyzes source code, adds `@MutationTarget` to business-logic classes, uses the selected JUnit integration (`@MutFlowTest`, JUnit 4 `@RunWith(MutFlowRunner::class)`, or KMP common tests), and adds suppression comments to framework noise
-3. **`test-executor`** runs one `mutationResults` Gradle invocation in the selected module, optionally filtered by `--targets`; this produces the aggregate report and avoids concurrent Gradle processes writing shared results
+3. **`test-executor`** runs one `mutationResults` Gradle invocation in the
+   selected module, optionally filtered by `--targets`; this produces aggregate
+   JSON and a readable Markdown summary, which is also added to the GitHub
+   Actions job summary when available
 4. **`test-auditor`** parses JSON results + JUnit XML, calculates mutation score, identifies zombie test candidates, detects over-mocked tests
 5. **`test-refactor-specialist`** generates improved test code for flagged issues
 

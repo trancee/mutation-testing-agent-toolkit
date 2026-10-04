@@ -18,7 +18,7 @@ This reference lists the OMP and GitHub Copilot CLI agents that implement the mu
 |-------|-------|--------|--------------------------|
 | `test-quality-reviewer` | Project path, target filters, mode, approval setting | Combined mutation-quality report | Through spawned agents |
 | `test-saboteur` | Kotlin production and test sources | Mutflow configuration, annotations, and wrapped test calls | Yes |
-| `test-executor` | Project path and selected JVM test-class patterns (plain JVM or KMP) | One aggregate Gradle status, current JUnit XML, and schema 2 JSON when generation succeeds | No |
+| `test-executor` | Project path and selected JVM test-class patterns (plain JVM or KMP) | One aggregate Gradle status, current JUnit XML, schema 2 JSON, and Markdown summary when generation succeeds; GitHub Actions job summary when available | No |
 | `test-auditor` | Executor evidence, schema 2 results when available, and source | Evaluated/discovered/untested totals, scores, confidence, gaps, survivors, zombie candidates, and redundant groups | No |
 | `test-refactor-specialist` | Audit report and original tests | Proposed or approved test refactors, diffs, and rollback instructions | Only when approval permits |
 

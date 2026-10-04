@@ -16,8 +16,10 @@ files.
    script applies the patterns to the configured `Test` tasks, and
    `mutationResults` writes the aggregate JSON report from their JUnit XML.
    This is an aggregate report task, not a per-class replacement.
-2. Capture the Gradle exit status, mutation summary, JUnit XML paths, and
-   `mutation-results.json` path when present. KMP uses dedicated
+2. Capture the Gradle exit status, mutation summary, JUnit XML paths,
+   `mutation-results.json`, and `mutation-results.md` paths when present. In
+   GitHub Actions, verify that the summary was appended to the workflow run's
+   job summary when `GITHUB_STEP_SUMMARY` is available. KMP uses dedicated
    `mutflow<Target>Test` report directories, not ordinary `jvmTest`.
    Require schema 2 JSON from this run under the selected module's build
    directory. The configured adapter selects JUnit 4 or JUnit 6 for plain JVM;
@@ -40,5 +42,5 @@ JUnit result directories are shared, while mutflow's synchronization lock is
 JVM-local. Mutflow swallows assertions when mutations are killed; strict
 survivors, timeouts, and baseline failures remain failures in XML.
 Use mutflow's mutation summary for `Killed`, `Survived`, and
-`TimedOut` results. Return the test class, command, exit status, result paths,
-and any execution gaps.
+`TimedOut` results. Return the test class, command, exit status, JSON and
+Markdown report paths, and any execution gaps.

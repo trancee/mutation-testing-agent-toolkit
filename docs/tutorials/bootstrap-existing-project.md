@@ -203,12 +203,17 @@ We'll see the mutation summary with discovered, tested, killed, survived,
 timed-out, and remaining-untested counts. Exact counts depend on the selected
 business logic and operators. For our eligibility rule, look for a survivor
 that changes `>=` to `>`: the test at age 25 does not cover the age-18 boundary.
+The task also writes a human-readable summary to
+`build/reports/mutation-results.md`. When run in GitHub Actions, it appends the
+summary table to the workflow run's job summary.
 
 Our deliberately weak test leaves survivors. With upstream's default strict
-mode, `mutationResults` writes schema 2 JSON and then exits unsuccessfully.
-Survivors are mutation outcomes, not infrastructure gaps. The report is at
+mode, `mutationResults` writes both the Markdown summary and schema 2 JSON
+before exiting unsuccessfully. Survivors are mutation outcomes, not
+infrastructure gaps. The structured report is at
 `build/reports/mutation-results.json`; its `gaps` should be zero for a complete
-run. Compilation or discovery failures can prevent a report from being written.
+run. Compilation or discovery failures can prevent current reports from being
+written.
 
 If some mutations survived, we can add boundary tests to kill them. See the [interpret results](../how-to/interpret-results.md) guide for details.
 

@@ -5,11 +5,16 @@ Use this guide when you have a mutation testing run and want to act on the resul
 ## Prerequisites
 
 - You've run `gradle test` (or `gradle mutationResults`) and mutflow generated output
-- You have the mutation summary (console) or `mutation-results.json` (Gradle task)
+- You have the mutation summary in the Gradle output, the generated
+  `build/reports/mutation-results.md`, or `mutation-results.json` (Gradle task)
+- In GitHub Actions, the `mutationResults` task also adds the summary table to
+  the workflow run's job summary
 
 ## Step 1: Read the mutation summary
 
-mutflow prints a summary after all runs:
+The `mutationResults` task prints and writes an aggregate summary after all runs.
+In GitHub Actions, the same Markdown table appears in the workflow run's job
+summary. MutFlow also prints its per-mutation console summary:
 
 ```
 ╔════════════════════════════════════════════════════════════════╗

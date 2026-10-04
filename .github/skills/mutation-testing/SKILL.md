@@ -51,3 +51,7 @@ OMP's `task`, `hub`, or `tasks[]` interfaces.
 If the Copilot agent profiles are unavailable, report that limitation rather than
 falling back to OMP-specific dispatch. Preserve existing user changes and present
 the affected paths and diffs in the final report.
+
+The `mutationResults` task prints and writes a human-readable Markdown summary in
+addition to schema 2 JSON. In GitHub Actions, it also appends the summary table
+to the workflow run's job summary when `GITHUB_STEP_SUMMARY` is available.

@@ -25,7 +25,7 @@
 | Read the mutation summary and calculate your score | [How-to: Interpret mutation testing results](how-to/interpret-results.md) |
 | Fix surviving mutations with boundary tests | [How-to: Fix surviving mutations](how-to/fix-surviving-mutations.md) |
 | Diagnose setup failures, gaps, timeouts, or suspicious findings | [How-to: Troubleshoot mutation testing](how-to/troubleshoot-mutation-testing.md) |
-| Understand the JSON output format | [Reference: mutation-results.json](reference/mutation-results-format.md) |
+| Understand the JSON contract and human-readable summary | [Reference: mutation results](reference/mutation-results-format.md) |
 
 ## Architecture
 

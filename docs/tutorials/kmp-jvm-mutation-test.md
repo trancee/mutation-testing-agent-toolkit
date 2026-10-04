@@ -117,8 +117,12 @@ plain JVM annotation `maxRuns`, which includes the baseline.
 gradle mutationResults '-PmutationTest.includes=example.DecisionTest' --console=plain
 ```
 
-The executed mutation task is `mutflowJvmTest`, not ordinary `jvmTest`. Open
-`build/reports/mutation-results.json`. For the pinned plugin, expect:
+The executed mutation task is `mutflowJvmTest`, not ordinary `jvmTest`. The
+task prints an aggregate summary and writes
+`build/reports/mutation-results.md` alongside
+`build/reports/mutation-results.json`. In GitHub Actions, the table is also
+added to the workflow run's job summary. For the pinned plugin, the JSON
+contains:
 
 ```json
 {
@@ -147,7 +151,8 @@ mutflow {
 
 Run the same command again. Expect four discovered/evaluated/killed mutations,
 zero untested mutations, zero gaps, and a successful build. The report's
-identities use `example.DecisionTest::boundary()`.
+identities use `example.DecisionTest::boundary()`. The Markdown summary shows
+the same totals and the resulting score.
 
 ## Continue
 

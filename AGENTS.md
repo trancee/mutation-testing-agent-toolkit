@@ -42,6 +42,8 @@ Use Conventional Commits with the format `type(scope): imperative summary`; the 
 
 Make changes on a feature branch and use pull requests for review; do not commit directly to the protected default branch. Commit, push, open or merge pull requests, and publish only when the user explicitly approves those external actions. Preserve unrelated work and never rewrite history or force-push without explicit approval.
 
+Before opening a pull request, audit all affected documentation, including user guides, agent instructions, references, examples, and generated/bootstrap outputs where applicable. Update the relevant docs on the feature branch so they match the implementation; open the PR only after this audit. If no documentation change is warranted, state the reason in the PR description.
+
 ### Verification
 
 Add or update behavior-focused tests for code and tooling changes, including relevant boundary and failure cases. Keep tests deterministic and independent of the developer workstation, retained processes, or manual inspection. Run the narrow checks for changed behavior and applicable repository CI gates; a retry loop must still exit unsuccessfully if every attempt fails.

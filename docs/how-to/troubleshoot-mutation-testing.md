@@ -15,13 +15,16 @@ gradle mutationResults '-PmutationTest.includes=example.CalculatorTest' --rerun-
 ```
 
 Use the project's wrapper and qualified module task when appropriate. Check
-`build/reports/mutation-results.json` for schema 2, then examine `executionGaps`,
-evaluated/untested counts, and matching JUnit XML. A new `generatedAt` means JSON
-was generated, not necessarily that tests executed again.
+`build/reports/mutation-results.md` for the human-readable summary and
+`build/reports/mutation-results.json` for schema 2 details; in GitHub Actions,
+the same table appears in the workflow run's job summary. Then examine
+`executionGaps`, evaluated/untested counts, and matching JUnit XML. A new
+`generatedAt` means JSON was generated, not necessarily that tests executed
+again.
 
-Compilation, configuration, or discovery failure can prevent JSON generation.
-Do not reuse a report from an earlier invocation, even when it still exists
-after an early configuration failure.
+Compilation, configuration, or discovery failure can prevent the current JSON
+and Markdown reports from being generated. Do not reuse reports from an earlier
+invocation, even when they still exist after an early configuration failure.
 
 ## Diagnose by symptom
 
