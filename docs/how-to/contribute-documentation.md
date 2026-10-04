@@ -1,8 +1,9 @@
 # How to contribute documentation following the Diataxis framework
 
-Use this guide when adding or editing maintained documentation. README is the
-entry point, [CONTEXT.md](../../CONTEXT.md) owns domain vocabulary, and
-[AGENTS.md](../../AGENTS.md) owns contributor rules.
+Use this guide when adding or editing maintained documentation. Start with
+[CONTRIBUTING.md](../../CONTRIBUTING.md) for the contributor workflow. The
+[README](../../README.md) introduces the toolkit, and
+[CONTEXT.md](../../CONTEXT.md) owns domain vocabulary.
 
 ## Choose the reader's need
 
@@ -15,8 +16,8 @@ Give each reader-facing page one primary type:
 | Look up fields, options, or constraints | Reference | `docs/reference/` |
 | Understand rationale and relationships | Explanation | `docs/explanation/` |
 
-`docs/agents/` groups contributor pages by audience; each still has a primary
-type. ADRs retain their decision-record format. Do not create empty categories
+`docs/agents/` groups contributor pages by audience. Each page still has a
+primary type. ADRs retain their decision-record format. Do not create empty categories
 or split pages solely to satisfy a template.
 
 ## Edit the authoritative page
@@ -39,6 +40,11 @@ headings or update their incoming links.
 - References state exact contracts, types, defaults, and limitations.
 - Explanations describe the reasoning and link to operational details.
 
+Write to the reader as "you". Give instructions as direct commands, and put a
+condition before the step it guards. Name the exact file, symbol, or command.
+Split sentences that carry more than one action or claim. Replace filler and
+abstract metaphors with the concrete action or result.
+
 For full writing guidance, use the repository's
 [Diataxis skill](../../.agents/skills/diataxis/SKILL.md) and its
 [quality checklist](../../.agents/skills/diataxis/references/quality-checklist.md).
@@ -55,8 +61,7 @@ compiler compatibility. Do not independently upgrade mutflow and Kotlin.
 Historical ADR rationale should not contain volatile star counts or unsupported
 claims of current validation.
 
-Run the [repository documentation checks](run-checks.md), including external
-links when network access permits:
+Run the [repository documentation checks](run-checks.md):
 
 ```bash
 ./scripts/check-markdown.sh
@@ -64,5 +69,4 @@ python3 scripts/check-upstream.py --offline
 ```
 
 Use [Conventional Commits](../../AGENTS.md#commit-messages) when committing.
-Keep changes scoped to the reader need rather than restructuring all docs at
-once.
+Keep the change focused on the reader's need.

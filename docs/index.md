@@ -57,6 +57,7 @@
 
 | Goal | Document |
 |------|----------|
+| Follow the contributor workflow | [CONTRIBUTING.md](../CONTRIBUTING.md) |
 | Write documentation following the Diataxis framework | [How-to: Contribute documentation](how-to/contribute-documentation.md) |
 | Run tests, documentation checks, and upstream monitoring | [How-to: Run repository checks](how-to/run-checks.md) |
 | Upgrade installed toolkit files safely | [How-to: Update an installation](how-to/update-installation.md) |

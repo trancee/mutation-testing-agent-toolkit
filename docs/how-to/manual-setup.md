@@ -6,9 +6,15 @@ project, or when you want to control each step yourself.
 ## Prerequisites
 
 - Java 26
-- Gradle 9.8.0
+- Gradle 9.8.0 to reproduce the repository's integration-tested baseline
 - Kotlin 2.4.20
 - Python 3.10 or newer (required by the root `bootstrap.sh` install/update command)
+
+Kotlin `2.4.20` lists Gradle `9.7.0` as its latest fully supported version.
+The toolkit integration tests pass on Gradle `9.8.0`, but that does not extend
+Kotlin's documented support range. Check the
+[Kotlin Gradle plugin compatibility table](https://kotlinlang.org/docs/gradle-configure-project.html#check-for-compatibility)
+when choosing a version for your project.
 
 ## Copy files
 
@@ -21,21 +27,22 @@ Copy these shared assets from the toolkit checkout into your project root:
 - `.mutation-testing/mutation-results.gradle.kts`
 - `.mutation-testing/mutation-results-src/`, the typed module source copied to `buildSrc/`
 
-The installer creates `.mutation-testing/manifest.json`; do not copy or hand-edit
-that metadata file. Run the root `bootstrap.sh install` command from the toolkit
-checkout rather than copying or invoking internal implementation scripts in the
-target.
+The root installer creates `.mutation-testing/manifest.json`. Do not copy or
+edit that metadata file by hand. A manual installation without a manifest
+cannot use `bootstrap.sh update`. The updater stops before writing. Update the
+files manually. Do not copy internal installer or updater scripts into the
+target project.
 
-Copy the complete client layer(s) you intend to use:
+Copy each client layer you plan to use:
 
 | Client | Files |
 |--------|-------|
 | OMP | `.omp/agents/` and `.omp/skills/mutation-testing/` |
 | Copilot CLI | `.github/skills/mutation-testing/` and all five `.github/agents/mutation-testing-*.agent.md` profiles |
 
-Gradle-only execution needs neither client. Agent-driven setup expects the
-root `bootstrap.sh install` command's source layout and both client file sets; use the installer for a
-complete dual-client installation.
+Gradle-only execution needs neither client. For a dual-client installation,
+copy both client layers. The root installer installs both adapters when the
+project fits its supported layout.
 
 Append a mutation-testing pointer to the existing `AGENTS.md` without
 replacing project policy: `For mutation-testing setup, execution, audits, or
@@ -91,11 +98,11 @@ cp .mutation-testing/mutation-results-src/build.gradle.kts buildSrc/build.gradle
 ```
 
 The template applies Kotlin JVM and serialization plugins, not `kotlin-dsl`.
-For an existing `buildSrc`, merge its dependencies and source files instead of
-overwriting the build. mutflow 1.6.1 requires Kotlin 2.4.20; do not independently
-upgrade or downgrade the compiler. The setup command resolves direct Kotlin plugin pins
-and aliases in the default `gradle/libs.versions.toml` catalog, including
-version references. Custom catalog names, nonstandard plugin-block layouts,
+For an existing `buildSrc`, merge its dependencies and source files. Do not
+overwrite the build. mutflow `1.6.1` requires Kotlin `2.4.20`. Do not upgrade or
+downgrade the compiler independently. The setup command resolves direct Kotlin
+plugin pins and aliases in the default `gradle/libs.versions.toml` catalog,
+including version references. Custom catalog names, nonstandard plugin blocks,
 custom `projectDir` mappings, and user-owned `buildSrc` builds require manual
 setup.
 
@@ -132,8 +139,8 @@ extra["mutationTest.junitFramework"] = "junit4"
 
 The results script selects Gradle's JUnit 4 runner for the `test` task. A
 mutation-tested class uses `@RunWith(MutFlowRunner::class)` from
-`io.github.anschnapp.mutflow.junit4`. If a per-class budget is required, use
-that package's `@MutFlowTest(maxRuns = ...)`; do not combine the JUnit 4 and
+`io.github.anschnapp.mutflow.junit4`. If you need a per-class budget, use
+that package's `@MutFlowTest(maxRuns = ...)`. Do not combine JUnit 4 and
 JUnit 6 integrations in one test source set. Existing custom JUnit 4 runners
 need a manual MutFlow adapter.
 
@@ -149,14 +156,15 @@ mutflow {
 
 ## Annotate your code
 
-Add `@MutationTarget` to business-logic classes. Plain JVM/JUnit 6 classes use
-`@MutFlowTest`; plain JVM/JUnit 4 classes use
-`@RunWith(MutFlowRunner::class)`; KMP common tests stay plain `kotlin.test`.
-The targeting agent handles this through either client entry point. To do it
-by hand, see the [bootstrap tutorial](../tutorials/bootstrap-existing-project.md)
-for annotation and `MutFlow.underTest` patterns. Use `@file:MutationTarget`
-before the package declaration for top-level functions; nested classes must
-be targeted independently.
+Add `@MutationTarget` to business-logic classes. Plain JVM projects that use
+JUnit 6 use `@MutFlowTest`. Plain JVM projects that use JUnit 4 use
+`@RunWith(MutFlowRunner::class)`. KMP common tests stay plain `kotlin.test`.
+The targeting agent handles these annotations through either client entry
+point. To annotate code by hand, see the
+[bootstrap tutorial](../tutorials/bootstrap-existing-project.md) for examples
+of `@MutationTarget` and `MutFlow.underTest`. Put `@file:MutationTarget`
+before the package declaration for top-level functions. Target nested classes
+independently.
 
 ## Configure KMP JVM projects
 
@@ -182,9 +190,9 @@ kotlin {
 }
 ```
 
-Keep common tests free of JUnit annotations; upstream synthesizes
-`@MutFlowTest` in its mutated JVM compilation. `targets` contains production class/file patterns,
-not source-set or task names.
+Keep common tests free of JUnit annotations. Upstream adds `@MutFlowTest` in
+the mutated JVM compilation. `targets` contains production class or file
+patterns, not source-set or task names.
 
 ```kotlin
 mutflow {
@@ -193,15 +201,16 @@ mutflow {
 }
 ```
 
-Run `gradle mutationResults`; the adapter selects dedicated `mutflow<Target>Test`
-JVM tasks and their report directories. Normal `jvmTest` is not a mutation run.
-KMP JVM uses MutFlow's generated JUnit 6 integration; `--junit4` is for plain
-JVM modules, not KMP.
+Run `gradle mutationResults`. The adapter selects dedicated
+`mutflow<Target>Test` JVM tasks and their report directories. Normal `jvmTest`
+is not a mutation run.
+KMP JVM uses MutFlow's generated JUnit 6 integration. Use `--junit4` only for
+plain JVM modules.
 MutFlow dependencies are added to common source sets, so all declared targets
 must resolve compatible variants. In the validated `1.6.1` baseline, MutFlow
 publishes JVM, `linuxX64`, and `mingwX64`, but not iOS or Android Native
-variants. Selecting only `mutflowJvmTest` does not avoid those dependencies;
-use a separate JVM-only build model for unsupported target combinations.
+variants. Selecting only `mutflowJvmTest` does not avoid those dependencies.
+Use a separate JVM-only build model for unsupported target combinations.
 
 For a conventional multi-module project with a catalog alias and the default
 module directory mapping, install from the build root and select the module:
@@ -211,7 +220,7 @@ module directory mapping, install from the build root and select the module:
 ./gradlew :module:mutationResults
 ```
 
-The toolkit files and `buildSrc` are installed at the root; only the selected
+The toolkit files and `buildSrc` are installed at the root. Only the selected
 module build file receives the mutflow and results wiring.
 
 ## Verify setup
@@ -234,7 +243,7 @@ no current report. For direct filters and exit semantics, see the
 ## Upgrade an existing installation
 
 Use the root command from a toolkit checkout that has been fast-forwarded to an
-approved source revision. The updater reads only that local checkout; it does
+approved source revision. The updater reads only that local checkout. It does
 not fetch or execute remote code. This repository currently has no tagged stable
 release channel, so updates use the exact local checkout and record its Git
 revision when available.
@@ -246,13 +255,14 @@ git -C "/absolute/toolkit" pull --ff-only
 ```
 
 The updater requires a valid `.mutation-testing/manifest.json`. If it is absent
-or invalid, the updater stops before writing; it does not adopt an untracked
+or invalid, the updater stops before writing. It does not adopt an untracked
 installation. The manifest records the source revision and SHA-256 hashes for
 managed toolkit files, including generated `buildSrc` copies. Files matching
 their last installed hash can be updated. Local edits, missing managed files,
 symlinks, and incompatible file types are preserved and reported. After
 reviewing a specific diff, approve only that exact project-relative file with a
-repeated `--force <path>` option. Do not use force as a blanket merge strategy.
+repeated `--force <path>` option. Do not use `--force` as a blanket merge
+strategy.
 
 The dry run previews creates, updates, conflicts, and diffs. If a canonical
 results source conflicts, its generated `buildSrc` copy is not refreshed. The
@@ -264,24 +274,26 @@ For older `io.omp.mutation` namespace installations, namespace changes are not a
 path-only migration. Manually compare the `buildSrc` sources and tests, preserve
 unrelated convention code, update imports and the results script together, and
 validate schema 2 consumers. Never delete legacy code merely to clear an
-installer conflict; see the [results contract](../reference/mutation-results-format.md).
+installer conflict. See the
+[results contract](../reference/mutation-results-format.md).
 
 After updating, inspect the selected module build, verify `buildSrc` source
 parity, and run the configured `mutationResults` task. Compilation or discovery
-failure invalidates retained JSON; use current JUnit XML and reports as described
-in the [results contract](../reference/mutation-results-format.md).
+failure invalidates retained JSON. Use current JUnit XML and reports as
+described in the [results contract](../reference/mutation-results-format.md).
 
 ## Configure a multi-module project
 
-The root `bootstrap.sh install` command can configure one conventional Gradle module at a time with
-`--module :path`. Keep the shared typed module in root `buildSrc`; module-local
-results go under the selected module's build directory:
+The root `bootstrap.sh install` command can configure one conventional Gradle
+module at a time with `--module :path`. Keep the shared typed module in root
+`buildSrc`. Module-local results go under the selected module's build
+directory:
 
 ```bash
 ./gradlew :service:mutationResults
 ```
 
 The toolkit does not install every subproject automatically or combine
-module reports into one score. Repeat setup for each supported module, and use
-qualified tasks; see
+module reports into one score. Repeat setup for each supported module. Use
+qualified tasks. See
 [multi-module CI](run-in-github-actions.md#adjust-a-multi-module-build).

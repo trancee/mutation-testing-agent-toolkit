@@ -2,84 +2,106 @@
 
 ## Overview
 
-A five-role mutation-testing toolkit for Kotlin (JVM-first) projects, powered by [mutflow](https://github.com/anschnapp/mutflow), with separate OMP and GitHub Copilot CLI adapters.
+This five-role toolkit runs mutflow mutation tests in Kotlin/JVM projects.
+It has separate OMP and GitHub Copilot CLI adapters.
 
-The toolkit uses mutflow's test-only mutation compilation and predefined operators. Agents select targets, execute tests, calculate quality metrics, and propose test improvements. They do not generate mutation operators.
+mutflow compiles mutation variants for tests and uses predefined operators.
+Agents select targets, run tests, analyze results, and propose test
+improvements. They do not create mutation operators.
 
 ## Key concepts
 
 ### Mutation testing
 
-Injecting small faults (mutations) into source code and running tests to see whether they catch the faults. The schema 2 score is `killed / mutationsEvaluated`. A higher score means tests detected a larger share of recorded mutation outcomes. The score is null for zero evaluations or any infrastructure gap.
+Mutation testing injects small faults into code during test compilation and
+runs tests against them. A test kills a mutation when it fails under that
+variant. The schema 2 score is `killed / mutationsEvaluated`. A higher score
+means tests detected a larger share of recorded outcomes. The score is null
+when no mutations were evaluated or an execution gap exists.
 
 ### Meta-mutant (mutflow)
 
-mutflow keeps production compilation clean and injects mutation variants during test compilation. The test artifact contains guarded variants; runtime activates one variant per mutation run, avoiding a separate compile for each mutation.
+mutflow keeps production compilation clean. During test compilation, it adds
+guarded mutation variants to the test artifact. Each mutation run activates
+one variant, so mutflow does not compile once per mutation.
 
 ### Zombie test
 
-A test that passes even when the code is mutated. In this system, a test is only a zombie candidate when the run evidence confirms it executed, it was in the selected mutation scope, and it never appears in any mutation's killer set. A missing killer entry alone is not proof: skipped or out-of-scope tests must not be classified as zombies. mutflow records all tests that kill each mutation, not every test's outcome for every mutation, so candidates are not confirmed unnecessary tests.
+A zombie candidate is a test that appears in no recorded mutation killer set.
+Count a test as a candidate only when the run evidence confirms it executed in
+the selected mutation scope. The report lists tests that kill each mutation,
+not every test outcome for every mutation. A missing killer entry alone does
+not prove that a test is unnecessary. Skipped and out-of-scope tests are not
+zombie candidates.
 
 ### Over-mocked test
 
-A test that uses excessive mocking (`mockk()`, `mock()`), potentially masking real logic and reducing mutation sensitivity. More than three mock calls is a toolkit-specific review heuristic, not evidence by itself that a test is weak.
+A test that uses many mocks may hide real logic and reduce mutation sensitivity.
+More than three mock calls triggers review in this toolkit. That count alone
+does not prove that a test is weak.
 
 ## Agent architecture
 
-| Agent | Role |
-|-------|------|
-| test-quality-reviewer | Orchestrator — coordinates the pipeline via `task` tool dispatch |
-| test-saboteur | Mutation targeting — selects source/test classes, adds `@MutationTarget`, configures the module's JUnit adapter and mode budget, and applies applicable `// mutflow:ignore` annotations |
-| test-executor | Test execution — runs one aggregate `mutationResults` Gradle invocation for the selected classes and captures stdout, JUnit XML, and JSON |
-| test-auditor | Results analysis — parses aggregate output, calculates score, and identifies evidence-qualified zombie candidates |
-| test-refactor-specialist | Test improvement — generates refactored test code |
+| Agent | Responsibility |
+|-------|----------------|
+| `test-quality-reviewer` | Coordinates the selected client's workflow. |
+| `test-saboteur` | Selects production and test classes, adds `@MutationTarget`, configures the module's JUnit adapter and mode budget, and applies applicable `// mutflow:ignore` annotations. |
+| `test-executor` | Runs one aggregate `mutationResults` Gradle invocation and captures stdout, JUnit XML, and JSON. |
+| `test-auditor` | Analyzes the aggregate output, calculates the score, and identifies evidence-qualified zombie candidates. |
+| `test-refactor-specialist` | Proposes or applies approved test changes. |
 
 ## Client adapters
 
-- **OMP**: `/mutation-testing` dispatches through `.omp/skills/mutation-testing/` and
-  `.omp/agents/` using OMP's `task` and `hub` tools.
-- **GitHub Copilot CLI**: `/mutation-testing` dispatches through
-  `.github/skills/mutation-testing/` and the five `mutation-testing-*`
-  profiles in `.github/agents/` using Copilot's `agent` tool.
+- **OMP:** `/mutation-testing` uses `.omp/skills/mutation-testing/` and
+  `.omp/agents/`. It dispatches through OMP's `task` and `hub` tools.
+- **GitHub Copilot CLI:** `/mutation-testing` uses
+  `.github/skills/mutation-testing/` and five profiles in `.github/agents/`.
+  It dispatches through Copilot's `agent` tool.
 
-The adapters keep the same mutation-testing phases and approval boundaries but
-use client-specific dispatch and profile formats. The bootstrap installs both.
+Both adapters use the same mutation-testing phases and approval rules. Their
+dispatch tools and profile formats differ. The bootstrap command installs both.
 
 ## Mutation strategies
 
 | Scott-CC strategy category | Representative mutflow operators | Relationship |
 |---|---|---|
-| Boundary conditions | RelationalComparisonOperator + ConstantBoundaryOperator | Category mapping; operator-generated cases only |
-| Return values | BooleanReturnOperator + NullableReturnOperator | Limited to supported return forms |
-| Boolean logic | BooleanInversionOperator + EqualitySwapOperator + BooleanLogicOperator | Category mapping; not semantic mutation parity |
-| Arithmetic | ArithmeticOperator | Category mapping; operator-generated cases only |
-| Exception types | ExceptionTypeSwapOperator | Category mapping; operator-generated cases only |
-| Zombie analysis | Per-mutation killing-test data | Candidate analysis; not complete test-outcome matrix |
+| Boundary conditions | RelationalComparisonOperator + ConstantBoundaryOperator | Category mapping. Mutflow generates only its supported cases. |
+| Return values | BooleanReturnOperator + NullableReturnOperator | Limited to supported return forms. |
+| Boolean logic | BooleanInversionOperator + EqualitySwapOperator + BooleanLogicOperator | Category mapping, not semantic mutation parity. |
+| Arithmetic | ArithmeticOperator | Category mapping. Mutflow generates only its supported cases. |
+| Exception types | ExceptionTypeSwapOperator | Category mapping. Mutflow generates only its supported cases. |
+| Zombie analysis | Per-mutation killing-test data | Candidate analysis, not a complete test-outcome matrix. |
 
-These are broad strategy mappings, not feature-equivalence claims. Scott-CC
-generates context-aware semantic mutations in isolated worktrees; this toolkit
-uses mutflow's predefined Kotlin/JVM operators and does not create arbitrary
-return-value replacements.
+These rows map strategy categories. They do not claim feature parity.
+Scott-CC generates context-aware semantic mutations in isolated worktrees.
+This toolkit uses mutflow's predefined Kotlin operators and does not create
+arbitrary return-value replacements.
 
-Mutation score quality bands and the mock-count heuristic are toolkit policy;
-they are not inherited Scott-CC thresholds.
+The toolkit sets its own mutation-score bands and mock-count heuristic.
+Scott-CC does not define those policies.
 
 ## Data contracts
 
-The `mutationResults` Gradle task outputs `mutation-results.json` including `killedByTests` (all recorded killing tests per mutation) and `testKillerMatrix` (test → mutation source locations it killed). These are killer relationships, not a complete test-by-mutation outcome matrix. Field names, types, and meanings are a consumer contract; the format and quality bands are documented in the [mutation results reference](docs/reference/mutation-results-format.md).
+The `mutationResults` Gradle task writes `mutation-results.json`.
+`killedByTests` lists the recorded tests that killed each mutation.
+`testKillerMatrix` maps each test to mutation source locations it killed.
+These fields describe killer relationships, not every test outcome for every
+mutation. Consumers rely on the field names, types, and meanings. See the
+[mutation results reference](docs/reference/mutation-results-format.md).
 
-## Decisions deferred to v2
+## Current support limits
 
-- Native, Android, and JS toolkit adapters. The toolkit validates plain
-  JVM/JUnit 4, plain JVM/JUnit 6, and KMP JVM through MutFlow's generated
-  JUnit 6 integration.
+The toolkit supports plain JVM with JUnit 4 or JUnit 6, and KMP JVM through
+MutFlow's generated JUnit 6 integration. Native, Android, and JS execution
+adapters are outside the current scope. The repository has set no release or
+schedule for them.
 
 ## Results module ownership
 
 The shared results module uses `ch.trancee.mutation`, not a client-specific
-namespace. Schema 2 distinguishes discovered/evaluated/untested counts,
-qualifies tests as `testClass::displayName`, and makes scores null when
-infrastructure gaps exist. Legacy `io.omp.mutation` installations require a
+namespace. Schema 2 reports discovered, evaluated, and untested counts.
+It qualifies tests as `testClass::displayName` and sets the score to null when
+execution gaps exist. Existing `io.omp.mutation` installations need a
 coordinated source and consumer migration.
 
 ## References
