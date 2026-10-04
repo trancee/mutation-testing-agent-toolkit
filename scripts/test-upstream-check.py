@@ -24,11 +24,11 @@ class UpstreamCheckTest(unittest.TestCase):
         self.write("sample/build.gradle.kts", """
 plugins {
     kotlin("jvm") version "2.4.20"
-    id("io.github.anschnapp.mutflow") version "1.6.0"
+    id("io.github.anschnapp.mutflow") version "1.6.1"
 }
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.3")
-    testImplementation("io.github.anschnapp.mutflow:mutflow-junit4:1.6.0")
+    testImplementation("io.github.anschnapp.mutflow:mutflow-junit4:1.6.1")
     testImplementation("junit:junit:4.13.2")
 }
 """)
@@ -39,15 +39,15 @@ dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:
         self.write("sample/buildSrc/build.gradle.kts",
                    (self.root / ".mutation-testing/mutation-results-src/build.gradle.kts").read_text())
         self.write(".mutation-testing/bootstrap-mutation-testing.sh",
-                   'REQUIRED_KOTLIN_VERSION="2.4.20"\n# mutflow preflight pin: 1\\.6\\.0\n')
+                   'REQUIRED_KOTLIN_VERSION="2.4.20"\n# mutflow preflight pin: 1\\.6\\.1\n')
         for path in [".github/workflows/ci.yml", "scripts/test-bootstrap-copilot.sh",
                      "scripts/test-mutflow-integration.py"]:
             self.write(path, "")
         (self.root / "docs").mkdir()
         self.compiler = "2.4.20"
         self.status = "identical"
-        self.latest_mutflow = "1.6.0"
-        self.latest_mutflow_junit4 = "1.6.0"
+        self.latest_mutflow = "1.6.1"
+        self.latest_mutflow_junit4 = "1.6.1"
         self.latest_junit4 = "4.13.2"
 
     def write(self, path, text):

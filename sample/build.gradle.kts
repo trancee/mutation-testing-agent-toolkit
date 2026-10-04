@@ -1,6 +1,6 @@
 plugins {
     kotlin("jvm") version "2.4.20"
-    id("io.github.anschnapp.mutflow") version "1.6.0"
+    id("io.github.anschnapp.mutflow") version "1.6.1"
 }
 
 apply(from = rootProject.file("../.mutation-testing/mutation-results.gradle.kts"))
@@ -13,7 +13,7 @@ repositories {
     mavenCentral()
 }
 dependencies {
-    testImplementation("io.github.anschnapp.mutflow:mutflow-junit4:1.6.0")
+    testImplementation("io.github.anschnapp.mutflow:mutflow-junit4:1.6.1")
     testImplementation("junit:junit:4.13.2")
 }
 

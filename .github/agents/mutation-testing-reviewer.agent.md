@@ -42,7 +42,7 @@ tasks. KMP uses DSL `maxMutationRuns` (10/30/unlimited), not annotations in
 common tests. The JUnit 4 runner is not the KMP JVM adapter.
 Before a KMP run, inspect the module's full target set: MutFlow dependencies
 are attached to common source sets, so every declared target must resolve
-them. In the validated MutFlow `1.6.0` baseline, iOS and Android Native variants
+them. In the validated MutFlow `1.6.1` baseline, iOS and Android Native variants
 are absent; selecting only `mutflowJvmTest` does not bypass variant
 resolution. Stop and report unsupported targets unless the user approves a
 separate JVM-only build model.

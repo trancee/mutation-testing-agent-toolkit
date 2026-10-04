@@ -9,7 +9,7 @@ Use this guide to run an already-configured mutation test suite on pull requests
 - Business logic and its tests have the mutflow annotations described in the bootstrap tutorial.
 
 This example intentionally uses upstream `LENIENT` verification so surviving
-mutations reach the score gate. Default `STRICT` verification fails on any
+mutations reach the score check. Default `STRICT` verification fails on any
 survivor before an 80% threshold can accept the run. Lenient mode does not
 excuse ordinary test failures, timeouts, execution gaps, or incomplete budgets.
 

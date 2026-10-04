@@ -58,7 +58,7 @@ JUnit 6 integration on common tests. The JUnit 4 runner is a plain JVM adapter;
 Native, Android, and JS execution remain outside toolkit support. KMP
 dependencies are attached to common source sets, so every declared target
 must resolve a MutFlow variant. MutFlow's
-[1.6.0 target support table](https://github.com/anschnapp/mutflow/blob/v1.6.0/DESIGN-MULTIPLATFORM.md#supported-targets)
+[1.6.1 target support table](https://github.com/anschnapp/mutflow/blob/v1.6.1/DESIGN-MULTIPLATFORM.md#supported-targets)
 omits iOS and Android Native variants. Selecting only the JVM mutation task
 does not bypass resolution of those common dependencies.
 
