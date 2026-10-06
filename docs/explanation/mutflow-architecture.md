@@ -46,7 +46,11 @@ out that mutation.
 4. **Do not overlap sessions within a JVM.** Upstream guards overlapping sessions;
    separate test JVMs are independent. The toolkit uses one aggregate Gradle
    invocation rather than competing processes sharing output directories.
-5. **The results task reads test reports.** The toolkit's `mutationResults`
+5. **Compiler-plugin-generated code is excluded when its origin is known.**
+   MutFlow 1.6.2 skips generated classes and members, including serialization
+   output; the integration test verifies that only the handwritten target is
+   counted.
+6. **The results task reads test reports.** The toolkit's `mutationResults`
    task captures mutflow output from JUnit XML and serializes mutation results,
    gaps, per-test killer data, and redundant groups. It also writes and prints
    a Markdown summary, appending the table to the GitHub Actions job summary
@@ -58,7 +62,7 @@ JUnit 6 integration on common tests. The JUnit 4 runner is a plain JVM adapter;
 Native, Android, and JS execution remain outside toolkit support. KMP
 dependencies are attached to common source sets, so every declared target
 must resolve a MutFlow variant. MutFlow's
-[1.6.1 target support table](https://github.com/anschnapp/mutflow/blob/v1.6.1/DESIGN-MULTIPLATFORM.md#supported-targets)
+[1.6.2 target support table](https://github.com/anschnapp/mutflow/blob/v1.6.2/DESIGN-MULTIPLATFORM.md#supported-targets)
 omits iOS and Android Native variants. Selecting only the JVM mutation task
 does not bypass resolution of those common dependencies.
 

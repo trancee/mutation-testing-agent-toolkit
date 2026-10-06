@@ -35,7 +35,7 @@ limitation to report, not a reason to substitute another client's dispatch.
 Supported paths are plain JVM/JUnit 4, plain JVM/JUnit 6, and KMP JVM mutation
 tasks through MutFlow's generated JUnit 6 integration. Every declared KMP
 target must resolve MutFlow's common-source-set dependencies. In the validated
-MutFlow `1.6.1` baseline, artifacts publish JVM, `linuxX64`, and `mingwX64`, but
+MutFlow `1.6.2` baseline, artifacts publish JVM, `linuxX64`, and `mingwX64`, but
 not iOS or Android Native variants; selecting only the JVM mutation task does
 not avoid that resolution. The toolkit does not prune unsupported targets or
 provide Native, Android, or JS execution adapters.

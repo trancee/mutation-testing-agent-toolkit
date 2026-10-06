@@ -97,7 +97,7 @@ write_minimal_project "$module_project/service"
 cp "$module_project/build.gradle.kts" "$tmp_root/module-root-build.gradle.kts"
 "$bootstrap_command" install "$module_project" --module :service >"$tmp_root/module-project.log" 2>&1
 cmp "$tmp_root/module-root-build.gradle.kts" "$module_project/build.gradle.kts"
-grep -Fq 'id("io.github.anschnapp.mutflow") version "1.6.1"' \
+grep -Fq 'id("io.github.anschnapp.mutflow") version "1.6.2"' \
   "$module_project/service/build.gradle.kts"
 grep -Fq 'Run: /mutation-testing' "$tmp_root/module-project.log"
 grep -Fq 'gradle :service:mutationResults' "$tmp_root/module-project.log"

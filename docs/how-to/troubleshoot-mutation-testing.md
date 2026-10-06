@@ -36,7 +36,7 @@ invocation, even when they still exist after an early configuration failure.
 | No tests match the filter | Fully qualified class name and selected task | Correct `mutationTest.includes`; remove method-only filtering for complete sessions |
 | KMP runs ordinary `jvmTest` only | Applied results script, mutflow enabled, JVM target | Invoke `mutationResults`; it must select `mutflow<Target>Test` |
 | Common tests fail to compile | JUnit imports or `@MutFlowTest` in common sources | Use `kotlin.test`; follow [KMP setup](manual-setup.md#configure-kmp-jvm-projects) |
-| KMP dependency resolution reports no matching variant for iOS or Android Native | MutFlow dependencies are attached to common source sets; the validated `1.6.1` artifacts do not publish those variants | Use an explicitly scoped JVM-only build model or compatible upstream artifacts; selecting only the JVM mutation task is insufficient |
+| KMP dependency resolution reports no matching variant for iOS or Android Native | MutFlow dependencies are attached to common source sets; the validated `1.6.2` artifacts do not publish those variants | Use an explicitly scoped JVM-only build model or compatible upstream artifacts; selecting only the JVM mutation task is insufficient |
 | Strict survivors fail Gradle but JSON has no gaps | `survived`, verification mode, current XML | Strengthen tests; for a deliberate threshold policy use the [CI guide](run-in-github-actions.md) |
 | Baseline/ordinary tests fail | `TEST_FAILURE` and XML failure/error entries | Fix the original failing test before interpreting mutation quality |
 | `NO_OUTPUT` or `PARTIAL_RUN` | Missing summary, counters, or truncated output | Inspect XML and console; do not calculate a complete score |

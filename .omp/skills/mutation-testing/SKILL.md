@@ -61,7 +61,7 @@ skills remain OMP-native under `.omp/agents/` and `.omp/skills/`.
 ### Prerequisites
 
 - Kotlin JVM project with Gradle
-- Python 3.10 or newer for setup/update; Java 26, Gradle 9.8.0, Kotlin 2.4.20, mutflow 1.6.1 (validated baseline)
+- Python 3.10 or newer for setup/update; Java 26, Gradle 9.8.0, Kotlin 2.4.20, MutFlow 1.6.2 (validated baseline)
 - For fresh projects, use `/mutation-testing setup` first
 
 ### mutflow architecture notes
@@ -70,7 +70,7 @@ Key mutflow constraints that affect orchestration:
 
 - Toolkit support: plain JVM/JUnit 4 or JUnit 6, plus KMP JVM through MutFlow's
   generated JUnit 6 integration when every declared target can resolve its
-  common-source-set dependencies. In the validated MutFlow `1.6.1` baseline,
+  common-source-set dependencies. In the validated MutFlow `1.6.2` baseline,
   artifacts publish JVM, `linuxX64`, and `mingwX64`, but not iOS or Android
   Native variants; selecting only the JVM task does not avoid dependency
   resolution. The toolkit does not prune unsupported targets or provide

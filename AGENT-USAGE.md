@@ -25,7 +25,7 @@ commands to the approved target; inspect its instructions and existing changes.
 Supported execution: plain Kotlin JVM with JUnit 4 or JUnit 6, and KMP JVM
 mutation tasks through MutFlow's generated JUnit 6 integration. Every declared
 KMP target must also resolve MutFlow's common-source-set dependencies. In the
-validated MutFlow `1.6.1` baseline, the artifacts publish JVM, `linuxX64`, and
+validated MutFlow `1.6.2` baseline, the artifacts publish JVM, `linuxX64`, and
 `mingwX64`, but not iOS or Android Native variants; selecting only the JVM
 mutation task does not avoid that resolution. The toolkit does not prune
 unsupported targets or provide Native, Android, or JS execution adapters.

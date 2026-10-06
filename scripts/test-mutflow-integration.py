@@ -69,11 +69,17 @@ def main() -> None:
         base = Path(temporary)
         jvm = base / "jvm"
         write(jvm, "build.gradle.kts", """
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
+
 plugins {
     kotlin("jvm") version "2.4.20"
+    kotlin("plugin.serialization") version "2.4.20"
 }
 repositories { mavenCentral() }
 kotlin { jvmToolchain(26) }
+dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+}
 """)
         write(jvm, "src/main/kotlin/Decision.kt", """
 package fixture
@@ -128,6 +134,36 @@ class TimeoutTest {
     @Test fun loopCompletes() { assertEquals(1, MutFlow.underTest { Loop().count() }) }
 }
 """)
+        write(jvm, "src/main/kotlin/SerializableTarget.kt", """
+package fixture
+import kotlinx.serialization.Serializable
+
+@Serializable
+class SerializableTarget(val name: String, val count: Int = 0) {
+    fun isEmpty(): Boolean = count == 0
+}
+""")
+        write(jvm, "src/test/kotlin/SerializableTargetTest.kt", """
+package fixture
+import io.github.anschnapp.mutflow.MutFlow
+import io.github.anschnapp.mutflow.junit.MutFlowTest
+import kotlinx.serialization.json.Json
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
+
+@MutFlowTest
+class SerializableTargetTest {
+    @Test fun onlyHandWrittenFunctionIsMutated() {
+        val isEmpty = MutFlow.underTest {
+            val target = SerializableTarget("a", 0)
+            val json = Json.encodeToString(SerializableTarget.serializer(), target)
+            Json.decodeFromString(SerializableTarget.serializer(), json)
+            target.isEmpty()
+        }
+        assertTrue(isEmpty)
+    }
+}
+""")
         workflow_summary = jvm / "workflow-summary.md"
         write(jvm, "workflow-summary.md", "Prior workflow summary")
         github_environment = {
@@ -138,6 +174,15 @@ class TimeoutTest {
         write(jvm, "build.gradle.kts.bak", "user-owned backup\n")
         run([bootstrap_command, "install", str(jvm)])  # Repeat setup must preserve an installed project.
         assert (jvm / "build.gradle.kts.bak").read_text() == "user-owned backup\n"
+        with (jvm / "build.gradle.kts").open("a") as build_file:
+            build_file.write("""
+
+tasks.withType<KotlinCompilationTask<*>>().configureEach {
+    compilerOptions.freeCompilerArgs.add(
+        "-Xcompiler-plugin-order=org.jetbrains.kotlinx.serialization>io.github.anschnapp.mutflow"
+    )
+}
+""")
         gradle = [args.gradle, "-p", str(jvm), "--console=plain"]
         run(
             gradle + ["-PmutationTest.includes=fixture.StrongTest", "mutationResults"],
@@ -185,6 +230,20 @@ class TimeoutTest {
         multi = report(jvm)
         assert multi["totalMutations"] == 8 and multi["killed"] == multi["survived"] == 4, multi
         assert {m["testClass"] for m in multi["mutations"]} == {"fixture.StrongTest", "fixture.WeakTest"}, multi
+
+        with((jvm / "build.gradle.kts").open("a") as build):
+            build.write("""
+
+mutflow {
+    targets = listOf("fixture.SerializableTarget", "fixture.SerializableTarget.**")
+}
+""")
+        run(gradle + ["-PmutationTest.includes=fixture.SerializableTargetTest", "mutationResults"])
+        serialization = report(jvm)
+        assert serialization["totalMutations"] == serialization["killed"] == 1, serialization
+        assert serialization["gaps"] == 0, serialization
+        assert serialization["mutations"][0]["sourceLocation"].startswith("SerializableTarget.kt:"), serialization
+
         run(gradle + ["-PmutationTest.includes=fixture.TimeoutTest", "mutationResults"], success=False)
         timed_out = report(jvm)
         assert timed_out["timedOut"] > 0 and timed_out["gaps"] == 0, timed_out
