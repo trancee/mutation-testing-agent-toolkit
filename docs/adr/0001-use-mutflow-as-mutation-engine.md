@@ -52,7 +52,7 @@ Use **mutflow** as the mutation engine.
 
 ### Current engine baseline
 
-The toolkit validates against mutflow 1.6.1, Kotlin 2.4.20, Gradle 9.8.0, and
+The toolkit validates against MutFlow 1.6.2, Kotlin 2.4.20, Gradle 9.8.0, and
 Java 26. Kotlin 2.4.20 does not yet support Java 27 bytecode targets, so Java
 26 is the latest compatible toolchain baseline. mutflow versions are
 compiler-coupled; update the Kotlin plugin and mutflow plugin together to their

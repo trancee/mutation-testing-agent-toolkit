@@ -33,7 +33,7 @@ OMP's `task`, `hub`, or `tasks[]` interfaces.
   JUnit 6 integration. Select one adapter per module.
 - Supported execution includes plain JVM/JUnit 4, plain JVM/JUnit 6, and KMP
   JVM when every declared KMP target can resolve MutFlow's common-source-set
-  dependencies. In the validated MutFlow `1.6.1` baseline, artifacts publish
+  dependencies. In the validated MutFlow `1.6.2` baseline, artifacts publish
   JVM, `linuxX64`, and `mingwX64`, but not iOS or Android Native variants;
   selecting only the JVM task does not avoid dependency resolution. The toolkit
   does not prune unsupported targets or provide Native, Android, and JS

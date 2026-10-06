@@ -31,7 +31,7 @@ cd mutation-testing-agent-toolkit
 ```
 
 The repository's integration checks use Java `26`, Gradle `9.8.0`, Kotlin
-`2.4.20`, and mutflow `1.6.1`. Kotlin's compatibility table lists Gradle
+`2.4.20`, and MutFlow `1.6.2`. Kotlin's compatibility table lists Gradle
 `9.7.0` as the latest fully supported version for Kotlin `2.4.20`. The
 repository passes on `9.8.0`, but that does not extend Kotlin's support range.
 See [toolchain compatibility](docs/how-to/run-checks.md#toolchain-compatibility).
@@ -130,7 +130,7 @@ incompatible update automatically.
 
 - **Kotlin Multiplatform:** `--kmp` configures mutation tests for a selected
   module's JVM target. Every declared target must resolve MutFlow's
-  common-source-set dependencies. MutFlow `1.6.1` publishes JVM, `linuxX64`,
+  common-source-set dependencies. MutFlow `1.6.2` publishes JVM, `linuxX64`,
   and `mingwX64` variants, but not iOS or Android Native variants. A project
   with those targets can fail dependency resolution before the JVM mutation
   task runs. The toolkit does not provide Native, Android, or JS adapters.
