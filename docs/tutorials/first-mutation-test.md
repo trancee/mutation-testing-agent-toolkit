@@ -35,8 +35,8 @@ Create `build.gradle.kts`:
 
 ```kotlin
 plugins {
-    kotlin("jvm") version "2.4.20"
-    id("io.github.anschnapp.mutflow") version "1.6.2"
+    kotlin("jvm") version "2.4.21"
+    id("io.github.anschnapp.mutflow") version "1.7.0"
 }
 
 kotlin { jvmToolchain(26) }

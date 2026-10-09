@@ -14,7 +14,7 @@ and upstream alignment before proposing repository changes.
 
 The integration suite uses Gradle `9.8.0`. Kotlin's compatibility table lists
 Gradle `9.7.0` as the latest fully supported version for the Kotlin Gradle
-plugin `2.4.20`. The repository passes on `9.8.0`, but that result does not
+plugin `2.4.21`. The repository passes on `9.8.0`, but that result does not
 extend the plugin's documented support range. Check the
 [Kotlin Gradle plugin compatibility table](https://kotlinlang.org/docs/gradle-configure-project.html#check-for-compatibility)
 when choosing versions for another project.

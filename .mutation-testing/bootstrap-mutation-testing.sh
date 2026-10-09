@@ -98,7 +98,7 @@ if ! grep -q '^plugins {$' "$build_file"; then
     echo "Error: bootstrap requires a conventional multiline plugins block; use manual setup for other layouts." >&2
     exit 1
 fi
-REQUIRED_KOTLIN_VERSION="2.4.20"
+REQUIRED_KOTLIN_VERSION="2.4.21"
 version_catalog="$PROJECT_PATH/gradle/libs.versions.toml"
 
 catalog_plugin_records() {
@@ -240,12 +240,12 @@ if [[ "$IS_KMP" == "0" && "$KOTLIN_PLUGIN_KIND" == "multiplatform" ]]; then
     exit 1
 fi
 if [[ "$KOTLIN_PLUGIN_VERSION" != "$REQUIRED_KOTLIN_VERSION" ]]; then
-    echo "Error: mutflow 1.6.2 requires Kotlin $REQUIRED_KOTLIN_VERSION; module '$MODULE_PATH' resolves '${KOTLIN_PLUGIN_VERSION:-an unpinned version}'." >&2
+    echo "Error: toolkit baseline uses mutflow 1.7.0 with Kotlin $REQUIRED_KOTLIN_VERSION; module '$MODULE_PATH' resolves '${KOTLIN_PLUGIN_VERSION:-an unpinned version}'." >&2
     exit 1
 fi
 if grep -q 'io.github.anschnapp.mutflow' "$build_file" &&
-    ! grep -Eq 'id\("io.github.anschnapp.mutflow"\) version "1\.6\.2"' "$build_file"; then
-    echo "Error: existing mutflow plugin is not pinned to the supported version 1.6.2." >&2
+    ! grep -Eq 'id\("io.github.anschnapp.mutflow"\) version "1\.7\.0"' "$build_file"; then
+    echo "Error: existing mutflow plugin is not pinned to the supported version 1.7.0." >&2
     exit 1
 fi
 if [[ -d "$PROJECT_PATH/buildSrc/src/main/kotlin/io/omp/mutation" ||
@@ -331,12 +331,12 @@ fi
 if ! grep -q 'io.github.anschnapp.mutflow' "$build_file"; then
     if grep -q '^plugins {' "$build_file"; then
         sed -i '/^plugins {/a\
-    id("io.github.anschnapp.mutflow") version "1.6.2"' "$build_file"
+    id("io.github.anschnapp.mutflow") version "1.7.0"' "$build_file"
         echo "  Added mutflow plugin"
     else
         {
             echo 'plugins {'
-            echo '    id("io.github.anschnapp.mutflow") version "1.6.2"'
+            echo '    id("io.github.anschnapp.mutflow") version "1.7.0"'
             echo '}'
             echo ''
             cat "$build_file"
@@ -373,12 +373,12 @@ else
         if ! grep -q 'mutflow-junit4' "$build_file"; then
             if grep -q '^dependencies {' "$build_file"; then
                 sed -i '/^dependencies {/a\
-    testImplementation("io.github.anschnapp.mutflow:mutflow-junit4:1.6.2")' "$build_file"
+    testImplementation("io.github.anschnapp.mutflow:mutflow-junit4:1.7.0")' "$build_file"
             else
                 cat >> "$build_file" << 'EOF'
 
 dependencies {
-    testImplementation("io.github.anschnapp.mutflow:mutflow-junit4:1.6.2")
+    testImplementation("io.github.anschnapp.mutflow:mutflow-junit4:1.7.0")
 }
 EOF
             fi
@@ -431,7 +431,7 @@ EOF
 fi
 
 KOTLIN_VERSION="$REQUIRED_KOTLIN_VERSION"
-echo "  Verified compiler-coupled Kotlin $KOTLIN_VERSION"
+echo "  Verified toolkit Kotlin $KOTLIN_VERSION baseline"
 
 # --- Step 3b: The manager synchronized typed results sources into buildSrc ---
 echo ""

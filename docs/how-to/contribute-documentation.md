@@ -57,7 +57,9 @@ executed evidence. Run changed executable examples when their behavior is not
 already covered by an equivalent fixture.
 
 Verify updated version pins against authoritative release metadata and
-compiler compatibility. Do not independently upgrade mutflow and Kotlin.
+compiler compatibility. Update mutflow and Kotlin as one tested toolchain
+change; only accept a compiler-version mismatch when the exact pair has a
+passing real-plugin integration test.
 Historical ADR rationale should not contain volatile star counts or unsupported
 claims of current validation.
 

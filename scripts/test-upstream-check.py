@@ -23,31 +23,31 @@ class UpstreamCheckTest(unittest.TestCase):
         self.root = Path(self.temporary.name)
         self.write("sample/build.gradle.kts", """
 plugins {
-    kotlin("jvm") version "2.4.20"
-    id("io.github.anschnapp.mutflow") version "1.6.2"
+    kotlin("jvm") version "2.4.21"
+    id("io.github.anschnapp.mutflow") version "1.7.0"
 }
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.3")
-    testImplementation("io.github.anschnapp.mutflow:mutflow-junit4:1.6.2")
+    testImplementation("io.github.anschnapp.mutflow:mutflow-junit4:1.7.0")
     testImplementation("junit:junit:4.13.2")
 }
 """)
         self.write(".mutation-testing/mutation-results-src/build.gradle.kts", """
-plugins { kotlin("plugin.serialization") version "2.4.20" }
+plugins { kotlin("plugin.serialization") version "2.4.21" }
 dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0") }
 """)
         self.write("sample/buildSrc/build.gradle.kts",
                    (self.root / ".mutation-testing/mutation-results-src/build.gradle.kts").read_text())
         self.write(".mutation-testing/bootstrap-mutation-testing.sh",
-                   'REQUIRED_KOTLIN_VERSION="2.4.20"\n# mutflow preflight pin: 1\\.6\\.2\n')
+                   'REQUIRED_KOTLIN_VERSION="2.4.21"\n# mutflow preflight pin: 1\\.7\\.0\n')
         for path in [".github/workflows/ci.yml", "scripts/test-bootstrap-copilot.sh",
                      "scripts/test-mutflow-integration.py"]:
             self.write(path, "")
         (self.root / "docs").mkdir()
-        self.compiler = "2.4.20"
+        self.compiler = "2.4.21"
         self.status = "identical"
-        self.latest_mutflow = "1.6.2"
-        self.latest_mutflow_junit4 = "1.6.2"
+        self.latest_mutflow = "1.7.0"
+        self.latest_mutflow_junit4 = "1.7.0"
         self.latest_junit4 = "4.13.2"
 
     def write(self, path, text):
@@ -60,7 +60,7 @@ dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:
             versions = {
                 "mutflow-gradle-plugin": [self.latest_mutflow, "1.7.0-RC1"],
                 "mutflow-junit4": [self.latest_mutflow_junit4, "1.7.0-RC1"],
-                "kotlin-gradle-plugin": ["2.4.20", "2.5.0-Beta1"],
+                "kotlin-gradle-plugin": ["2.4.21", "2.5.0-Beta1"],
                 "junit-jupiter-api": ["6.1.3", "6.2.0-M1"],
                 "junit/junit": [self.latest_junit4, "4.14-Beta1"],
                 "kotlinx-serialization-json": ["1.11.0", "1.12.0-RC"],
@@ -83,24 +83,28 @@ dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:
     def test_prereleases_are_ignored(self):
         self.check()
 
+    def test_validated_mutflow_kotlin_patch_mismatch_passes(self):
+        self.compiler = "2.4.20"
+        self.check()
+
     def test_new_stable_junit4_release_requires_review(self):
         self.latest_junit4 = "4.14"
         with self.assertRaises(SystemExit):
             self.check()
 
     def test_new_stable_mutflow_junit4_release_requires_review(self):
-        self.latest_mutflow_junit4 = "1.7.0"
+        self.latest_mutflow_junit4 = "1.8.0"
         with self.assertRaises(SystemExit):
             self.check()
 
     def test_new_stable_release_requires_review(self):
-        self.latest_mutflow = "1.7.0"
+        self.latest_mutflow = "1.8.0"
         with self.assertRaises(SystemExit) as failure:
             self.check()
         self.assertEqual(1, failure.exception.code)
 
     def test_compiler_mismatch_requires_review(self):
-        self.compiler = "2.5.0"
+        self.compiler = "2.4.22"
         with self.assertRaises(SystemExit):
             self.check()
 

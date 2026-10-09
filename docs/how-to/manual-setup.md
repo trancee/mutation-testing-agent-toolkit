@@ -7,10 +7,10 @@ project, or when you want to control each step yourself.
 
 - Java 26
 - Gradle 9.8.0 to reproduce the repository's integration-tested baseline
-- Kotlin 2.4.20
+- Kotlin 2.4.21
 - Python 3.10 or newer (required by the root `bootstrap.sh` install/update command)
 
-Kotlin `2.4.20` lists Gradle `9.7.0` as its latest fully supported version.
+Kotlin `2.4.21` lists Gradle `9.7.0` as its latest fully supported version.
 The toolkit integration tests pass on Gradle `9.8.0`, but that does not extend
 Kotlin's documented support range. Check the
 [Kotlin Gradle plugin compatibility table](https://kotlinlang.org/docs/gradle-configure-project.html#check-for-compatibility)
@@ -71,7 +71,7 @@ Edit `build.gradle.kts` to apply the plugin:
 
 ```kotlin
 plugins {
-    id("io.github.anschnapp.mutflow") version "1.6.2"
+    id("io.github.anschnapp.mutflow") version "1.7.0"
     // ... existing plugins
 }
 ```
@@ -99,8 +99,9 @@ cp .mutation-testing/mutation-results-src/build.gradle.kts buildSrc/build.gradle
 
 The template applies Kotlin JVM and serialization plugins, not `kotlin-dsl`.
 For an existing `buildSrc`, merge its dependencies and source files. Do not
-overwrite the build. MutFlow `1.6.2` requires Kotlin `2.4.20`. Do not upgrade or
-downgrade the compiler independently. The setup command resolves direct Kotlin
+overwrite the build. The toolkit validates MutFlow `1.7.0` with Kotlin
+`2.4.21`; keep the compiler pinned to this tested version unless you update
+and revalidate the pair. The setup command resolves direct Kotlin
 plugin pins and aliases in the default `gradle/libs.versions.toml` catalog,
 including version references. Custom catalog names, nonstandard plugin blocks,
 custom `projectDir` mappings, and user-owned `buildSrc` builds require manual
@@ -130,7 +131,7 @@ setup, keep the project's JUnit 4 engine and add the MutFlow runner:
 
 ```kotlin
 dependencies {
-    testImplementation("io.github.anschnapp.mutflow:mutflow-junit4:1.6.2")
+    testImplementation("io.github.anschnapp.mutflow:mutflow-junit4:1.7.0")
     testImplementation("junit:junit:4.13.2")
 }
 
@@ -173,8 +174,8 @@ with this module build (keep the shared results module in `buildSrc`):
 
 ```kotlin
 plugins {
-    kotlin("multiplatform") version "2.4.20"
-    id("io.github.anschnapp.mutflow") version "1.6.2"
+    kotlin("multiplatform") version "2.4.21"
+    id("io.github.anschnapp.mutflow") version "1.7.0"
 }
 
 apply(from = rootProject.file(".mutation-testing/mutation-results.gradle.kts"))
@@ -207,7 +208,7 @@ is not a mutation run.
 KMP JVM uses MutFlow's generated JUnit 6 integration. Use `--junit4` only for
 plain JVM modules.
 MutFlow dependencies are added to common source sets, so all declared targets
-must resolve compatible variants. In the validated `1.6.2` baseline, MutFlow
+must resolve compatible variants. In the validated `1.7.0` baseline, MutFlow
 publishes JVM, `linuxX64`, and `mingwX64`, but not iOS or Android Native
 variants. Selecting only `mutflowJvmTest` does not avoid those dependencies.
 Use a separate JVM-only build model for unsupported target combinations.
