@@ -148,9 +148,9 @@ Gradle report.
 |------|---------------------------|
 | Project type | Plain Kotlin/JVM with JUnit 4 or 6, or KMP with a JVM target and the generated JUnit 6 integration. Every declared target must resolve a compatible MutFlow variant. Uses Gradle Kotlin DSL. |
 | Python | 3.10 or newer for the root `bootstrap.sh` install and update commands. |
-| Java | 26 (validated baseline). Kotlin 2.4.20 supports this bytecode target. |
-| Gradle | `9.8.0` (repository test baseline). Kotlin `2.4.20` lists `9.7.0` as the latest fully supported version. See the [compatibility table](https://kotlinlang.org/docs/gradle-configure-project.html#check-for-compatibility). |
-| Kotlin | 2.4.20 (validated baseline). It must match the mutflow compiler plugin. |
+| Java | 26 (validated baseline). Kotlin 2.4.21 supports this bytecode target. |
+| Gradle | `9.8.0` (repository test baseline). Kotlin `2.4.21` lists `9.7.0` as the latest fully supported version. See the [compatibility table](https://kotlinlang.org/docs/gradle-configure-project.html#check-for-compatibility). |
+| Kotlin | 2.4.21 (validated baseline with MutFlow 1.7.0). |
 | Kotlin Multiplatform | Uses dedicated `mutflow<Target>Test` JVM tasks. Common tests stay plain `kotlin.test`. Every declared target must resolve MutFlow's common-source-set dependencies. Selecting only the JVM task does not bypass missing variants. |
 | Unsupported toolkit adapters | Native, Android, and JS. Upstream support does not imply a toolkit adapter. |
 | Bootstrap module support | Supports standard `gradle/libs.versions.toml` Kotlin plugin aliases and default module directories. Custom catalogs or `projectDir` mappings require manual setup. |

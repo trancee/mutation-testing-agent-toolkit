@@ -27,6 +27,10 @@ PATTERNS = {
     "junit4": r'junit:junit:([^:"]+)',
     "serialization": r'org\.jetbrains\.kotlinx:kotlinx-serialization-json:([^"]+)"',
 }
+TESTED_MUTFLOW_KOTLIN_PAIRS = {
+    # Exact (MutFlow, upstream Kotlin, toolkit Kotlin) tuples covered by live integration.
+    ("1.7.0", "2.4.20", "2.4.21"),
+}
 
 
 def fetch(url: str) -> str:
@@ -102,8 +106,13 @@ def main() -> None:
         version = pins["mutflow"]
         upstream = fetch(f"https://raw.githubusercontent.com/anschnapp/mutflow/v{version}/gradle.properties")
         compiler = re.search(r"^kotlinVersion=(.+)$", upstream, re.MULTILINE)
-        if not compiler or compiler.group(1).strip() != pins["kotlin"]:
-            errors.append(f"mutflow {version} is not built against pinned Kotlin {pins['kotlin']}")
+        upstream_compiler = compiler.group(1).strip() if compiler else None
+        compiler_pair = (version, upstream_compiler, pins["kotlin"])
+        if upstream_compiler != pins["kotlin"] and compiler_pair not in TESTED_MUTFLOW_KOTLIN_PAIRS:
+            errors.append(
+                f"mutflow {version} is built against Kotlin {upstream_compiler or 'unknown'}; "
+                f"toolkit pins {pins['kotlin']} and the pair is not validated"
+            )
         comparison = json.loads(fetch(f"https://api.github.com/repos/anschnapp/mutflow/compare/v{version}...master"))
         if comparison["status"] != "identical":
             errors.append(f"Upstream master differs from v{version}: {comparison['html_url']}. Review unreleased API changes; do not pin snapshots.")

@@ -18,7 +18,7 @@ does not promise feature parity. See
 
 Clone this repository and run the installer from its root. The target project
 must use a conventional multiline Kotlin DSL `plugins` block and pin Kotlin
-`2.4.20` directly or through the default `gradle/libs.versions.toml` plugin
+`2.4.21` directly or through the default `gradle/libs.versions.toml` plugin
 alias. Custom catalogs, convention builds, or project-directory mappings need
 [manual setup](docs/how-to/manual-setup.md).
 
@@ -31,8 +31,8 @@ cd mutation-testing-agent-toolkit
 ```
 
 The repository's integration checks use Java `26`, Gradle `9.8.0`, Kotlin
-`2.4.20`, and MutFlow `1.6.2`. Kotlin's compatibility table lists Gradle
-`9.7.0` as the latest fully supported version for Kotlin `2.4.20`. The
+`2.4.21`, and MutFlow `1.7.0`. Kotlin's compatibility table lists Gradle
+`9.7.0` as the latest fully supported version for Kotlin `2.4.21`. The
 repository passes on `9.8.0`, but that does not extend Kotlin's support range.
 See [toolchain compatibility](docs/how-to/run-checks.md#toolchain-compatibility).
 Python 3.10 or newer is required by the root `./bootstrap.sh` install and
@@ -130,7 +130,7 @@ incompatible update automatically.
 
 - **Kotlin Multiplatform:** `--kmp` configures mutation tests for a selected
   module's JVM target. Every declared target must resolve MutFlow's
-  common-source-set dependencies. MutFlow `1.6.2` publishes JVM, `linuxX64`,
+  common-source-set dependencies. MutFlow `1.7.0` publishes JVM, `linuxX64`,
   and `mingwX64` variants, but not iOS or Android Native variants. A project
   with those targets can fail dependency resolution before the JVM mutation
   task runs. The toolkit does not provide Native, Android, or JS adapters.

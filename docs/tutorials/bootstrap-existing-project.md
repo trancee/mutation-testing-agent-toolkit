@@ -9,7 +9,7 @@ do not, create one with
 
 ## Prerequisites
 
-- A Kotlin/JVM project with a multiline `plugins` block and Kotlin `2.4.20`
+- A Kotlin/JVM project with a multiline `plugins` block and Kotlin `2.4.21`
   pinned directly or through the default `gradle/libs.versions.toml` catalog
 - Java 26 and Gradle 9.8.0
 - Python 3.10 or newer for the root `bootstrap.sh` command
@@ -65,7 +65,7 @@ Configuring module build.gradle.kts...
   Added JUnit 6 dependencies
   Added mutflow configuration
   Enabled JUnit Platform
-  Verified compiler-coupled Kotlin 2.4.20
+  Verified toolkit Kotlin 2.4.21 baseline
 Typed mutation-results sources are installed in buildSrc/
 
 ✅ Bootstrap complete!
@@ -98,7 +98,7 @@ Open `build.gradle.kts` and check for these entries:
 
 ```kotlin
 plugins {
-    id("io.github.anschnapp.mutflow") version "1.6.2"
+    id("io.github.anschnapp.mutflow") version "1.7.0"
     // ... existing plugins
 }
 ```

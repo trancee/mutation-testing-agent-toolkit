@@ -72,8 +72,8 @@ def main() -> None:
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 plugins {
-    kotlin("jvm") version "2.4.20"
-    kotlin("plugin.serialization") version "2.4.20"
+    kotlin("jvm") version "2.4.21"
+    kotlin("plugin.serialization") version "2.4.21"
 }
 repositories { mavenCentral() }
 kotlin { jvmToolchain(26) }
@@ -267,7 +267,7 @@ mutflow {
         junit4 = base / "junit4"
         write(junit4, "build.gradle.kts", """
 plugins {
-    kotlin("jvm") version "2.4.20"
+    kotlin("jvm") version "2.4.21"
 }
 repositories { mavenCentral() }
 kotlin { jvmToolchain(26) }
@@ -313,7 +313,7 @@ class DecisionTest {
         kmp = base / "kmp"
         write(kmp, "build.gradle.kts", """
 plugins {
-    kotlin("multiplatform") version "2.4.20"
+    kotlin("multiplatform") version "2.4.21"
 }
 repositories { mavenCentral() }
 kotlin {
@@ -382,7 +382,7 @@ class DecisionTest {
         incompatible = base / "incompatible"
         write(incompatible, "build.gradle.kts", 'plugins {\n    kotlin("jvm") version "2.3.0"\n}\n')
         rejected = run([bootstrap_command, "install", str(incompatible)], success=False)
-        assert "requires Kotlin 2.4.20" in rejected.stdout, rejected.stdout
+        assert "toolkit baseline uses mutflow 1.7.0 with Kotlin 2.4.21" in rejected.stdout, rejected.stdout
         assert not (incompatible / ".omp").exists()
 
         catalog_kmp = base / "catalog-kmp"
@@ -398,7 +398,7 @@ include(":kompact")
 """)
         write(catalog_kmp, "gradle/libs.versions.toml", """
 [versions]
-kotlin = "2.4.20"
+kotlin = "2.4.21"
 
 [plugins]
 kmp = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
