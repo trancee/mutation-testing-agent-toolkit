@@ -5,6 +5,7 @@ import contextlib
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -34,7 +35,7 @@ dependencies {
 """)
         self.write(".mutation-testing/mutation-results-src/build.gradle.kts", """
 plugins { kotlin("plugin.serialization") version "2.4.21" }
-dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0") }
+dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0") }
 """)
         self.write("sample/buildSrc/build.gradle.kts",
                    (self.root / ".mutation-testing/mutation-results-src/build.gradle.kts").read_text())
@@ -49,6 +50,7 @@ dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:
         self.latest_mutflow = "1.7.0"
         self.latest_mutflow_junit4 = "1.7.0"
         self.latest_junit4 = "4.13.2"
+        self.latest_serialization = "1.12.0"
 
     def write(self, path, text):
         destination = self.root / path
@@ -63,7 +65,7 @@ dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:
                 "kotlin-gradle-plugin": ["2.4.21", "2.5.0-Beta1"],
                 "junit-jupiter-api": ["6.1.3", "6.2.0-M1"],
                 "junit/junit": [self.latest_junit4, "4.14-Beta1"],
-                "kotlinx-serialization-json": ["1.11.0", "1.12.0-RC"],
+                "kotlinx-serialization-json": [self.latest_serialization, "1.13.0-RC"],
             }
             values = next(values for key, values in versions.items() if key in url)
             return "<metadata><versioning><versions>" + "".join(
@@ -94,6 +96,11 @@ dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:
 
     def test_new_stable_mutflow_junit4_release_requires_review(self):
         self.latest_mutflow_junit4 = "1.8.0"
+        with self.assertRaises(SystemExit):
+            self.check()
+
+    def test_new_stable_serialization_release_requires_review(self):
+        self.latest_serialization = "1.13.0"
         with self.assertRaises(SystemExit):
             self.check()
 
@@ -166,6 +173,35 @@ dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:
             with patch.object(CHECKER, "ROOT", self.root), patch("sys.argv", ["check-upstream.py"]):
                 with self.assertRaises(ConnectionError):
                     CHECKER.main()
+
+    def test_fetch_sends_workflow_token_only_to_github_api(self):
+        requests = []
+
+        def open_request(request, timeout):
+            requests.append(request)
+            return io.BytesIO(b"{}")
+
+        urls = [
+            "https://api.github.com/repos/anschnapp/mutflow/compare/v1.7.0...master",
+            "https://raw.githubusercontent.com/anschnapp/mutflow/v1.7.0/gradle.properties",
+            "https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-gradle-plugin/maven-metadata.xml",
+            "http://api.github.com/repos/anschnapp/mutflow/compare/v1.7.0...master",
+            "https://api.github.com.attacker.example/repos/anschnapp/mutflow/compare",
+        ]
+        with patch.dict(os.environ, {"GH_TOKEN": "github-test-token"}), \
+                patch.object(CHECKER.urllib.request, "urlopen", side_effect=open_request):
+            for url in urls:
+                CHECKER.fetch(url)
+
+        self.assertEqual("Bearer github-test-token", requests[0].get_header("Authorization"))
+        for request in requests[1:]:
+            self.assertIsNone(request.get_header("Authorization"))
+
+    def test_upstream_workflow_passes_token_to_checker(self):
+        workflow = (Path(__file__).resolve().parents[1] / ".github/workflows/upstream-sync.yml").read_text()
+        check_step = workflow.split("      - name: Publish upstream status", maxsplit=1)[0]
+        self.assertIn("      - name: Verify latest stable versions and upstream API drift", check_step)
+        self.assertIn("          GH_TOKEN: ${{ github.token }}", check_step)
 
 
 if __name__ == "__main__":

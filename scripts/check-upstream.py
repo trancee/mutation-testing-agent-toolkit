@@ -2,12 +2,14 @@
 """Fail visibly on upstream drift, mismatched pins, or stale generated sources."""
 
 import argparse
+import json
+import os
 from pathlib import Path
 import re
 import sys
+from urllib.parse import urlsplit
 import urllib.request
 import xml.etree.ElementTree as ET
-import json
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -34,7 +36,12 @@ TESTED_MUTFLOW_KOTLIN_PAIRS = {
 
 
 def fetch(url: str) -> str:
-    request = urllib.request.Request(url, headers={"User-Agent": "mutation-testing-agent-toolkit"})
+    headers = {"User-Agent": "mutation-testing-agent-toolkit"}
+    parsed_url = urlsplit(url)
+    token = os.environ.get("GH_TOKEN")
+    if parsed_url.scheme == "https" and parsed_url.hostname == "api.github.com" and token:
+        headers["Authorization"] = f"Bearer {token}"
+    request = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(request, timeout=30) as response:
         return response.read().decode("utf-8")
 
