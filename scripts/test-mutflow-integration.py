@@ -78,7 +78,7 @@ plugins {
 repositories { mavenCentral() }
 kotlin { jvmToolchain(26) }
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0")
 }
 """)
         write(jvm, "src/main/kotlin/Decision.kt", """

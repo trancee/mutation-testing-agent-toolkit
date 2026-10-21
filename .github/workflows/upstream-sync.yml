@@ -21,6 +21,8 @@ jobs:
           python-version: '3.14'
       - name: Verify latest stable versions and upstream API drift
         id: upstream
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: python3 scripts/check-upstream.py > upstream-status.txt 2>&1
       - name: Publish upstream status
         if: always()
