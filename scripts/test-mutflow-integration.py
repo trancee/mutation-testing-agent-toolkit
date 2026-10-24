@@ -382,7 +382,7 @@ class DecisionTest {
         incompatible = base / "incompatible"
         write(incompatible, "build.gradle.kts", 'plugins {\n    kotlin("jvm") version "2.3.0"\n}\n')
         rejected = run([bootstrap_command, "install", str(incompatible)], success=False)
-        assert "toolkit baseline uses mutflow 1.7.0 with Kotlin 2.4.21" in rejected.stdout, rejected.stdout
+        assert "toolkit baseline uses mutflow 1.7.1 with Kotlin 2.4.21" in rejected.stdout, rejected.stdout
         assert not (incompatible / ".omp").exists()
 
         catalog_kmp = base / "catalog-kmp"
