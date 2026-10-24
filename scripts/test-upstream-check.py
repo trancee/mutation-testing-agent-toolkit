@@ -25,11 +25,11 @@ class UpstreamCheckTest(unittest.TestCase):
         self.write("sample/build.gradle.kts", """
 plugins {
     kotlin("jvm") version "2.4.21"
-    id("io.github.anschnapp.mutflow") version "1.7.0"
+    id("io.github.anschnapp.mutflow") version "1.7.1"
 }
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.3")
-    testImplementation("io.github.anschnapp.mutflow:mutflow-junit4:1.7.0")
+    testImplementation("io.github.anschnapp.mutflow:mutflow-junit4:1.7.1")
     testImplementation("junit:junit:4.13.2")
 }
 """)
@@ -40,15 +40,15 @@ dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:
         self.write("sample/buildSrc/build.gradle.kts",
                    (self.root / ".mutation-testing/mutation-results-src/build.gradle.kts").read_text())
         self.write(".mutation-testing/bootstrap-mutation-testing.sh",
-                   'REQUIRED_KOTLIN_VERSION="2.4.21"\n# mutflow preflight pin: 1\\.7\\.0\n')
+                   'REQUIRED_KOTLIN_VERSION="2.4.21"\n# mutflow preflight pin: 1\\.7\\.1\n')
         for path in [".github/workflows/ci.yml", "scripts/test-bootstrap-copilot.sh",
                      "scripts/test-mutflow-integration.py"]:
             self.write(path, "")
         (self.root / "docs").mkdir()
         self.compiler = "2.4.21"
         self.status = "identical"
-        self.latest_mutflow = "1.7.0"
-        self.latest_mutflow_junit4 = "1.7.0"
+        self.latest_mutflow = "1.7.1"
+        self.latest_mutflow_junit4 = "1.7.1"
         self.latest_junit4 = "4.13.2"
         self.latest_serialization = "1.12.0"
 
@@ -60,8 +60,8 @@ dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:
     def fetch(self, url):
         if url.endswith("maven-metadata.xml"):
             versions = {
-                "mutflow-gradle-plugin": [self.latest_mutflow, "1.7.0-RC1"],
-                "mutflow-junit4": [self.latest_mutflow_junit4, "1.7.0-RC1"],
+                "mutflow-gradle-plugin": [self.latest_mutflow, "1.7.1-RC1"],
+                "mutflow-junit4": [self.latest_mutflow_junit4, "1.7.1-RC1"],
                 "kotlin-gradle-plugin": ["2.4.21", "2.5.0-Beta1"],
                 "junit-jupiter-api": ["6.1.3", "6.2.0-M1"],
                 "junit/junit": [self.latest_junit4, "4.14-Beta1"],
@@ -87,6 +87,15 @@ dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:
 
     def test_validated_mutflow_kotlin_patch_mismatch_passes(self):
         self.compiler = "2.4.20"
+        self.latest_mutflow = "1.7.0"
+        self.latest_mutflow_junit4 = "1.7.0"
+        sample = (self.root / "sample/build.gradle.kts").read_text()
+        self.write("sample/build.gradle.kts", sample.replace("1.7.1", "1.7.0"))
+        bootstrap = (self.root / ".mutation-testing/bootstrap-mutation-testing.sh").read_text()
+        self.write(
+            ".mutation-testing/bootstrap-mutation-testing.sh",
+            bootstrap.replace(r"1\.7\.1", r"1\.7\.0"),
+        )
         self.check()
 
     def test_new_stable_junit4_release_requires_review(self):
@@ -182,10 +191,10 @@ dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:
             return io.BytesIO(b"{}")
 
         urls = [
-            "https://api.github.com/repos/anschnapp/mutflow/compare/v1.7.0...master",
-            "https://raw.githubusercontent.com/anschnapp/mutflow/v1.7.0/gradle.properties",
+            "https://api.github.com/repos/anschnapp/mutflow/compare/v1.7.1...master",
+            "https://raw.githubusercontent.com/anschnapp/mutflow/v1.7.1/gradle.properties",
             "https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-gradle-plugin/maven-metadata.xml",
-            "http://api.github.com/repos/anschnapp/mutflow/compare/v1.7.0...master",
+            "http://api.github.com/repos/anschnapp/mutflow/compare/v1.7.1...master",
             "https://api.github.com.attacker.example/repos/anschnapp/mutflow/compare",
         ]
         with patch.dict(os.environ, {"GH_TOKEN": "github-test-token"}), \

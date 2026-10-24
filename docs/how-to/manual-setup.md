@@ -71,7 +71,7 @@ Edit `build.gradle.kts` to apply the plugin:
 
 ```kotlin
 plugins {
-    id("io.github.anschnapp.mutflow") version "1.7.0"
+    id("io.github.anschnapp.mutflow") version "1.7.1"
     // ... existing plugins
 }
 ```
@@ -99,7 +99,7 @@ cp .mutation-testing/mutation-results-src/build.gradle.kts buildSrc/build.gradle
 
 The template applies Kotlin JVM and serialization plugins, not `kotlin-dsl`.
 For an existing `buildSrc`, merge its dependencies and source files. Do not
-overwrite the build. The toolkit validates MutFlow `1.7.0` with Kotlin
+overwrite the build. The toolkit validates MutFlow `1.7.1` with Kotlin
 `2.4.21`; keep the compiler pinned to this tested version unless you update
 and revalidate the pair. The setup command resolves direct Kotlin
 plugin pins and aliases in the default `gradle/libs.versions.toml` catalog,
@@ -131,7 +131,7 @@ setup, keep the project's JUnit 4 engine and add the MutFlow runner:
 
 ```kotlin
 dependencies {
-    testImplementation("io.github.anschnapp.mutflow:mutflow-junit4:1.7.0")
+    testImplementation("io.github.anschnapp.mutflow:mutflow-junit4:1.7.1")
     testImplementation("junit:junit:4.13.2")
 }
 
@@ -175,7 +175,7 @@ with this module build (keep the shared results module in `buildSrc`):
 ```kotlin
 plugins {
     kotlin("multiplatform") version "2.4.21"
-    id("io.github.anschnapp.mutflow") version "1.7.0"
+    id("io.github.anschnapp.mutflow") version "1.7.1"
 }
 
 apply(from = rootProject.file(".mutation-testing/mutation-results.gradle.kts"))
@@ -208,7 +208,7 @@ is not a mutation run.
 KMP JVM uses MutFlow's generated JUnit 6 integration. Use `--junit4` only for
 plain JVM modules.
 MutFlow dependencies are added to common source sets, so all declared targets
-must resolve compatible variants. In the validated `1.7.0` baseline, MutFlow
+must resolve compatible variants. In the validated `1.7.1` baseline, MutFlow
 publishes JVM, `linuxX64`, and `mingwX64`, but not iOS or Android Native
 variants. Selecting only `mutflowJvmTest` does not avoid those dependencies.
 Use a separate JVM-only build model for unsupported target combinations.
