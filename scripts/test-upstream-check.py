@@ -47,6 +47,7 @@ dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:
         (self.root / "docs").mkdir()
         self.compiler = "2.4.21"
         self.status = "identical"
+        self.changed_files = []
         self.latest_mutflow = "1.7.1"
         self.latest_mutflow_junit4 = "1.7.1"
         self.latest_junit4 = "4.13.2"
@@ -73,14 +74,20 @@ dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:
             ) + "</versions></versioning></metadata>"
         if url.endswith("gradle.properties"):
             return f"kotlinVersion={self.compiler}\n"
-        return json.dumps({"status": self.status, "html_url": "https://example.test/compare",
-                           "base_commit": {"sha": "release-sha"}})
+        return json.dumps({
+            "status": self.status,
+            "html_url": "https://example.test/compare",
+            "base_commit": {"sha": "release-sha"},
+            "files": self.changed_files,
+        })
 
     def check(self):
+        output = io.StringIO()
         with patch.object(CHECKER, "ROOT", self.root), patch.object(CHECKER, "fetch", self.fetch), \
                 patch("sys.argv", ["check-upstream.py"]), \
-                contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                contextlib.redirect_stdout(output), contextlib.redirect_stderr(io.StringIO()):
             CHECKER.main()
+        return output.getvalue()
 
     def test_prereleases_are_ignored(self):
         self.check()
@@ -132,6 +139,35 @@ dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:
 
     def test_unreleased_upstream_changes_require_review(self):
         self.status = "ahead"
+        self.changed_files = [
+            {"filename": "README.md"},
+            {"filename": "mutflow-core/src/MutFlow.kt"},
+        ]
+        with self.assertRaises(SystemExit):
+            self.check()
+
+    def test_documentation_only_upstream_changes_do_not_require_review(self):
+        self.status = "ahead"
+        self.changed_files = [{"filename": "DESIGN.md"}, {"filename": "README.md"}]
+
+        output = self.check()
+
+        self.assertIn("only in documentation", output)
+
+    def test_upstream_drift_without_file_details_requires_review(self):
+        self.status = "ahead"
+        with self.assertRaises(SystemExit):
+            self.check()
+
+    def test_documentation_changes_do_not_hide_a_diverged_release(self):
+        self.status = "diverged"
+        self.changed_files = [{"filename": "README.md"}]
+        with self.assertRaises(SystemExit):
+            self.check()
+
+    def test_truncated_documentation_file_list_requires_review(self):
+        self.status = "ahead"
+        self.changed_files = [{"filename": f"docs/{index}.md"} for index in range(300)]
         with self.assertRaises(SystemExit):
             self.check()
 

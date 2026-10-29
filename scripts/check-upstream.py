@@ -4,7 +4,7 @@
 import argparse
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import sys
 from urllib.parse import urlsplit
@@ -33,6 +33,9 @@ TESTED_MUTFLOW_KOTLIN_PAIRS = {
     # Exact (MutFlow, upstream Kotlin, toolkit Kotlin) tuples covered by live integration.
     ("1.7.0", "2.4.20", "2.4.21"),
 }
+DOCUMENTATION_SUFFIXES = {".adoc", ".asciidoc", ".markdown", ".md", ".rst"}
+# Compare responses cap file details at 300; don't classify potentially truncated lists.
+MAX_COMPARE_FILES = 300
 
 
 def fetch(url: str) -> str:
@@ -44,6 +47,20 @@ def fetch(url: str) -> str:
     request = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(request, timeout=30) as response:
         return response.read().decode("utf-8")
+
+
+def is_documentation_only_comparison(comparison: dict) -> bool:
+    if comparison.get("status") != "ahead":
+        return False
+    files = comparison.get("files")
+    if not isinstance(files, list) or not files or len(files) >= MAX_COMPARE_FILES:
+        return False
+    return all(
+        isinstance(file, dict)
+        and isinstance(file.get("filename"), str)
+        and PurePosixPath(file["filename"]).suffix.lower() in DOCUMENTATION_SUFFIXES
+        for file in files
+    )
 
 
 def main() -> None:
@@ -122,7 +139,16 @@ def main() -> None:
             )
         comparison = json.loads(fetch(f"https://api.github.com/repos/anschnapp/mutflow/compare/v{version}...master"))
         if comparison["status"] != "identical":
-            errors.append(f"Upstream master differs from v{version}: {comparison['html_url']}. Review unreleased API changes; do not pin snapshots.")
+            if is_documentation_only_comparison(comparison):
+                print(
+                    f"Upstream master differs from v{version} only in documentation; "
+                    f"no unreleased API changes need review: {comparison['html_url']}"
+                )
+            else:
+                errors.append(
+                    f"Upstream master differs from v{version}: {comparison['html_url']}. "
+                    "Review unreleased changes; do not pin snapshots."
+                )
         print(f"Verified upstream mutflow v{version}, release commit {comparison['base_commit']['sha']}")
 
     if errors:

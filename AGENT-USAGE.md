@@ -187,8 +187,9 @@ python3 scripts/check-upstream.py --offline
 ```
 
 For dependency work, run `python3 scripts/check-upstream.py` online. Stable
-release drift, compiler mismatch, unreleased upstream changes, and network
-failures are visible review signals; use latest compatible stable releases,
+release drift, compiler mismatch, unreleased non-documentation changes, and
+network failures are visible review signals; documentation-only upstream drift
+is reported without blocking the check. Use latest compatible stable releases,
 not snapshots. Inspect [the scheduled monitor](.github/workflows/upstream-sync.yml)
 and [Dependabot](.github/dependabot.yml) for automation ownership.
 
