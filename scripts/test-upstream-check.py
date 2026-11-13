@@ -35,7 +35,7 @@ dependencies {
 """)
         self.write(".mutation-testing/mutation-results-src/build.gradle.kts", """
 plugins { kotlin("plugin.serialization") version "2.4.21" }
-dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0") }
+dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.13.0") }
 """)
         self.write("sample/buildSrc/build.gradle.kts",
                    (self.root / ".mutation-testing/mutation-results-src/build.gradle.kts").read_text())
@@ -51,7 +51,7 @@ dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:
         self.latest_mutflow = "1.7.1"
         self.latest_mutflow_junit4 = "1.7.1"
         self.latest_junit4 = "4.13.2"
-        self.latest_serialization = "1.12.0"
+        self.latest_serialization = "1.13.0"
 
     def write(self, path, text):
         destination = self.root / path
@@ -116,7 +116,7 @@ dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:
             self.check()
 
     def test_new_stable_serialization_release_requires_review(self):
-        self.latest_serialization = "1.13.0"
+        self.latest_serialization = "1.14.0"
         with self.assertRaises(SystemExit):
             self.check()
 
